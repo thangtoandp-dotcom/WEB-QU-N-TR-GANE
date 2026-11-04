@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Giải Trí: Bắn Bóng Toán Học & Phản Xạ Nhanh</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Times New Roman", Times, serif; }
+    body { background: #0A192F; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+    
+    header {
+      background: #020C1B;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #00CFFF;
+      z-index: 10;
+    }
+    .badge { background: #10B981; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 13px; margin-right: 8px; }
+    .stat { font-size: 17px; margin-left: 20px; color: #E0F2FE; }
+    .stat strong { color: #FFDE59; font-size: 20px; }
+    
+    canvas { flex: 1; width: 100%; height: 100%; display: block; background: radial-gradient(circle at center, #0F284E 0%, #030D1A 100%); cursor: crosshair; }
+    
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      z-index: 20;
+    }
+    .btn {
+      background: linear-gradient(135deg, #0878DC 0%, #00CFFF 100%);
+      color: #041E42;
+      font-weight: bold;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 50px;
+      font-size: 20px;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 4px 20px rgba(0,207,255,0.4);
+      transition: transform 0.2s;
+    }
+    .btn:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <span class="badge">HTML5 GAME</span>
+      <strong style="color: #FFDE59; font-size: 18px;">Bắn Bóng Toán Học & Phản Xạ Thư Giãn</strong>
+      <span style="font-size: 13px; color: #94A3B8; margin-left: 10px;">THPT Đan Phượng</span>
+    </div>
+    <div>
+      <span class="stat">Điểm: <strong id="score">0</strong></span>
+      <span class="stat">Thời gian: <strong id="timer">30</strong>s</span>
+    </div>
+  </header>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="overlay">
+    <div style="font-size: 48px; margin-bottom: 10px;">🎯</div>
+    <h1 style="font-size: 36px; color: #FFDE59; margin-bottom: 8px;">BẮN BÓNG TOÁN HỌC</h1>
+    <p style="font-size: 20px; max-width: 500px; color: #E0F2FE; line-height: 1.5;">
+      Quy tắc: Nhấp chuột hoặc chạm vào các quả bóng số chẵn hoặc bội số của 3 để ghi điểm!<br>
+      Tránh bóng gai đỏ để không bị trừ điểm.
+    </p>
+    <button class="btn" onclick="startGame()">BẮT ĐẦU CHƠI NGAY</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight - 50;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    let score = 0;
+    let timeLeft = 30;
+    let gameRunning = false;
+    let bubbles = [];
+    let timerInterval = null;
+
+    class Bubble {
+      constructor() {
+        this.radius = 28 + Math.random() * 20;
+        this.x = Math.random() * (width - this.radius * 2) + this.radius;
+        this.y = height + this.radius + Math.random() * 50;
+        this.speedY = 1.5 + Math.random() * 2.5;
+        this.value = Math.floor(Math.random() * 30) + 1;
+        this.isBonus = this.value % 2 === 0 || this.value % 3 === 0;
+        this.color = this.isBonus ? '#00CFFF' : '#EF4444';
+      }
+      update() {
+        this.y -= this.speedY;
+      }
+      draw() {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.isBonus ? 'rgba(0, 207, 255, 0.35)' : 'rgba(239, 68, 68, 0.4)';
+        ctx.fill();
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 20px "Times New Roman"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.value, this.x, this.y);
+        ctx.restore();
+      }
+    }
+
+    function spawnBubble() {
+      if (gameRunning && bubbles.length < 15) {
+        bubbles.push(new Bubble());
+      }
+    }
+
+    function animate() {
+      if (!gameRunning) return;
+      ctx.clearRect(0, 0, width, height);
+
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        const b = bubbles[i];
+        b.update();
+        b.draw();
+        if (b.y < -b.radius) {
+          bubbles.splice(i, 1);
+        }
+      }
+
+      if (Math.random() < 0.05) spawnBubble();
+      requestAnimationFrame(animate);
+    }
+
+    canvas.addEventListener('click', (e) => {
+      if (!gameRunning) return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        const b = bubbles[i];
+        const dist = Math.hypot(clickX - b.x, clickY - b.y);
+        if (dist <= b.radius) {
+          if (b.isBonus) {
+            score += 10;
+          } else {
+            score = Math.max(0, score - 5);
+          }
+          document.getElementById('score').innerText = score;
+          bubbles.splice(i, 1);
+          break;
+        }
+      }
+    });
+
+    function startGame() {
+      document.getElementById('overlay').style.display = 'none';
+      score = 0;
+      timeLeft = 30;
+      bubbles = [];
+      gameRunning = true;
+      document.getElementById('score').innerText = '0';
+      document.getElementById('timer').innerText = '30';
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+
+      animate();
+    }
+
+    function endGame() {
+      gameRunning = false;
+      clearInterval(timerInterval);
+      const overlay = document.getElementById('overlay');
+      overlay.style.display = 'flex';
+      overlay.innerHTML = `
+        <div style="font-size: 54px; margin-bottom: 10px;">🏆</div>
+        <h1 style="font-size: 36px; color: #FFDE59; margin-bottom: 8px;">KẾT THÚC VÒNG CHƠI!</h1>
+        <p style="font-size: 22px; color: #FFFFFF; margin-bottom: 16px;">
+          Bạn đạt được: <strong style="color: #00CFFF; font-size: 32px;">${score} điểm</strong>
+        </p>
+        <button class="btn" onclick="startGame()">CHƠI LẠI VÒNG MỚI</button>
+      `;
+    }
+  </script>
+</body>
+</html>

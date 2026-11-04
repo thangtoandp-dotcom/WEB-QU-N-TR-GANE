@@ -1,0 +1,6 @@
+{
+  "name": "TOAN GAME HUB - Hệ Sinh Thái Trò Chơi Toán Học THPT",
+  "description": "Nền tảng trò chơi học tập và giải trí Toán học THPT Đan Phượng - Giáo viên Bùi Ngọc Thắng. Đa dạng game trắc nghiệm, tư duy logic, hình học, phòng thi đấu, quản lý lớp học và trợ lý AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

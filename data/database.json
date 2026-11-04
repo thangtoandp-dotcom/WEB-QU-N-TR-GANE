@@ -1,0 +1,630 @@
+{
+  "settings": {
+    "schoolName": "Trường THPT Đan Phượng",
+    "teacherName": "Bùi Ngọc Thắng",
+    "subject": "Toán học THPT",
+    "phone": "0904.545.748",
+    "website": "toangamehub.edu.vn",
+    "supabaseUrl": "",
+    "supabaseAnonKey": "",
+    "aiModel": "gemini-3.8-flash"
+  },
+  "classes": [
+    {
+      "id": "10A1",
+      "name": "Lớp 10A1",
+      "grade": 10,
+      "studentCount": 42,
+      "homeroom": "Thầy Bùi Ngọc Thắng"
+    },
+    {
+      "id": "10A2",
+      "name": "Lớp 10A2",
+      "grade": 10,
+      "studentCount": 40,
+      "homeroom": "Cô Nguyễn Thị Hoa"
+    },
+    {
+      "id": "10A3",
+      "name": "Lớp 10A3",
+      "grade": 10,
+      "studentCount": 41,
+      "homeroom": "Thầy Trần Văn Bình"
+    },
+    {
+      "id": "11A1",
+      "name": "Lớp 11A1",
+      "grade": 11,
+      "studentCount": 43,
+      "homeroom": "Thầy Bùi Ngọc Thắng"
+    },
+    {
+      "id": "11A2",
+      "name": "Lớp 11A2",
+      "grade": 11,
+      "studentCount": 39,
+      "homeroom": "Cô Lê Thu Hà"
+    },
+    {
+      "id": "12A1",
+      "name": "Lớp 12A1",
+      "grade": 12,
+      "studentCount": 44,
+      "homeroom": "Thầy Bùi Ngọc Thắng"
+    },
+    {
+      "id": "12A2",
+      "name": "Lớp 12A2",
+      "grade": 12,
+      "studentCount": 42,
+      "homeroom": "Thầy Hoàng Minh Tuấn"
+    },
+    {
+      "id": "12A3",
+      "name": "Lớp 12A3",
+      "grade": 12,
+      "studentCount": 40,
+      "homeroom": "Cô Phạm Hải Yến"
+    }
+  ],
+  "students": [
+    {
+      "id": "HS1001",
+      "code": "HS1001",
+      "name": "Nguyễn Minh Anh",
+      "classId": "12A1",
+      "grade": 12,
+      "username": "minhanh12a1",
+      "status": "active",
+      "totalPoints": 1095,
+      "gamesPlayed": 26,
+      "badge": "Vô địch"
+    },
+    {
+      "id": "HS1002",
+      "code": "HS1002",
+      "name": "Trần Đức Minh",
+      "classId": "11A2",
+      "grade": 11,
+      "username": "ducminh11a2",
+      "status": "active",
+      "totalPoints": 940,
+      "gamesPlayed": 22,
+      "badge": "Xuất sắc"
+    },
+    {
+      "id": "HS1003",
+      "code": "HS1003",
+      "name": "Lê Thị Hà",
+      "classId": "12A3",
+      "grade": 12,
+      "username": "leha12a3",
+      "status": "active",
+      "totalPoints": 920,
+      "gamesPlayed": 20,
+      "badge": "Tài năng Toán học"
+    },
+    {
+      "id": "HS1004",
+      "code": "HS1004",
+      "name": "Nguyễn Văn Nam",
+      "classId": "11A1",
+      "grade": 11,
+      "username": "nam11a1",
+      "status": "active",
+      "totalPoints": 890,
+      "gamesPlayed": 19,
+      "badge": "Siêu tốc"
+    },
+    {
+      "id": "HS1005",
+      "code": "HS1005",
+      "name": "Trần Thị Mai",
+      "classId": "12A2",
+      "grade": 12,
+      "username": "mai12a2",
+      "status": "active",
+      "totalPoints": 875,
+      "gamesPlayed": 18,
+      "badge": "Kiên trì"
+    },
+    {
+      "id": "HS1006",
+      "code": "HS1006",
+      "name": "Phạm Đức Anh",
+      "classId": "10A3",
+      "grade": 10,
+      "username": "ducanh10a3",
+      "status": "active",
+      "totalPoints": 850,
+      "gamesPlayed": 16,
+      "badge": "Xuất sắc"
+    },
+    {
+      "id": "HS1007",
+      "code": "HS1007",
+      "name": "Lê Minh Trang",
+      "classId": "11A1",
+      "grade": 11,
+      "username": "minhtrang11a1",
+      "status": "active",
+      "totalPoints": 830,
+      "gamesPlayed": 15,
+      "badge": "Tài năng Toán học"
+    },
+    {
+      "id": "HS1008",
+      "code": "HS1008",
+      "name": "Hoàng Quốc Việt",
+      "classId": "10A1",
+      "grade": 10,
+      "username": "viet10a1",
+      "status": "active",
+      "totalPoints": 810,
+      "gamesPlayed": 14,
+      "badge": "Siêu tốc"
+    },
+    {
+      "id": "HS1009",
+      "code": "HS1009",
+      "name": "Đỗ Thảo Vy",
+      "classId": "10A2",
+      "grade": 10,
+      "username": "thaovy10a2",
+      "status": "active",
+      "totalPoints": 790,
+      "gamesPlayed": 13,
+      "badge": "Kiên trì"
+    },
+    {
+      "id": "HS1010",
+      "code": "HS1010",
+      "name": "Vũ Tùng Dương",
+      "classId": "12A1",
+      "grade": 12,
+      "username": "tungduong12a1",
+      "status": "active",
+      "totalPoints": 770,
+      "gamesPlayed": 12,
+      "badge": "Xuất sắc"
+    }
+  ],
+  "games": [
+    {
+      "id": "g-uploaded-html5-ban-bong",
+      "title": "Game HTML5: Bắn Bóng Toán Học & Phản Xạ Nhanh",
+      "category": "giai-tri",
+      "categoryName": "Game Giải trí Không giới hạn",
+      "grade": "all",
+      "topic": "Phản xạ nhanh, tư duy số học & thư giãn",
+      "difficulty": "Dễ",
+      "questionsCount": 1,
+      "durationMinutes": 10,
+      "maxScore": 100,
+      "active": true,
+      "description": "Trò chơi HTML5 đồ họa mượt mà, thư giãn và rèn luyện phản xạ tính nhẩm số học sau giờ học căng thẳng. Hỗ trợ mở rộng toàn màn hình máy tính.",
+      "color": "#0284C7",
+      "bgCard": "#E0F2FE",
+      "fileUrl": "/uploads/games/demo_game_giai_tri_bong_bong.html",
+      "fileName": "Ban_Bong_Toan_Hoc_Relax.html",
+      "fileType": "html",
+      "fileSize": "1.2 MB",
+      "isUploaded": true,
+      "authorName": "Thầy Bùi Ngọc Thắng",
+      "uploadedAt": "2026-11-04T07:11:00.000Z"
+    },
+    {
+      "id": "g-uploaded-powerpoint-ham-so",
+      "title": "Game PowerPoint: Khảo Sát Hàm Số & Đạo Hàm THPT",
+      "category": "trac-nghiem",
+      "categoryName": "Game Trắc nghiệm Toán học",
+      "grade": 12,
+      "topic": "Đạo hàm, Cực trị & Khảo sát đồ thị hàm số",
+      "difficulty": "Trung bình",
+      "questionsCount": 10,
+      "durationMinutes": 15,
+      "maxScore": 100,
+      "active": true,
+      "description": "Bài giảng trò chơi PowerPoint tương tác chuyên đề Đạo hàm & Hàm số lớp 12 do Thầy Bùi Ngọc Thắng biên soạn. Hỗ trợ phóng to hết màn hình để trình chiếu và trả lời câu hỏi trực quan.",
+      "color": "#E11D48",
+      "bgCard": "#FFE4E6",
+      "fileUrl": "/uploads/games/demo_game_toan_powerpoint.html",
+      "fileName": "Game_Toan_DaoHam_HamSo.pptx",
+      "fileType": "powerpoint",
+      "fileSize": "3.8 MB",
+      "isUploaded": true,
+      "authorName": "Thầy Bùi Ngọc Thắng",
+      "uploadedAt": "2026-11-04T07:10:00.000Z"
+    },
+    {
+      "id": "g-trac-nghiem-1",
+      "title": "Trắc nghiệm Toán học 4 đáp án",
+      "category": "trac-nghiem",
+      "categoryName": "Game Trắc nghiệm Toán học",
+      "grade": "all",
+      "topic": "Hàm số, Lượng giác & Hình học không gian",
+      "difficulty": "Trung bình",
+      "questionsCount": 10,
+      "durationMinutes": 10,
+      "maxScore": 100,
+      "active": true,
+      "description": "Thử thách 10 câu hỏi trắc nghiệm Toán THPT bám sát cấu trúc đề thi tốt nghiệp và kiểm tra định kỳ.",
+      "color": "#0878DC",
+      "bgCard": "#E0F2FE"
+    },
+    {
+      "id": "g-60s-tinh-nhanh",
+      "title": "Thử thách tính nhanh 60 giây",
+      "category": "trac-nghiem",
+      "categoryName": "Game Trắc nghiệm Toán học",
+      "grade": "all",
+      "topic": "Đại số & Giải tích phản xạ nhanh",
+      "difficulty": "Khó",
+      "questionsCount": 15,
+      "durationMinutes": 1,
+      "maxScore": 100,
+      "active": true,
+      "description": "Chạy đua với thời gian 60 giây! Giải càng nhiều phép tính và câu hỏi ngắn càng nhận điểm bứt phá.",
+      "color": "#0284C7",
+      "bgCard": "#E0F2FE"
+    },
+    {
+      "id": "g-tu-duy-logic",
+      "title": "Game Tư duy & Tìm quy luật số",
+      "category": "tu-duy",
+      "categoryName": "Game Tư duy và Trí tuệ",
+      "grade": "all",
+      "topic": "Dãy số, Cấp số cộng, Cấp số nhân & Logic",
+      "difficulty": "Trung bình",
+      "questionsCount": 8,
+      "durationMinutes": 12,
+      "maxScore": 100,
+      "active": true,
+      "description": "Khám phá các dãy số bí ẩn, quy luật hình học và bảng tư duy logic toán học đỉnh cao.",
+      "color": "#16A34A",
+      "bgCard": "#DCFCE7"
+    },
+    {
+      "id": "g-sudoku-toan",
+      "title": "Sudoku Ma trận Toán học",
+      "category": "tu-duy",
+      "categoryName": "Game Tư duy và Trí tuệ",
+      "grade": "all",
+      "topic": "Tư duy logic tổ hợp & Số học",
+      "difficulty": "Khó",
+      "questionsCount": 1,
+      "durationMinutes": 15,
+      "maxScore": 100,
+      "active": true,
+      "description": "Điền các con số từ 1 đến 9 vào lưới 9x9 sao cho mỗi hàng, mỗi cột và mỗi ô 3x3 không trùng lặp.",
+      "color": "#15803D",
+      "bgCard": "#DCFCE7"
+    },
+    {
+      "id": "g-hinh-hoc-do-thi",
+      "title": "Nhận diện đồ thị hàm số & Hình học không gian",
+      "category": "hinh-hoc",
+      "categoryName": "Game Hình học",
+      "grade": 12,
+      "topic": "Khảo sát hàm số, Khối đa diện & Oxyz",
+      "difficulty": "Trung bình",
+      "questionsCount": 10,
+      "durationMinutes": 10,
+      "maxScore": 100,
+      "active": true,
+      "description": "Quan sát đồ thị parabol, hàm bậc ba, hàm phân thức và nhận diện bảng biến thiên, tính chất hình học.",
+      "color": "#9333EA",
+      "bgCard": "#F3E8FF"
+    },
+    {
+      "id": "g-vong-quay-may-man",
+      "title": "Vòng quay may mắn Toán học",
+      "category": "tuong-tac",
+      "categoryName": "Vòng quay may mắn",
+      "grade": "all",
+      "topic": "Kiến thức tổng hợp khối 10-11-12",
+      "difficulty": "Dễ",
+      "questionsCount": 8,
+      "durationMinutes": 8,
+      "maxScore": 120,
+      "active": true,
+      "description": "Quay vòng quay để nhận điểm thưởng ngẫu nhiên và giải cứu các câu hỏi Toán học kịch tính!",
+      "color": "#D97706",
+      "bgCard": "#FFEDD5"
+    },
+    {
+      "id": "g-trieu-phu-toan",
+      "title": "Ai là triệu phú Toán học THPT",
+      "category": "tuong-tac",
+      "categoryName": "Ai là triệu phú Toán học",
+      "grade": "all",
+      "topic": "Chinh phục 15 câu hỏi Toán THPT đỉnh cao",
+      "difficulty": "Nâng cao",
+      "questionsCount": 15,
+      "durationMinutes": 15,
+      "maxScore": 150,
+      "active": true,
+      "description": "Format chuẩn Ai Là Triệu Phú với 4 sự trợ giúp: 50:50, Hỏi ý kiến khán giả, Đổi câu hỏi, Gọi thầy cô.",
+      "color": "#0891B2",
+      "bgCard": "#CFFAFE"
+    },
+    {
+      "id": "g-giai-tri-memory",
+      "title": "Lật thẻ trí nhớ Công thức Toán",
+      "category": "giai-tri",
+      "categoryName": "Game Giải trí Không giới hạn",
+      "grade": "all",
+      "topic": "Công thức Lượng giác, Đạo hàm & Hình học",
+      "difficulty": "Dễ",
+      "questionsCount": 16,
+      "durationMinutes": 5,
+      "maxScore": 100,
+      "active": true,
+      "description": "Rèn luyện trí nhớ và phản xạ mắt bằng cách lật ghép các cặp công thức toán học tương ứng.",
+      "color": "#7C3AED",
+      "bgCard": "#EDE9FE"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "ROOM-102938",
+      "code": "864219",
+      "title": "Giao lưu Khảo sát Hàm số & Hình không gian 12A1",
+      "gameId": "g-trac-nghiem-1",
+      "gameTitle": "Trắc nghiệm Toán học 4 đáp án",
+      "classes": [
+        "12A1",
+        "12A2"
+      ],
+      "startTime": "2026-11-01T08:00",
+      "endTime": "2026-11-10T22:00",
+      "maxAttempts": 2,
+      "allowReplay": true,
+      "status": "active",
+      "participantsCount": 38,
+      "createdBy": "Thầy Bùi Ngọc Thắng"
+    },
+    {
+      "id": "ROOM-554433",
+      "code": "520131",
+      "title": "Đấu trường Ai là triệu phú Toán 11 Đan Phượng",
+      "gameId": "g-trieu-phu-toan",
+      "gameTitle": "Ai là triệu phú Toán học THPT",
+      "classes": [
+        "11A1",
+        "11A2"
+      ],
+      "startTime": "2026-11-02T19:00",
+      "endTime": "2026-11-08T21:00",
+      "maxAttempts": 1,
+      "allowReplay": false,
+      "status": "active",
+      "participantsCount": 42,
+      "createdBy": "Thầy Bùi Ngọc Thắng"
+    }
+  ],
+  "attempts": [
+    {
+      "id": "att-1793805109587",
+      "studentCode": "HS1001",
+      "studentName": "Khách tham quan",
+      "className": "12A1",
+      "gameId": "g-trieu-phu-toan",
+      "gameTitle": "Ai là triệu phú Toán học THPT",
+      "roomCode": "",
+      "startedAt": "2026-11-04T15:11:49.081Z",
+      "endedAt": "2026-11-04T15:11:49.081Z",
+      "durationSeconds": 315,
+      "totalQuestions": 15,
+      "correctCount": 8,
+      "incorrectCount": 1,
+      "score": 20,
+      "status": "completed"
+    },
+    {
+      "id": "att-1793787007169",
+      "studentCode": "HS1001",
+      "studentName": "Nguyễn Minh Anh",
+      "className": "12A1",
+      "gameId": "g-trac-nghiem-1",
+      "gameTitle": "Trắc nghiệm Toán học 4 đáp án",
+      "roomCode": "",
+      "startedAt": "2026-11-04T10:10:07.169Z",
+      "endedAt": "2026-11-04T10:10:07.169Z",
+      "durationSeconds": 300,
+      "totalQuestions": 10,
+      "correctCount": 9,
+      "incorrectCount": 1,
+      "score": 95,
+      "status": "completed"
+    },
+    {
+      "id": "att-1",
+      "studentCode": "HS1001",
+      "studentName": "Nguyễn Minh Anh",
+      "className": "12A1",
+      "gameId": "g-trac-nghiem-1",
+      "gameTitle": "Trắc nghiệm Toán học 4 đáp án",
+      "roomCode": "864219",
+      "startedAt": "2026-11-04T07:20:00Z",
+      "endedAt": "2026-11-04T07:28:40Z",
+      "durationSeconds": 520,
+      "totalQuestions": 10,
+      "correctCount": 10,
+      "incorrectCount": 0,
+      "score": 100,
+      "status": "completed"
+    },
+    {
+      "id": "att-2",
+      "studentCode": "HS1002",
+      "studentName": "Trần Đức Minh",
+      "className": "11A2",
+      "gameId": "g-trieu-phu-toan",
+      "gameTitle": "Ai là triệu phú Toán học THPT",
+      "roomCode": "520131",
+      "startedAt": "2026-11-04T07:50:00Z",
+      "endedAt": "2026-11-04T08:01:10Z",
+      "durationSeconds": 670,
+      "totalQuestions": 15,
+      "correctCount": 14,
+      "incorrectCount": 1,
+      "score": 98,
+      "status": "completed"
+    },
+    {
+      "id": "att-3",
+      "studentCode": "HS1003",
+      "studentName": "Lê Thị Hà",
+      "className": "12A3",
+      "gameId": "g-hinh-hoc-do-thi",
+      "gameTitle": "Nhận diện đồ thị hàm số & Hình học không gian",
+      "roomCode": "",
+      "startedAt": "2026-11-04T08:15:00Z",
+      "endedAt": "2026-11-04T08:24:00Z",
+      "durationSeconds": 540,
+      "totalQuestions": 10,
+      "correctCount": 9,
+      "incorrectCount": 1,
+      "score": 96,
+      "status": "completed"
+    },
+    {
+      "id": "att-4",
+      "studentCode": "HS1004",
+      "studentName": "Nguyễn Văn Nam",
+      "className": "11A1",
+      "gameId": "g-60s-tinh-nhanh",
+      "gameTitle": "Thử thách tính nhanh 60 giây",
+      "roomCode": "",
+      "startedAt": "2026-11-04T08:40:00Z",
+      "endedAt": "2026-11-04T08:41:00Z",
+      "durationSeconds": 60,
+      "totalQuestions": 15,
+      "correctCount": 14,
+      "incorrectCount": 1,
+      "score": 95,
+      "status": "completed"
+    },
+    {
+      "id": "att-5",
+      "studentCode": "HS1005",
+      "studentName": "Trần Thị Mai",
+      "className": "12A2",
+      "gameId": "g-trac-nghiem-1",
+      "gameTitle": "Trắc nghiệm Toán học 4 đáp án",
+      "roomCode": "864219",
+      "startedAt": "2026-11-04T09:00:00Z",
+      "endedAt": "2026-11-04T09:08:15Z",
+      "durationSeconds": 495,
+      "totalQuestions": 10,
+      "correctCount": 10,
+      "incorrectCount": 0,
+      "score": 100,
+      "status": "completed"
+    },
+    {
+      "id": "att-6",
+      "studentCode": "HS1006",
+      "studentName": "Phạm Đức Anh",
+      "className": "10A3",
+      "gameId": "g-tu-duy-logic",
+      "gameTitle": "Game Tư duy & Tìm quy luật số",
+      "roomCode": "",
+      "startedAt": "2026-11-04T09:10:00Z",
+      "endedAt": "2026-11-04T09:18:00Z",
+      "durationSeconds": 480,
+      "totalQuestions": 8,
+      "correctCount": 7,
+      "incorrectCount": 1,
+      "score": 90,
+      "status": "completed"
+    }
+  ],
+  "questions": [
+    {
+      "question": "Hàm số y = x^3 - 3x^2 + 2 đồng biến trên khoảng nào dưới đây?",
+      "options": [
+        "(0; 2)",
+        "(-∞; 0) và (2; +∞)",
+        "(2; +∞)",
+        "(-∞; 2)"
+      ],
+      "correctIndex": 1,
+      "explanation": "Ta có y' = 3x^2 - 6x = 3x(x - 2). Cho y' > 0 <=> x < 0 hoặc x > 2. Vậy hàm số đồng biến trên (-∞; 0) và (2; +∞).",
+      "topic": "Đơn điệu của hàm số"
+    },
+    {
+      "question": "Cho hàm số y = f(x) có bảng biến thiên với f'(x) đổi dấu từ dương sang âm tại x = 1. Điểm cực đại của hàm số là:",
+      "options": [
+        "x = 1",
+        "x = -1",
+        "y = 1",
+        "x = 0"
+      ],
+      "correctIndex": 0,
+      "explanation": "Khi đạo hàm đổi dấu từ dương sang âm qua x0 thì x0 là điểm cực đại của hàm số.",
+      "topic": "Cực trị của hàm số"
+    },
+    {
+      "question": "Tiệm cận ngang của đồ thị hàm số y = (2x - 1)/(x + 1) là đường thẳng:",
+      "options": [
+        "y = 2",
+        "x = -1",
+        "y = -1",
+        "x = 2"
+      ],
+      "correctIndex": 0,
+      "explanation": "lim(x->∞) (2x - 1)/(x + 1) = 2. Do đó tiệm cận ngang là đường thẳng y = 2.",
+      "topic": "Tiệm cận"
+    },
+    {
+      "question": "Tập xác định của hàm số y = log2(2x - 4) là:",
+      "options": [
+        "(2; +∞)",
+        "[2; +∞)",
+        "(-∞; 2)",
+        "R \\ {2}"
+      ],
+      "correctIndex": 0,
+      "explanation": "Điều kiện xác định: 2x - 4 > 0 <=> x > 2. Vậy tập xác định D = (2; +∞).",
+      "topic": "Mũ và Logarit"
+    },
+    {
+      "question": "Trong không gian Oxyz, cho mặt phẳng (P): 2x - y + 3z - 5 = 0. Vectơ pháp tuyến của (P) là:",
+      "options": [
+        "n = (2; -1; 3)",
+        "n = (2; 1; 3)",
+        "n = (2; -1; -5)",
+        "n = (-2; 1; 3)"
+      ],
+      "correctIndex": 0,
+      "explanation": "Phương trình tổng quát Ax + By + Cz + D = 0 có VTPT là n = (A; B; C) = (2; -1; 3).",
+      "topic": "Hình học Oxyz"
+    },
+    {
+      "question": "Nghiệm của phương trình cos(x) = 1/2 là:",
+      "options": [
+        "x = ±π/3 + k2π (k ∈ Z)",
+        "x = ±π/6 + k2π (k ∈ Z)",
+        "x = π/3 + kπ (k ∈ Z)",
+        "x = ±2π/3 + k2π (k ∈ Z)"
+      ],
+      "correctIndex": 0,
+      "explanation": "cos(x) = 1/2 = cos(π/3) <=> x = ±π/3 + k2π, k ∈ Z.",
+      "topic": "Phương trình lượng giác"
+    },
+    {
+      "question": "Cho cấp số nhân (u_n) có u_1 = 3 và công bội q = 2. Số hạng u_5 bằng:",
+      "options": [
+        "48",
+        "96",
+        "24",
+        "192"
+      ],
+      "correctIndex": 0,
+      "explanation": "Công thức u_n = u_1 * q^(n-1). Với n = 5: u_5 = 3 * 2^4 = 3 * 16 = 48.",
+      "topic": "Dãy số & Cấp số"
+    }
+  ]
+}

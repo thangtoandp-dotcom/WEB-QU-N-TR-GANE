@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Trình Chiếu PowerPoint: Ôn Tập Đạo Hàm & Hàm Số</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Times New Roman", Times, serif; }
+    body { background: #041E42; color: #FFFFFF; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    .ppt-header {
+      background: #063B8E;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #00CFFF;
+    }
+    .ppt-title { font-size: 19px; font-weight: bold; color: #FFDE59; display: flex; align-items: center; gap: 8px; }
+    .ppt-badge { background: #E11D48; color: white; padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; }
+    
+    .slide-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .slide-card {
+      background: linear-gradient(135deg, #0A2D6C 0%, #063B8E 50%, #084FA0 100%);
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      border: 3px solid #00CFFF;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 36px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .slide-card::before {
+      content: "THPT Đan Phượng - Môn Toán - Thầy Bùi Ngọc Thắng";
+      position: absolute;
+      top: 14px;
+      right: 24px;
+      font-size: 13px;
+      color: #00CFFF;
+      font-style: italic;
+    }
+    
+    .slide-card h1 { font-size: 38px; color: #FFDE59; text-align: center; text-transform: uppercase; margin-bottom: 12px; }
+    .slide-card h2 { font-size: 26px; color: #FFFFFF; text-align: center; line-height: 1.4; }
+    .slide-card p { font-size: 18px; color: #E0F2FE; text-align: center; line-height: 1.6; }
+    
+    .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+    .choice-btn {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid #00CFFF;
+      color: white;
+      padding: 16px 20px;
+      border-radius: 14px;
+      font-size: 19px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .choice-btn:hover { background: #00CFFF; color: #041E42; transform: translateY(-2px); }
+    .choice-btn.correct { background: #10B981 !important; color: white !important; border-color: #34D399 !important; }
+    .choice-btn.wrong { background: #EF4444 !important; color: white !important; border-color: #F87171 !important; }
+    
+    .ppt-controls {
+      background: #021124;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #1E3A8A;
+    }
+    .btn {
+      background: #0878DC;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #0284C7; }
+    .btn:disabled { background: #475569; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <div class="ppt-header">
+    <div class="ppt-title">
+      <span class="ppt-badge">POWERPOINT GAME</span>
+      <span>Ôn Tập Chuyên Đề: Đạo Hàm & Khảo Sát Hàm Số</span>
+    </div>
+    <div style="font-size: 14px; color: #E0F2FE;">
+      Điểm số: <strong id="score-display" style="color: #FFD700; font-size: 18px;">0</strong> / 100
+    </div>
+  </div>
+
+  <div class="slide-stage">
+    <div class="slide-card" id="slide-content">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+
+  <div class="ppt-controls">
+    <button class="btn" id="prev-btn" onclick="prevSlide()">◀ Slide Trước</button>
+    <div style="color: #00CFFF; font-weight: bold;" id="slide-num">Slide 1 / 4</div>
+    <button class="btn" id="next-btn" onclick="nextSlide()">Slide Kế Tiếp ▶</button>
+  </div>
+
+  <script>
+    const slides = [
+      {
+        type: 'intro',
+        title: 'TRÒ CHƠI HỌC TẬP TOÁN HỌC',
+        subtitle: 'CHUYÊN ĐỀ HÀM SỐ & ĐẠO HÀM KHỐI 12',
+        desc: 'Thiết kế bởi: Thầy Bùi Ngọc Thắng - THPT Đan Phượng.<br>Bấm "Slide Kế Tiếp" để bắt đầu trả lời các câu hỏi tương tác tính điểm!'
+      },
+      {
+        type: 'question',
+        q: 'Câu 1: Đạo hàm của hàm số y = ln(x) với x > 0 là:',
+        options: ['1/x', 'e^x', 'x', '1/(2x)'],
+        correct: 0,
+        explain: 'Công thức đạo hàm hàm logarit tự nhiên: (ln x)\' = 1/x với x > 0.'
+      },
+      {
+        type: 'question',
+        q: 'Câu 2: Số điểm cực trị của hàm số bậc ba y = x³ - 3x + 2 là:',
+        options: ['2 điểm cực trị', '1 điểm cực trị', '0 điểm cực trị', '3 điểm cực trị'],
+        correct: 0,
+        explain: 'y\' = 3x² - 3 = 0 có 2 nghiệm phân biệt x = 1 và x = -1.'
+      },
+      {
+        type: 'end',
+        title: 'CHÚC MỪNG HOÀN THÀNH!',
+        subtitle: 'BẠN ĐÃ HOÀN THÀNH BÀI GAME POWERPOINT',
+        desc: 'Kết quả bài làm đã được lưu vào học bạ học tập THPT Đan Phượng.'
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let answered = {};
+
+    function renderSlide() {
+      const s = slides[current];
+      const container = document.getElementById('slide-content');
+      document.getElementById('slide-num').innerText = `Slide ${current + 1} / ${slides.length}`;
+      document.getElementById('prev-btn').disabled = current === 0;
+      document.getElementById('next-btn').disabled = current === slides.length - 1;
+
+      if (s.type === 'intro' || s.type === 'end') {
+        container.innerHTML = `
+          <div></div>
+          <div>
+            <h1>${s.title}</h1>
+            <h2>${s.subtitle}</h2>
+            <p style="margin-top: 18px;">${s.desc}</p>
+          </div>
+          <div style="text-align: center; color: #00CFFF; font-size: 14px;">
+            Nhấn các nút điều khiển phía dưới hoặc dùng phím mũi tên để chuyển slide
+          </div>
+        `;
+      } else {
+        const isAns = answered[current] !== undefined;
+        let optionsHtml = '';
+        s.options.forEach((opt, idx) => {
+          let extraClass = '';
+          if (isAns) {
+            if (idx === s.correct) extraClass = 'correct';
+            else if (idx === answered[current]) extraClass = 'wrong';
+          }
+          optionsHtml += `
+            <button class="choice-btn ${extraClass}" onclick="chooseOpt(${idx})" ${isAns ? 'disabled' : ''}>
+              <strong style="color: #FFDE59;">${['A', 'B', 'C', 'D'][idx]}.</strong>
+              <span>${opt}</span>
+            </button>
+          `;
+        });
+
+        container.innerHTML = `
+          <div>
+            <h2 style="font-size: 24px; text-align: left; color: #FFDE59; margin-bottom: 8px;">${s.q}</h2>
+          </div>
+          <div class="choices-grid">
+            ${optionsHtml}
+          </div>
+          <div style="min-height: 36px; margin-top: 12px; font-size: 16px; color: #E0F2FE;">
+            ${isAns ? `<strong>Giải thích:</strong> ${s.explain}` : 'Hãy chọn một phương án đúng để ghi 50 điểm!'}
+          </div>
+        `;
+      }
+    }
+
+    function chooseOpt(idx) {
+      if (answered[current] !== undefined) return;
+      answered[current] = idx;
+      if (idx === slides[current].correct) {
+        score += 50;
+        document.getElementById('score-display').innerText = score;
+      }
+      renderSlide();
+    }
+
+    function nextSlide() {
+      if (current < slides.length - 1) {
+        current++;
+        renderSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (current > 0) {
+        current--;
+        renderSlide();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    renderSlide();
+  </script>
+</body>
+</html>
