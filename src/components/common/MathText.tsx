@@ -13,11 +13,25 @@ interface MathTextProps {
 function autoFormatMath(raw: string): string {
   let str = raw.trim();
 
+  // Replace common textbook patterns in text with standard LaTeX delimiters
+  str = str.replace(/\(a\s*(?:khác|≠|!=)\s*0\)/gi, '($a \\ne 0$)');
+  str = str.replace(/\ba\s*(?:khác|≠|!=)\s*0\b/gi, '$a \\ne 0$');
+  str = str.replace(/trên\s*R\b/g, 'trên $\\mathbb{R}$');
+  str = str.replace(/\bvới\s*x\s*>\s*0\b/gi, 'với $x > 0$');
+  str = str.replace(/\by\s*=\s*ln\(x\)/gi, '$y = \\ln x$');
+  str = str.replace(/\by\s*=\s*ln\s*x\b/gi, '$y = \\ln x$');
+  str = str.replace(/\bln\(x\)/gi, '$\\ln x$');
+
   // If already contains LaTeX math markers $, return as is
   if (str.includes('$')) return str;
 
-  // If it's already raw LaTeX (e.g., starts with \frac or \sqrt)
-  if (/^\\(frac|sqrt|displaystyle|int|vec|lim|log|sin|cos|tan|pm)/.test(str)) {
+  // Single variable options: e.g. "x", "y", "a", "b"
+  if (/^[a-zA-Z]$/.test(str)) {
+    return `$${str}$`;
+  }
+
+  // If it's already raw LaTeX (e.g., starts with \frac, \dfrac or \sqrt)
+  if (/^\\(frac|dfrac|sqrt|displaystyle|int|vec|lim|log|sin|cos|tan|pm)/.test(str)) {
     return `$${str}$`;
   }
 
@@ -50,7 +64,7 @@ function autoFormatMath(raw: string): string {
     let latex = str
       .replace(/√(\d+)/g, '\\sqrt{$1}')
       .replace(/\^([a-zA-Z0-9]+)/g, '^{$1}')
-      .replace(/≠/g, '\\neq ')
+      .replace(/≠/g, '\\ne ')
       .replace(/≤/g, '\\le ')
       .replace(/≥/g, '\\ge ')
       .replace(/\s*\*\s*/g, ' \\cdot ');
@@ -74,7 +88,8 @@ function cleanKatexHtml(html: string): string {
     /<span class="mord mathbb">R<\/span>/g,
     '<span class="mord mathbb" style="font-family: KaTeX_AMS, serif; font-weight: normal;">ℝ</span>'
   );
-  // Strip any remaining Private Use Area characters
+  // Strip any remaining Private Use Area characters and guarantee ≠
+  cleaned = cleaned.replace(/≢/g, '≠');
   cleaned = cleaned.replace(/[\uE000-\uF8FF]/g, '');
   return cleaned;
 }
