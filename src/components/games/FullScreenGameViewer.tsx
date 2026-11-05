@@ -269,8 +269,17 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
       {/* Main Game Stage / Iframe Screen */}
       <div className="flex-1 w-full h-full relative bg-[#020B16] flex items-center justify-center overflow-hidden">
         
-        {/* If embed code provided */}
-        {game.embedCode && game.embedCode.includes('<iframe') ? (
+        {/* If direct HTML document provided (from Supabase html_content or uploaded HTML) */}
+        {game.embedCode && !game.embedCode.includes('<iframe') ? (
+          <iframe
+            key={keyCounter}
+            srcDoc={game.embedCode}
+            title={game.title}
+            className="w-full h-full border-0 select-none bg-white"
+            allow="fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; payment"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
+          />
+        ) : game.embedCode && game.embedCode.includes('<iframe') ? (
           <div 
             key={keyCounter}
             className="w-full h-full flex items-center justify-center [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"

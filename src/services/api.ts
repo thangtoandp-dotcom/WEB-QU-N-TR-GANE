@@ -1,7 +1,8 @@
 import * as XLSX from 'xlsx';
-import { Student, GameItem, GameRoom, GameAttempt, ClassItem, Question } from '../types';
+import { Student, GameItem, GameRoom, GameAttempt, ClassItem, Question, GameCategory } from '../types';
+import { supabase } from '../lib/supabase';
 
-// API client interacting with the Express backend
+// API client interacting with Supabase Cloud & Express backend
 export const api = {
   async getDb() {
     try {
@@ -15,6 +16,23 @@ export const api = {
   },
 
   async getClasses(): Promise<ClassItem[]> {
+    // 1. Try Supabase first
+    try {
+      const { data, error } = await supabase.from('classes').select('*').order('grade', { ascending: true });
+      if (!error && data && data.length > 0) {
+        return data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          grade: c.grade || (c.name.startsWith('10') ? 10 : c.name.startsWith('11') ? 11 : 12),
+          studentCount: c.total_students || c.student_count || 0,
+          homeroom: c.teacher || c.teacher_name || 'Bùi Ngọc Thắng'
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase getClasses fallback', e);
+    }
+
+    // 2. Fallback to Express local endpoint
     try {
       const res = await fetch('/api/classes');
       const data = await res.json();
@@ -25,6 +43,18 @@ export const api = {
   },
 
   async addClass(classData: Partial<ClassItem>): Promise<ClassItem | null> {
+    try {
+      await supabase.from('classes').insert([{
+        id: classData.id || `c${Date.now()}`,
+        name: classData.name,
+        grade: classData.grade,
+        total_students: classData.studentCount || 0,
+        teacher: classData.homeroom || 'Bùi Ngọc Thắng'
+      }]);
+    } catch (e) {
+      console.warn('Supabase addClass error', e);
+    }
+
     try {
       const res = await fetch('/api/classes', {
         method: 'POST',
@@ -39,6 +69,40 @@ export const api = {
   },
 
   async getStudents(params?: { classId?: string; grade?: number }): Promise<Student[]> {
+    // 1. Try Supabase first (reads 214+ real students)
+    try {
+      let query = supabase.from('students').select('*').order('name', { ascending: true });
+      if (params?.classId) {
+        query = query.or(`class_id.eq.${params.classId},class_name.eq.${params.classId}`);
+      }
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        let students: Student[] = data.map((s: any) => {
+          const gradeNum = s.class_name?.startsWith('10') ? 10 : s.class_name?.startsWith('11') ? 11 : 12;
+          return {
+            id: s.id,
+            code: s.code || s.id,
+            name: s.name,
+            classId: s.class_name || s.class_id,
+            grade: gradeNum,
+            username: s.code || s.name,
+            status: s.status === 'locked' ? 'locked' : 'active',
+            totalPoints: s.avg_score ? Math.round(s.avg_score * 10) : (s.total_score || (s.total_tests ? s.total_tests * 25 : 0)),
+            gamesPlayed: s.total_tests || s.games_played || 0,
+            badge: s.badge || s.notes || 'Học viên THPT Đan Phượng'
+          };
+        });
+
+        if (params?.grade) {
+          students = students.filter(st => st.grade === params.grade);
+        }
+        return students;
+      }
+    } catch (e) {
+      console.warn('Supabase getStudents fallback', e);
+    }
+
+    // 2. Fallback to Express endpoint
     try {
       const query = new URLSearchParams();
       if (params?.classId) query.set('classId', params.classId);
@@ -52,6 +116,21 @@ export const api = {
   },
 
   async addStudent(student: Partial<Student>): Promise<Student | null> {
+    try {
+      await supabase.from('students').insert([{
+        id: student.id || `s_${Date.now()}`,
+        code: student.code,
+        name: student.name,
+        class_name: student.classId,
+        status: student.status || 'active',
+        total_score: student.totalPoints || 0,
+        games_played: student.gamesPlayed || 0,
+        badge: student.badge || 'Học viên chăm chỉ'
+      }]);
+    } catch (e) {
+      console.warn('Supabase addStudent error', e);
+    }
+
     try {
       const res = await fetch('/api/students', {
         method: 'POST',
@@ -67,6 +146,19 @@ export const api = {
 
   async updateStudent(id: string, updates: Partial<Student>): Promise<Student | null> {
     try {
+      await supabase.from('students').update({
+        name: updates.name,
+        class_name: updates.classId,
+        status: updates.status,
+        total_score: updates.totalPoints,
+        games_played: updates.gamesPlayed,
+        badge: updates.badge
+      }).eq('id', id);
+    } catch (e) {
+      console.warn('Supabase updateStudent error', e);
+    }
+
+    try {
       const res = await fetch(`/api/students/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -81,6 +173,12 @@ export const api = {
 
   async deleteStudent(id: string): Promise<boolean> {
     try {
+      await supabase.from('students').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Supabase deleteStudent error', e);
+    }
+
+    try {
       const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
       const data = await res.json();
       return data.success;
@@ -90,6 +188,22 @@ export const api = {
   },
 
   async bulkAddStudents(students: Partial<Student>[]): Promise<boolean> {
+    try {
+      const records = students.map(s => ({
+        id: s.id || `s_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        code: s.code,
+        name: s.name,
+        class_name: s.classId,
+        status: 'active',
+        total_score: s.totalPoints || 0,
+        games_played: 0,
+        badge: s.badge || 'Học viên chăm chỉ'
+      }));
+      await supabase.from('students').upsert(records);
+    } catch (e) {
+      console.warn('Supabase bulkAddStudents error', e);
+    }
+
     try {
       const res = await fetch('/api/students/bulk', {
         method: 'POST',
@@ -104,12 +218,90 @@ export const api = {
   },
 
   async getGames(): Promise<GameItem[]> {
+    let supabaseGames: GameItem[] = [];
+
+    // 1. Fetch 34+ games directly from Supabase
+    try {
+      const { data, error } = await supabase.from('games').select('*').order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        supabaseGames = data.map((g: any) => {
+          let cat: GameCategory = 'trac-nghiem';
+          const titleLower = (g.title || '').toLowerCase();
+          if (
+            g.category === 'fun' || g.category === 'entertainment' || g.category === 'giai-tri' ||
+            titleLower.includes('cờ') || titleLower.includes('giải cứu') || titleLower.includes('đào vàng') ||
+            titleLower.includes('hứng quả') || titleLower.includes('rắn') || titleLower.includes('bốc bài') ||
+            titleLower.includes('đua tới') || titleLower.includes('bắn đĩa') || titleLower.includes('ong') ||
+            titleLower.includes('hái quả') || titleLower.includes('bậc thang')
+          ) {
+            cat = 'giai-tri';
+          } else if (titleLower.includes('hình học') || titleLower.includes('tọa độ') || titleLower.includes('vec tơ') || titleLower.includes('đập niêu')) {
+            cat = 'hinh-hoc';
+          } else if (titleLower.includes('tư duy') || titleLower.includes('caro') || titleLower.includes('khóa')) {
+            cat = 'tu-duy';
+          } else if (titleLower.includes('hđtn') || titleLower.includes('tương tác')) {
+            cat = 'tuong-tac';
+          }
+
+          let catName = g.category_name;
+          if (!catName || catName === 'Toán học & Tư duy') {
+            catName = cat === 'giai-tri' 
+              ? 'Game Giải trí Không giới hạn' 
+              : cat === 'hinh-hoc' 
+              ? 'Game Hình học & Không gian' 
+              : cat === 'tu-duy' 
+              ? 'Game Tư duy & Trí tuệ' 
+              : cat === 'tuong-tac' 
+              ? 'Game Tương tác Học tập' 
+              : 'Game Trắc nghiệm Toán';
+          }
+
+          return {
+            id: g.id,
+            title: g.title,
+            category: cat,
+            categoryName: catName,
+            grade: g.grade === '10' ? 10 : g.grade === '11' ? 11 : g.grade === '12' ? 12 : 'all',
+            topic: g.subtitle || g.topic || 'Toán học THPT Đan Phượng',
+            difficulty: g.difficulty || 'Trung bình',
+            questionsCount: g.quiz_questions?.length || g.questions_count || 10,
+            durationMinutes: g.estimated_minutes || g.duration_minutes || 15,
+            maxScore: g.max_score || 100,
+            active: g.active !== false,
+            description: g.description || g.subtitle || g.title,
+            color: g.thumbnail_color?.includes('indigo') || g.thumbnail_color?.includes('blue') ? '#0878DC' : g.color || '#0878DC',
+            bgCard: 'from-blue-600 to-indigo-700',
+            fileUrl: g.embed_url || g.file_url || undefined,
+            fileType: g.html_content ? 'html' : (g.file_type || (g.embed_url ? 'embed' : 'html')),
+            embedCode: g.html_content || g.embed_code || undefined,
+            isUploaded: Boolean(g.is_custom_upload || g.html_content || g.is_uploaded),
+            authorName: g.author || g.author_name || 'Thầy Bùi Ngọc Thắng',
+            uploadedAt: g.created_at || g.created_date
+          };
+        });
+      }
+    } catch (e) {
+      console.warn('Supabase getGames fallback', e);
+    }
+
+    // 2. Also combine with local system templates (Ai là triệu phú, Vòng quay, Sudoku)
     try {
       const res = await fetch('/api/games');
       const data = await res.json();
-      return data.games || [];
+      const localGames: GameItem[] = data.games || [];
+
+      if (supabaseGames.length === 0) return localGames;
+
+      const existingTitles = new Set(supabaseGames.map(g => g.title.toLowerCase().trim()));
+      const combined = [...supabaseGames];
+      for (const lg of localGames) {
+        if (!existingTitles.has(lg.title.toLowerCase().trim())) {
+          combined.push(lg);
+        }
+      }
+      return combined;
     } catch {
-      return [];
+      return supabaseGames;
     }
   },
 
@@ -127,6 +319,28 @@ export const api = {
   },
 
   async addGame(game: Partial<GameItem>): Promise<GameItem | null> {
+    // 1. Save to Supabase
+    try {
+      await supabase.from('games').insert([{
+        id: game.id || `game_${Date.now()}`,
+        title: game.title,
+        subtitle: game.topic,
+        description: game.description,
+        category: game.category,
+        category_name: game.categoryName,
+        grade: game.grade?.toString() || 'all',
+        difficulty: game.difficulty || 'Trung bình',
+        estimated_minutes: game.durationMinutes || 15,
+        html_content: game.embedCode || null,
+        embed_url: game.fileUrl || null,
+        is_custom_upload: true,
+        author: game.authorName || 'Thầy Bùi Ngọc Thắng'
+      }]);
+    } catch (e) {
+      console.warn('Supabase addGame error', e);
+    }
+
+    // 2. Also sync to local backend
     try {
       const res = await fetch('/api/games', {
         method: 'POST',
@@ -142,6 +356,20 @@ export const api = {
 
   async updateGame(id: string, updates: Partial<GameItem>): Promise<GameItem | null> {
     try {
+      await supabase.from('games').update({
+        title: updates.title,
+        subtitle: updates.topic,
+        description: updates.description,
+        difficulty: updates.difficulty,
+        grade: updates.grade?.toString(),
+        html_content: updates.embedCode,
+        embed_url: updates.fileUrl
+      }).eq('id', id);
+    } catch (e) {
+      console.warn('Supabase updateGame error', e);
+    }
+
+    try {
       const res = await fetch(`/api/games/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -156,6 +384,12 @@ export const api = {
 
   async deleteGame(id: string): Promise<boolean> {
     try {
+      await supabase.from('games').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Supabase deleteGame error', e);
+    }
+
+    try {
       const res = await fetch(`/api/games/${id}`, { method: 'DELETE' });
       const data = await res.json();
       return data.success;
@@ -166,6 +400,29 @@ export const api = {
 
   async getRooms(): Promise<GameRoom[]> {
     try {
+      const { data, error } = await supabase.from('rooms').select('*').order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        return data.map((r: any) => ({
+          id: r.id,
+          code: r.code,
+          title: r.title,
+          gameId: r.game_id,
+          gameTitle: r.game_title,
+          classes: Array.isArray(r.classes) ? r.classes : [],
+          startTime: r.start_time,
+          endTime: r.end_time,
+          maxAttempts: r.max_attempts || 1,
+          allowReplay: Boolean(r.allow_replay),
+          status: r.status || 'active',
+          participantsCount: r.participants_count || 0,
+          createdBy: r.created_by || 'Bùi Ngọc Thắng'
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase getRooms fallback', e);
+    }
+
+    try {
       const res = await fetch('/api/rooms');
       const data = await res.json();
       return data.rooms || [];
@@ -175,6 +432,21 @@ export const api = {
   },
 
   async createRoom(room: Partial<GameRoom>): Promise<GameRoom | null> {
+    try {
+      await supabase.from('rooms').insert([{
+        id: room.id || `r_${Date.now()}`,
+        code: room.code,
+        title: room.title,
+        game_id: room.gameId,
+        game_title: room.gameTitle,
+        classes: room.classes || [],
+        status: 'active',
+        created_by: 'Bùi Ngọc Thắng'
+      }]);
+    } catch (e) {
+      console.warn('Supabase createRoom error', e);
+    }
+
     try {
       const res = await fetch('/api/rooms', {
         method: 'POST',
@@ -190,6 +462,30 @@ export const api = {
 
   async verifyRoom(code: string): Promise<{ success: boolean; room?: GameRoom; message?: string }> {
     try {
+      const { data } = await supabase.from('rooms').select('*').eq('code', code.trim().toUpperCase()).single();
+      if (data) {
+        return {
+          success: true,
+          room: {
+            id: data.id,
+            code: data.code,
+            title: data.title,
+            gameId: data.game_id,
+            gameTitle: data.game_title,
+            classes: Array.isArray(data.classes) ? data.classes : [],
+            startTime: data.start_time,
+            endTime: data.end_time,
+            maxAttempts: data.max_attempts || 1,
+            allowReplay: Boolean(data.allow_replay),
+            status: data.status || 'active',
+            participantsCount: data.participants_count || 0,
+            createdBy: data.created_by || 'Bùi Ngọc Thắng'
+          }
+        };
+      }
+    } catch {}
+
+    try {
       const res = await fetch(`/api/rooms/verify/${code}`);
       return await res.json();
     } catch (e) {
@@ -198,6 +494,35 @@ export const api = {
   },
 
   async getAttempts(params?: { studentCode?: string; roomCode?: string; className?: string }): Promise<GameAttempt[]> {
+    try {
+      let query = supabase.from('attempts').select('*').order('started_at', { ascending: false });
+      if (params?.studentCode) query = query.eq('student_code', params.studentCode);
+      if (params?.roomCode) query = query.eq('room_code', params.roomCode);
+      if (params?.className) query = query.eq('class_name', params.className);
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        return data.map((a: any) => ({
+          id: a.id,
+          studentCode: a.student_code,
+          studentName: a.student_name,
+          className: a.class_name,
+          gameId: a.game_id,
+          gameTitle: a.game_title,
+          roomCode: a.room_code || undefined,
+          startedAt: a.started_at,
+          endedAt: a.ended_at,
+          durationSeconds: a.duration_seconds || 0,
+          totalQuestions: a.total_questions || 10,
+          correctCount: a.correct_count || 0,
+          incorrectCount: a.incorrect_count || 0,
+          score: Number(a.score) || 0,
+          status: a.status || 'completed'
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase getAttempts fallback', e);
+    }
+
     try {
       const query = new URLSearchParams();
       if (params?.studentCode) query.set('studentCode', params.studentCode);
@@ -212,6 +537,28 @@ export const api = {
   },
 
   async saveAttempt(attempt: Partial<GameAttempt>): Promise<GameAttempt | null> {
+    try {
+      await supabase.from('attempts').insert([{
+        id: attempt.id || `att_${Date.now()}`,
+        student_code: attempt.studentCode || 'HS1001',
+        student_name: attempt.studentName || 'Học sinh',
+        class_name: attempt.className || '12A1',
+        game_id: attempt.gameId,
+        game_title: attempt.gameTitle,
+        room_code: attempt.roomCode || null,
+        started_at: attempt.startedAt || new Date().toISOString(),
+        ended_at: attempt.endedAt || new Date().toISOString(),
+        duration_seconds: attempt.durationSeconds || 0,
+        total_questions: attempt.totalQuestions || 10,
+        correct_count: attempt.correctCount || 0,
+        incorrect_count: attempt.incorrectCount || 0,
+        score: attempt.score || 0,
+        status: attempt.status || 'completed'
+      }]);
+    } catch (e) {
+      console.warn('Supabase saveAttempt error', e);
+    }
+
     try {
       const res = await fetch('/api/attempts', {
         method: 'POST',
