@@ -4,6 +4,7 @@ import { Award, ArrowRight, RotateCcw, CheckCircle2, XCircle } from 'lucide-reac
 import { GameItem, UserProfile } from '../../types';
 import { api } from '../../services/api';
 import { MathText } from '../common/MathText';
+import { soundService } from '../../services/soundService';
 
 interface GeometryGamePlayerProps {
   game: GameItem;
@@ -81,20 +82,26 @@ export const GeometryGamePlayer: React.FC<GeometryGamePlayerProps> = ({
 
   const handleSelect = (idx: number) => {
     if (isAnswered) return;
+    soundService.playClick();
     setSelectedOpt(idx);
     setIsAnswered(true);
 
     if (idx === q.correct) {
+      soundService.playCorrect();
       setScore((s) => s + 25);
+    } else {
+      soundService.playWrong();
     }
   };
 
   const handleNext = async () => {
+    soundService.playClick();
     if (currentIdx + 1 < questions.length) {
       setCurrentIdx((c) => c + 1);
       setSelectedOpt(null);
       setIsAnswered(false);
     } else {
+      soundService.playVictory();
       setIsFinished(true);
 
       await api.saveAttempt({

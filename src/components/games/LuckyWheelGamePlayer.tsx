@@ -4,6 +4,7 @@ import { RotateCw, Award, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { GameItem, UserProfile } from '../../types';
 import { api } from '../../services/api';
 import { MathText } from '../common/MathText';
+import { soundService } from '../../services/soundService';
 
 interface LuckyWheelGamePlayerProps {
   game: GameItem;
@@ -78,6 +79,12 @@ export const LuckyWheelGamePlayer: React.FC<LuckyWheelGamePlayerProps> = ({
     setIsSpinning(true);
     setCurrentReward(null);
 
+    // Play tick sound while spinning
+    const spinInterval = setInterval(() => {
+      soundService.playSpinTick();
+    }, 110);
+    setTimeout(() => clearInterval(spinInterval), 3700);
+
     // Random slices
     const randomSlice = Math.floor(Math.random() * slices.length);
     const sliceAngle = 360 / slices.length;
@@ -92,6 +99,7 @@ export const LuckyWheelGamePlayer: React.FC<LuckyWheelGamePlayerProps> = ({
       const won = slices[randomSlice];
       setCurrentReward(won);
       setSpinsLeft((prev) => prev - 1);
+      soundService.playMagicChime();
 
       // Open a quick math bonus challenge
       const randomQ = mathChallenges[Math.floor(Math.random() * mathChallenges.length)];
@@ -107,9 +115,12 @@ export const LuckyWheelGamePlayer: React.FC<LuckyWheelGamePlayerProps> = ({
     setTotalScore(newTotal);
 
     if (isCorrect) {
+      soundService.playCorrect();
       try {
         confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
       } catch {}
+    } else {
+      soundService.playWrong();
     }
 
     if (spinsLeft <= 1) {
@@ -120,6 +131,7 @@ export const LuckyWheelGamePlayer: React.FC<LuckyWheelGamePlayerProps> = ({
   };
 
   const finishGame = async (finalPts: number) => {
+    soundService.playVictory();
     setIsFinished(true);
 
     await api.saveAttempt({

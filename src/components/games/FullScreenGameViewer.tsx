@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { GameItem, UserProfile } from '../../types';
 import { api } from '../../services/api';
+import { soundService } from '../../services/soundService';
 
 interface FullScreenGameViewerProps {
   game: GameItem;
@@ -100,6 +101,7 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
 
   const handleFinish = async () => {
     setIsCompleted(true);
+    soundService.playVictory();
     try {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
     } catch {}

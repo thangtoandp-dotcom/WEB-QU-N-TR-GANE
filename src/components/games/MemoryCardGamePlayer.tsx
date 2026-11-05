@@ -4,6 +4,7 @@ import { Clock, RotateCcw, Trophy, Award } from 'lucide-react';
 import { GameItem, UserProfile } from '../../types';
 import { api } from '../../services/api';
 import { MathText } from '../common/MathText';
+import { soundService } from '../../services/soundService';
 
 interface MemoryCardGamePlayerProps {
   game: GameItem;
@@ -77,6 +78,7 @@ export const MemoryCardGamePlayer: React.FC<MemoryCardGamePlayerProps> = ({
     const card = cards.find((c) => c.id === id);
     if (!card || card.isFlipped || card.isMatched) return;
 
+    soundService.playCardFlip();
     const newCards = cards.map((c) => (c.id === id ? { ...c, isFlipped: true } : c));
     setCards(newCards);
 
@@ -90,6 +92,7 @@ export const MemoryCardGamePlayer: React.FC<MemoryCardGamePlayerProps> = ({
 
       if (card1.pairId === card2.pairId) {
         // Matched!
+        soundService.playCorrect();
         setTimeout(() => {
           setCards((prev) =>
             prev.map((c) => (c.pairId === card1.pairId ? { ...c, isMatched: true } : c))
@@ -104,6 +107,7 @@ export const MemoryCardGamePlayer: React.FC<MemoryCardGamePlayerProps> = ({
         }, 500);
       } else {
         // Not matched, flip back
+        soundService.playWrong();
         setTimeout(() => {
           setCards((prev) =>
             prev.map((c) => (newFlipped.includes(c.id) ? { ...c, isFlipped: false } : c))
@@ -115,6 +119,7 @@ export const MemoryCardGamePlayer: React.FC<MemoryCardGamePlayerProps> = ({
   };
 
   const handleVictory = async () => {
+    soundService.playVictory();
     setIsWon(true);
     const score = Math.max(60, 100 - (moves - 6) * 4);
 

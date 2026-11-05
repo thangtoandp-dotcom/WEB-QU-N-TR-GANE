@@ -4,6 +4,7 @@ import { Clock, ArrowRight, CheckCircle2, XCircle, Trophy, RotateCcw, Award } fr
 import { GameItem, UserProfile } from '../../types';
 import { api } from '../../services/api';
 import { MathText } from '../common/MathText';
+import { soundService } from '../../services/soundService';
 
 interface QuizGamePlayerProps {
   game: GameItem;
@@ -133,6 +134,7 @@ export const QuizGamePlayer: React.FC<QuizGamePlayerProps> = ({
     });
 
     try {
+      soundService.playVictory();
       confetti({
         particleCount: 120,
         spread: 70,
@@ -150,14 +152,17 @@ export const QuizGamePlayer: React.FC<QuizGamePlayerProps> = ({
 
     const isRight = idx === questions[currentIndex].correct;
     if (isRight) {
+      soundService.playCorrect();
       setCorrectCount((c) => c + 1);
       setScore((s) => s + Math.round(game.maxScore / questions.length));
     } else {
+      soundService.playWrong();
       setIncorrectCount((c) => c + 1);
     }
   };
 
   const handleNext = () => {
+    soundService.playClick();
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((prev) => prev + 1);
       setSelectedOption(null);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Play, 
   HelpCircle, 
@@ -14,10 +14,13 @@ import {
   Maximize2,
   Presentation,
   FileCode,
-  Globe
+  Globe,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { GameItem, GameCategory } from '../types';
 import { GameUploadModal } from './common/GameUploadModal';
+import { soundService } from '../services/soundService';
 
 interface GamesGalleryProps {
   games: GameItem[];
@@ -43,6 +46,12 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [guideModalGame, setGuideModalGame] = useState<GameItem | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(soundService.isMuted());
+
+  // Listen to sound state
+  useEffect(() => {
+    return soundService.subscribe((muted) => setIsMuted(muted));
+  }, []);
 
   const categories = [
     { id: 'all', label: 'Tất cả' },
@@ -158,23 +167,46 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
         </div>
       </div>
 
-      {/* Fullscreen Notice Banner for Kho Trò Chơi */}
-      <div className="bg-gradient-to-r from-[#063B8E] via-[#0878DC] to-[#063B8E] text-white rounded-2xl p-3.5 sm:p-4 shadow-md border-2 border-[#00CFFF]/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* Fullscreen & Sound Effects Notice Banner for Kho Trò Chơi */}
+      <div className="bg-gradient-to-r from-[#063B8E] via-[#0878DC] to-[#063B8E] text-white rounded-2xl p-3.5 sm:p-4 shadow-md border-2 border-[#00CFFF]/40 flex flex-col md:flex-row items-center justify-between gap-3.5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#FFDE59] shrink-0 border border-white/20 shadow-inner">
             <Maximize2 className="w-5 h-5 text-amber-300 animate-pulse" />
           </div>
           <div>
-            <h4 className="font-bold text-base sm:text-lg text-[#FFDE59] font-serif leading-tight">
-              Chế Độ Mở Rộng Toàn Màn Hình Máy Tính (Full Screen)
+            <h4 className="font-bold text-base sm:text-lg text-[#FFDE59] font-serif leading-tight flex items-center gap-2">
+              <span>Chế Độ Mở Rộng Toàn Màn Hình & Âm Thanh Sinh Động</span>
+              <span className="text-xs bg-emerald-400 text-slate-950 font-sans px-2 py-0.5 rounded-full font-bold">
+                Mới
+              </span>
             </h4>
             <p className="text-xs sm:text-sm text-blue-100 font-serif">
-              Tất cả trò chơi trong Kho trò chơi đều hỗ trợ mở rộng 100% toàn màn hình máy tính để học sinh và thầy cô có không gian học tập, thi đấu rộng rãi nhất!
+              Tất cả trò chơi đều tích hợp hiệu ứng âm thanh (chuông đúng, báo sai, nhạc chiến thắng, vòng quay) và hỗ trợ mở rộng 100% màn hình máy tính!
             </p>
           </div>
         </div>
-        <div className="shrink-0 flex items-center gap-2 text-xs font-mono bg-black/30 px-3 py-1.5 rounded-xl border border-white/20 text-[#00CFFF]">
-          <span>Phím tắt: <strong>F11</strong> hoặc bấm <strong>Mở toàn màn hình</strong></span>
+
+        {/* Quick controls: Sound Toggle & Shortcut hint */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              const newMuted = soundService.toggleMute();
+              if (!newMuted) soundService.playCorrect();
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border transition-all cursor-pointer shadow-sm active:scale-95 ${
+              isMuted
+                ? 'bg-red-500/20 text-red-200 border-red-400/50 hover:bg-red-500/30'
+                : 'bg-emerald-500/30 text-emerald-200 border-emerald-400/60 hover:bg-emerald-500/40'
+            }`}
+            title="Bật hoặc tắt âm thanh cho tất cả trò chơi"
+          >
+            {isMuted ? <VolumeX className="w-4 h-4 text-red-300" /> : <Volume2 className="w-4 h-4 text-emerald-300 animate-pulse" />}
+            <span>{isMuted ? 'Âm thanh: Đang tắt' : 'Âm thanh: Đang bật'}</span>
+          </button>
+
+          <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono bg-black/30 px-3 py-1.5 rounded-xl border border-white/20 text-[#00CFFF]">
+            <span>Toàn màn hình: <strong>F11</strong></span>
+          </div>
         </div>
       </div>
 

@@ -6,9 +6,12 @@ import {
   RotateCcw, 
   Sparkles, 
   Monitor,
-  HelpCircle
+  HelpCircle,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { GameItem } from '../../types';
+import { soundService } from '../../services/soundService';
 
 interface FullScreenGameContainerProps {
   game: GameItem;
@@ -23,6 +26,12 @@ export const FullScreenGameContainer: React.FC<FullScreenGameContainerProps> = (
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMuted, setIsMuted] = useState(soundService.isMuted());
+
+  // Listen to sound mute state changes
+  useEffect(() => {
+    return soundService.subscribe((muted) => setIsMuted(muted));
+  }, []);
 
   // Monitor HTML5 fullscreen changes
   useEffect(() => {
@@ -124,8 +133,36 @@ export const FullScreenGameContainer: React.FC<FullScreenGameContainerProps> = (
           </div>
         </div>
 
-        {/* Right Side: Game Title & Big Fullscreen Toggle Button */}
-        <div className="flex items-center gap-2.5">
+        {/* Right Side: Sound Toggle & Big Fullscreen Toggle Button */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Sound Toggle Button */}
+          <button
+            onClick={() => {
+              const newMuted = soundService.toggleMute();
+              if (!newMuted) soundService.playClick();
+            }}
+            className={`px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer border active:scale-95 ${
+              isMuted
+                ? 'bg-red-500/20 text-red-300 border-red-500/40 hover:bg-red-500/30'
+                : isFullscreen
+                ? 'bg-white/10 text-emerald-300 border-emerald-400/40 hover:bg-white/20'
+                : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+            }`}
+            title={isMuted ? 'Bật âm thanh trò chơi' : 'Tắt âm thanh trò chơi'}
+          >
+            {isMuted ? (
+              <>
+                <VolumeX className="w-4 h-4 text-red-400" />
+                <span className="hidden sm:inline">Tắt âm</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
+                <span className="hidden sm:inline">Bật âm</span>
+              </>
+            )}
+          </button>
+
           <button
             onClick={toggleFullscreen}
             className={`px-4 py-2 rounded-xl font-black text-sm sm:text-base flex items-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95 ${

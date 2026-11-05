@@ -4,6 +4,7 @@ import { Phone, Users, Shuffle, Award, CheckCircle2, RotateCcw, HelpCircle } fro
 import { GameItem, UserProfile } from '../../types';
 import { api } from '../../services/api';
 import { MathText } from '../common/MathText';
+import { soundService } from '../../services/soundService';
 
 interface MillionaireGamePlayerProps {
   game: GameItem;
@@ -154,6 +155,7 @@ export const MillionaireGamePlayer: React.FC<MillionaireGamePlayerProps> = ({
   // 1. 50:50 Lifeline
   const useFiftyFifty = () => {
     if (!lifelines.fiftyFifty || isAnswered) return;
+    soundService.playMagicChime();
     const correctIdx = currentQ.correct;
     const wrongIndices = [0, 1, 2, 3].filter((idx) => idx !== correctIdx);
     // Shuffle and pick 2 to eliminate
@@ -165,6 +167,7 @@ export const MillionaireGamePlayer: React.FC<MillionaireGamePlayerProps> = ({
   // 2. Audience Lifeline
   const useAudience = () => {
     if (!lifelines.audience || isAnswered) return;
+    soundService.playMagicChime();
     setActiveDialog('audience');
     setLifelines((prev) => ({ ...prev, audience: false }));
   };
@@ -172,6 +175,7 @@ export const MillionaireGamePlayer: React.FC<MillionaireGamePlayerProps> = ({
   // 3. Call Teacher Bùi Ngọc Thắng
   const useTeacherCall = () => {
     if (!lifelines.teacherCall || isAnswered) return;
+    soundService.playMagicChime();
     setActiveDialog('teacher');
     setLifelines((prev) => ({ ...prev, teacherCall: false }));
   };
@@ -179,18 +183,21 @@ export const MillionaireGamePlayer: React.FC<MillionaireGamePlayerProps> = ({
   // 4. Switch Question
   const useSwitchQuestion = () => {
     if (!lifelines.switchQ || isAnswered) return;
+    soundService.playMagicChime();
     setEliminatedOptions([]);
     setLifelines((prev) => ({ ...prev, switchQ: false }));
   };
 
   const handleChoose = (idx: number) => {
     if (isAnswered) return;
+    soundService.playClick();
     setSelectedOpt(idx);
     setIsAnswered(true);
 
     const isCorrect = idx === currentQ.correct;
 
     if (isCorrect) {
+      soundService.playCorrect();
       if (currentLevel === 14) {
         // Won the game!
         setTimeout(() => {
@@ -205,6 +212,7 @@ export const MillionaireGamePlayer: React.FC<MillionaireGamePlayerProps> = ({
         }, 1200);
       }
     } else {
+      soundService.playWrong();
       // Wrong answer -> determine safe score
       let safeScore = 0;
       if (currentLevel >= 9) safeScore = 80;
@@ -217,6 +225,7 @@ export const MillionaireGamePlayer: React.FC<MillionaireGamePlayerProps> = ({
   };
 
   const endMillionaire = async (finalScore: number, message: string) => {
+    soundService.playVictory();
     setIsFinished(true);
     setStatusText(message);
 

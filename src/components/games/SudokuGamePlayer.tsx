@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import { Clock, Check, RotateCcw, HelpCircle, Trophy } from 'lucide-react';
 import { GameItem, UserProfile } from '../../types';
 import { api } from '../../services/api';
+import { soundService } from '../../services/soundService';
 
 interface SudokuGamePlayerProps {
   game: GameItem;
@@ -52,6 +53,7 @@ export const SudokuGamePlayer: React.FC<SudokuGamePlayerProps> = ({
   }, [isWon]);
 
   const handleCellClick = (r: number, c: number) => {
+    soundService.playClick();
     setSelectedCell({ r, c });
   };
 
@@ -67,8 +69,15 @@ export const SudokuGamePlayer: React.FC<SudokuGamePlayerProps> = ({
     setGrid(newGrid);
 
     // Check if correct
-    if (num !== 0 && solution[r][c] !== num) {
-      setMistakes((m) => m + 1);
+    if (num !== 0) {
+      if (solution[r][c] !== num) {
+        soundService.playWrong();
+        setMistakes((m) => m + 1);
+      } else {
+        soundService.playCorrect();
+      }
+    } else {
+      soundService.playClick();
     }
 
     // Check if board is complete and correct
@@ -92,12 +101,14 @@ export const SudokuGamePlayer: React.FC<SudokuGamePlayerProps> = ({
     const { r, c } = selectedCell;
     if (initialGrid[r][c] !== 0) return;
 
+    soundService.playMagicChime();
     const correctVal = solution[r][c];
     handleNumberInput(correctVal);
     setHintCount((h) => h - 1);
   };
 
   const handleWin = async () => {
+    soundService.playVictory();
     setIsWon(true);
     const score = Math.max(70, 100 - mistakes * 5);
 
