@@ -33,9 +33,17 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({
   const [searchStudent, setSearchStudent] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'attempts' | 'by-class' | 'not-participated'>('attempts');
 
+  const isMatchClass = (sClass: string, tClass: string) => {
+    if (!tClass || tClass === 'all') return true;
+    if (!sClass) return false;
+    const s = sClass.trim().toLowerCase().replace(/^c/, '');
+    const t = tClass.trim().toLowerCase().replace(/^c/, '');
+    return s === t || sClass === tClass;
+  };
+
   // Filtered attempts
   const filteredAttempts = attempts.filter((a) => {
-    if (selectedClass !== 'all' && a.className !== selectedClass) return false;
+    if (selectedClass !== 'all' && !isMatchClass(a.className, selectedClass)) return false;
     if (selectedGame !== 'all' && a.gameId !== selectedGame) return false;
     if (searchStudent.trim()) {
       const q = searchStudent.toLowerCase();
@@ -67,13 +75,13 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({
 
   // Class scores summary
   const classStats = classes.map((cls) => {
-    const classAttempts = attempts.filter((a) => a.className === cls.id);
+    const classAttempts = attempts.filter((a) => isMatchClass(a.className, cls.name) || isMatchClass(a.className, cls.id));
     const count = classAttempts.length;
     const avg = count > 0
       ? (classAttempts.reduce((sum, a) => sum + a.score, 0) / count).toFixed(1)
       : '0';
     return {
-      classId: cls.id,
+      classId: cls.name || cls.id,
       className: cls.name,
       totalAttempts: count,
       avgScore: Number(avg)
@@ -250,7 +258,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({
             >
               <option value="all">Tất cả các lớp</option>
               {classes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id || c.name} value={c.name}>{c.name}</option>
               ))}
             </select>
 

@@ -45,7 +45,7 @@ export const RoomsView: React.FC<RoomsViewProps> = ({
   // New room form state
   const [newTitle, setNewTitle] = useState('');
   const [selectedGameId, setSelectedGameId] = useState(games[0]?.id || '');
-  const [selectedClasses, setSelectedClasses] = useState<string[]>(['10A1', '10A2']);
+  const [selectedClasses, setSelectedClasses] = useState<string[]>(['12A3', '12A4', '12A14']);
   const [startTime, setStartTime] = useState(new Date().toISOString().substring(0, 16));
   const [endTime, setEndTime] = useState(
     new Date(Date.now() + 7 * 86400000).toISOString().substring(0, 16)
@@ -386,20 +386,23 @@ export const RoomsView: React.FC<RoomsViewProps> = ({
                   Chọn các lớp tham gia:
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {classes.map((cls) => (
-                    <button
-                      type="button"
-                      key={cls.id}
-                      onClick={() => toggleClassSelect(cls.id)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                        selectedClasses.includes(cls.id)
-                          ? 'bg-[#063B8E] text-white border-[#063B8E]'
-                          : 'bg-slate-100 text-slate-700 border-slate-300'
-                      }`}
-                    >
-                      {cls.name}
-                    </button>
-                  ))}
+                  {classes.map((cls) => {
+                    const cKey = cls.name || cls.id;
+                    return (
+                      <button
+                        type="button"
+                        key={cKey}
+                        onClick={() => toggleClassSelect(cKey)}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                          selectedClasses.includes(cKey)
+                            ? 'bg-[#063B8E] text-white border-[#063B8E]'
+                            : 'bg-slate-100 text-slate-700 border-slate-300'
+                        }`}
+                      >
+                        {cls.name}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

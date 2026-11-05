@@ -53,8 +53,26 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
     return soundService.subscribe((muted) => setIsMuted(muted));
   }, []);
 
-  const categories = [
-    { id: 'all', label: 'Tất cả' },
+  // Sync selected category whenever activeCategoryFilter prop changes (e.g. Tab navigation)
+  useEffect(() => {
+    setSelectedCat(activeCategoryFilter);
+  }, [activeCategoryFilter]);
+
+  const isMathModule = defaultUploadCategory === 'math' || (titleOverride && titleOverride.includes('Toán Học'));
+  const isFunModule = defaultUploadCategory === 'entertainment' || (titleOverride && titleOverride.includes('Giải Trí'));
+
+  const categories = isFunModule ? [
+    { id: 'all', label: 'Tất cả trò chơi giải trí' },
+    { id: 'giai-tri', label: 'Giải trí & Phản xạ' },
+    { id: 'tuong-tac', label: 'Tương tác & Đố vui' }
+  ] : isMathModule ? [
+    { id: 'all', label: 'Tất cả chuyên đề Toán' },
+    { id: 'trac-nghiem', label: 'Trắc nghiệm Toán' },
+    { id: 'tu-duy', label: 'Tư duy & Trí tuệ' },
+    { id: 'hinh-hoc', label: 'Game Hình học' },
+    { id: 'tuong-tac', label: 'Game Tương tác' }
+  ] : [
+    { id: 'all', label: 'Tất cả trò chơi' },
     { id: 'trac-nghiem', label: 'Trắc nghiệm Toán' },
     { id: 'tu-duy', label: 'Tư duy & Trí tuệ' },
     { id: 'hinh-hoc', label: 'Game Hình học' },

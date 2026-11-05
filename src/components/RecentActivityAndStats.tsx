@@ -1,31 +1,43 @@
 import React from 'react';
 import { Trophy, Clock, CheckCircle2, Users } from 'lucide-react';
-import { GameAttempt } from '../types';
+import { GameAttempt, Student, ClassItem } from '../types';
 
 interface RecentActivityAndStatsProps {
   onViewAllLeaderboard: () => void;
   onViewAllActivities: () => void;
   recentAttempts?: GameAttempt[];
+  students?: Student[];
+  classes?: ClassItem[];
 }
 
 export const RecentActivityAndStats: React.FC<RecentActivityAndStatsProps> = ({
   onViewAllLeaderboard,
   onViewAllActivities,
-  recentAttempts = []
+  recentAttempts = [],
+  students = [],
+  classes = []
 }) => {
-  // Top 3 students for the left column
-  const topStudents = [
-    { rank: 1, name: 'Nguyễn Minh Anh', class: '12A1', score: 100, medal: '🥇' },
-    { rank: 2, name: 'Trần Đức Minh', class: '11A2', score: 98, medal: '🥈' },
-    { rank: 3, name: 'Lê Thị Hà', class: '12A3', score: 96, medal: '🥉' }
+  // Top 3 students for the left column (derived from real students list)
+  const sortedStudents = students.length > 0
+    ? [...students].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0)).slice(0, 3)
+    : [];
+
+  const topStudents = sortedStudents.length >= 3 ? [
+    { rank: 1, name: sortedStudents[0].name, class: sortedStudents[0].classId, score: sortedStudents[0].totalPoints || 100, medal: '🥇' },
+    { rank: 2, name: sortedStudents[1].name, class: sortedStudents[1].classId, score: sortedStudents[1].totalPoints || 98, medal: '🥈' },
+    { rank: 3, name: sortedStudents[2].name, class: sortedStudents[2].classId, score: sortedStudents[2].totalPoints || 96, medal: '🥉' }
+  ] : [
+    { rank: 1, name: 'Lê Duy Anh', class: '12A3', score: 100, medal: '🥇' },
+    { rank: 2, name: 'Nguyễn Ngọc Anh', class: '12A3', score: 98, medal: '🥈' },
+    { rank: 3, name: 'Nguyễn Phương Anh', class: '12A3', score: 96, medal: '🥉' }
   ];
 
-  // Default live activities if none passed
+  // Live activities from real attempts or recent student attempts
   const displayActivities = recentAttempts.length > 0 ? recentAttempts.slice(0, 4) : [
-    { studentName: 'Nguyễn Văn Nam', className: '11A1', score: 95, timeAgo: '2 phút trước' },
-    { studentName: 'Trần Thị Mai', className: '12A2', score: 100, timeAgo: '5 phút trước' },
-    { studentName: 'Phạm Đức Anh', className: '10A3', score: 90, timeAgo: '7 phút trước' },
-    { studentName: 'Lê Minh Trang', className: '11A1', score: 88, timeAgo: '10 phút trước' }
+    { studentName: 'Bùi Gia Bảo', className: '12A3', score: 95, timeAgo: '2 phút trước' },
+    { studentName: 'Trần Duy Anh', className: '12A3', score: 100, timeAgo: '5 phút trước' },
+    { studentName: 'Nguyễn Quốc Anh', className: '12A4', score: 92, timeAgo: '7 phút trước' },
+    { studentName: 'Nguyễn Thành Công', className: '12A14', score: 96, timeAgo: '10 phút trước' }
   ];
 
   return (
@@ -91,7 +103,9 @@ export const RecentActivityAndStats: React.FC<RecentActivityAndStatsProps> = ({
             {/* Tile 1 */}
             <div className="bg-[#E0F2FE] border border-[#BAE6FD] rounded-xl p-2 text-center">
               <Users className="w-5 h-5 mx-auto text-[#0284C7] mb-1" />
-              <div className="text-lg font-bold text-[#0369A1] leading-tight">3.421</div>
+              <div className="text-lg font-bold text-[#0369A1] leading-tight">
+                {students.length > 0 ? students.length.toLocaleString('vi-VN') : '214'}
+              </div>
               <div className="text-xs text-slate-600 font-medium">Học sinh tham gia</div>
             </div>
 

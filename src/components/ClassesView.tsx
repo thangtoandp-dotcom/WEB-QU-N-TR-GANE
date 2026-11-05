@@ -39,11 +39,19 @@ export const ClassesView: React.FC<ClassesViewProps> = ({
   // Form states
   const [formName, setFormName] = useState('');
   const [formCode, setFormCode] = useState('');
-  const [formClassId, setFormClassId] = useState(classes[0]?.id || '10A1');
+  const [formClassId, setFormClassId] = useState(classes[0]?.name || classes[0]?.id || '12A3');
   const [formStatus, setFormStatus] = useState<'active' | 'locked'>('active');
 
+  const isMatchClass = (studentClass: string, targetClass: string) => {
+    if (!targetClass || targetClass === 'all') return true;
+    if (!studentClass) return false;
+    const s = studentClass.trim().toLowerCase().replace(/^c/, '');
+    const t = targetClass.trim().toLowerCase().replace(/^c/, '');
+    return s === t || studentClass === targetClass;
+  };
+
   const filteredStudents = students.filter((s) => {
-    if (selectedClassId !== 'all' && s.classId !== selectedClassId) return false;
+    if (selectedClassId !== 'all' && !isMatchClass(s.classId, selectedClassId)) return false;
     if (selectedGrade !== 'all' && s.grade.toString() !== selectedGrade) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -84,7 +92,7 @@ export const ClassesView: React.FC<ClassesViewProps> = ({
     setEditingStudent(null);
     setFormName('');
     setFormCode(`HS${Math.floor(1000 + Math.random() * 9000)}`);
-    setFormClassId(classes[0]?.id || '10A1');
+    setFormClassId(classes[0]?.name || classes[0]?.id || '12A3');
     setFormStatus('active');
     setIsAddModalOpen(true);
   };
@@ -217,8 +225,8 @@ export const ClassesView: React.FC<ClassesViewProps> = ({
               >
                 <option value="all">Tất cả các lớp</option>
                 {classes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.homeroom})
+                  <option key={c.id || c.name} value={c.name}>
+                    {c.name} ({c.homeroom || 'Thầy Bùi Ngọc Thắng'})
                   </option>
                 ))}
               </select>
@@ -240,24 +248,27 @@ export const ClassesView: React.FC<ClassesViewProps> = ({
       </div>
 
       {/* Class Overview Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {classes.map((cls) => {
-          const countInClass = students.filter((s) => s.classId === cls.id).length;
-          const isSelected = selectedClassId === cls.id;
+          const countInClass = students.filter((s) => isMatchClass(s.classId, cls.name) || isMatchClass(s.classId, cls.id)).length;
+          const isSelected = isMatchClass(selectedClassId, cls.name);
 
           return (
             <div
-              key={cls.id}
-              onClick={() => setSelectedClassId(isSelected ? 'all' : cls.id)}
-              className={`p-3 rounded-2xl border-2 text-center transition-all cursor-pointer ${
+              key={cls.id || cls.name}
+              onClick={() => setSelectedClassId(isSelected ? 'all' : cls.name)}
+              className={`p-3.5 rounded-2xl border-2 text-center transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-[#0878DC] text-white border-[#0878DC] shadow-md scale-105'
                   : 'bg-white text-slate-800 border-slate-200 hover:border-[#0878DC]'
               }`}
             >
-              <div className="font-bold font-serif text-lg">{cls.name}</div>
-              <div className={`text-xs mt-0.5 ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+              <div className="font-bold font-serif text-xl">{cls.name}</div>
+              <div className={`text-sm mt-0.5 font-bold ${isSelected ? 'text-blue-100' : 'text-[#0878DC]'}`}>
                 {countInClass} học sinh
+              </div>
+              <div className={`text-xs mt-0.5 ${isSelected ? 'text-blue-200' : 'text-slate-500'}`}>
+                {cls.homeroom || 'Thầy Bùi Ngọc Thắng'}
               </div>
             </div>
           );

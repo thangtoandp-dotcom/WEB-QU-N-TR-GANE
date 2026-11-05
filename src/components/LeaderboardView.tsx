@@ -10,15 +10,23 @@ interface LeaderboardViewProps {
 export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ students, classes }) => {
   const [filterTab, setFilterTab] = useState<'all' | 'by-grade' | 'by-class' | 'week' | 'month'>('all');
   const [selectedGrade, setSelectedGrade] = useState<number>(12);
-  const [selectedClass, setSelectedClass] = useState<string>('12A1');
+  const [selectedClass, setSelectedClass] = useState<string>(classes[0]?.name || '12A3');
   const [searchName, setSearchName] = useState('');
+
+  const isMatchClass = (sClass: string, tClass: string) => {
+    if (!tClass || tClass === 'all') return true;
+    if (!sClass) return false;
+    const s = sClass.trim().toLowerCase().replace(/^c/, '');
+    const t = tClass.trim().toLowerCase().replace(/^c/, '');
+    return s === t || sClass === tClass;
+  };
 
   // Sort students descending by total points
   const sortedStudents = [...students].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
 
   const filteredStudents = sortedStudents.filter((s) => {
     if (filterTab === 'by-grade' && s.grade !== selectedGrade) return false;
-    if (filterTab === 'by-class' && s.classId !== selectedClass) return false;
+    if (filterTab === 'by-class' && !isMatchClass(s.classId, selectedClass)) return false;
     if (searchName.trim()) {
       return s.name.toLowerCase().includes(searchName.toLowerCase());
     }
@@ -191,7 +199,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ students, clas
               className="border border-slate-300 rounded-lg px-3 py-1 text-sm bg-slate-50 font-serif"
             >
               {classes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id || c.name} value={c.name}>{c.name}</option>
               ))}
             </select>
           </div>

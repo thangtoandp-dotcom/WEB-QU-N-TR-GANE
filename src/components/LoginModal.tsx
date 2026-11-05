@@ -20,8 +20,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 }) => {
   const [role, setRole] = useState<'teacher' | 'student'>(defaultRole);
   const [teacherPasscode, setTeacherPasscode] = useState('');
-  const [selectedStudentCode, setSelectedStudentCode] = useState(studentsList[0]?.code || 'HS1001');
+  const [selectedStudentCode, setSelectedStudentCode] = useState(studentsList[0]?.code || '');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Auto-sync when studentsList finishes loading
+  React.useEffect(() => {
+    if (studentsList.length > 0 && (!selectedStudentCode || !studentsList.some(s => s.code === selectedStudentCode))) {
+      setSelectedStudentCode(studentsList[0].code);
+    }
+  }, [studentsList, selectedStudentCode]);
 
   if (!isOpen) return null;
 

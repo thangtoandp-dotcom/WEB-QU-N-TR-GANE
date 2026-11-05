@@ -76,15 +76,32 @@ export default function App() {
   // Fetch initial data
   const loadData = async () => {
     setIsLoading(true);
-    const db = await api.getDb();
-    if (db) {
-      if (db.games) setGames(db.games);
-      if (db.students) setStudents(db.students);
-      if (db.classes) setClasses(db.classes);
-      if (db.rooms) setRooms(db.rooms);
-      if (db.attempts) setAttempts(db.attempts);
+    try {
+      const [g, s, c, r, a] = await Promise.all([
+        api.getGames(),
+        api.getStudents(),
+        api.getClasses(),
+        api.getRooms(),
+        api.getAttempts()
+      ]);
+      if (g && g.length > 0) setGames(g);
+      if (s && s.length > 0) setStudents(s);
+      if (c && c.length > 0) setClasses(c);
+      if (r) setRooms(r);
+      if (a) setAttempts(a);
+    } catch (e) {
+      console.warn('Lỗi loadData, thử getDb:', e);
+      const db = await api.getDb();
+      if (db) {
+        if (db.games) setGames(db.games);
+        if (db.students) setStudents(db.students);
+        if (db.classes) setClasses(db.classes);
+        if (db.rooms) setRooms(db.rooms);
+        if (db.attempts) setAttempts(db.attempts);
+      }
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -275,7 +292,7 @@ export default function App() {
                       }}
                       stats={{
                         totalPlays: 12568 + attempts.length,
-                        totalStudents: 3421 + students.length,
+                        totalStudents: students.length > 0 ? students.length : 214,
                         avgScore: 8.7
                       }}
                     />
@@ -297,12 +314,14 @@ export default function App() {
                   onViewAllLeaderboard={() => setActiveTab('leaderboard')}
                   onViewAllActivities={() => setActiveTab('statistics')}
                   recentAttempts={attempts}
+                  students={students}
+                  classes={classes}
                 />
 
               </div>
             )}
 
-            {/* TAB: Kho trò chơi (All Games) */}
+            {/* TAB: Kho trò chơi (All Games - 44 games) */}
             {activeTab === 'all-games' && (
               <GamesGallery
                 games={games}
@@ -312,12 +331,12 @@ export default function App() {
               />
             )}
 
-            {/* TAB: Trò chơi Toán học (Math Games) */}
+            {/* TAB: Trò chơi Toán học (Math Games - 27 games) */}
             {activeTab === 'math-games' && (
               <GamesGallery
                 games={games.filter((g) => g.category !== 'giai-tri')}
                 onPlayGame={(g) => handleStartGame(g)}
-                activeCategoryFilter="trac-nghiem"
+                activeCategoryFilter="all"
                 defaultUploadCategory="math"
                 titleOverride="Phân Hệ: Trò Chơi Toán Học THPT"
                 subtitleOverride="Trắc nghiệm chuyên đề, đồ thị, hình học và các tệp trò chơi PowerPoint/HTML5 bám sát chương trình"
@@ -325,12 +344,12 @@ export default function App() {
               />
             )}
 
-            {/* TAB: Trò chơi giải trí (Fun Games) */}
+            {/* TAB: Trò chơi giải trí (Fun Games - 17 games) */}
             {activeTab === 'fun-games' && (
               <GamesGallery
                 games={games.filter((g) => g.category === 'giai-tri' || g.category === 'tuong-tac')}
                 onPlayGame={(g) => handleStartGame(g)}
-                activeCategoryFilter="giai-tri"
+                activeCategoryFilter="all"
                 defaultUploadCategory="entertainment"
                 titleOverride="Phân Hệ: Trò Chơi Giải Trí & Thư Giãn"
                 subtitleOverride="Game bóng bóng toán học, đố vui trí tuệ, phản xạ và các tệp game PowerPoint/HTML tương tác"
