@@ -55,7 +55,7 @@ export interface GameItem {
   bgCard: string;
   fileUrl?: string;
   fileName?: string;
-  fileType?: 'powerpoint' | 'html' | 'embed';
+  fileType?: 'powerpoint' | 'html' | 'video' | 'embed';
   fileSize?: string;
   embedCode?: string;
   isUploaded?: boolean;

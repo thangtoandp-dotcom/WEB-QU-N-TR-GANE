@@ -130,6 +130,7 @@ export default function App() {
     setCurrentUser(guestUser);
     try {
       localStorage.removeItem('toan_hub_user');
+      sessionStorage.removeItem('toan_admin_auth');
     } catch {}
     if (activeTab === 'admin') {
       setActiveTab('home');
@@ -187,10 +188,11 @@ export default function App() {
       onFinished: () => loadData()
     };
 
-    // If game is an uploaded file (PowerPoint, HTML, embed) or teacher uploaded game
+    // If game is an uploaded file (PowerPoint, HTML, Video MP4, embed) or teacher uploaded game
     if (
       activePlayingGame.isUploaded ||
       activePlayingGame.fileUrl ||
+      activePlayingGame.fileType === 'video' ||
       activePlayingGame.fileType === 'powerpoint' ||
       activePlayingGame.fileType === 'html' ||
       activePlayingGame.fileType === 'embed'
@@ -325,9 +327,13 @@ export default function App() {
             {activeTab === 'all-games' && (
               <GamesGallery
                 games={games}
+                currentUser={currentUser}
+                onAdminLoginSuccess={handleLoginSuccess}
                 onPlayGame={(g) => handleStartGame(g)}
                 activeCategoryFilter="all"
                 onGameUploaded={(newGame) => setGames((prev) => [newGame, ...prev])}
+                onDeleteGame={(id) => setGames((prev) => prev.filter((g) => g.id !== id))}
+                onUpdateGame={(updated) => setGames((prev) => prev.map((g) => g.id === updated.id ? { ...g, ...updated } : g))}
               />
             )}
 
@@ -335,12 +341,16 @@ export default function App() {
             {activeTab === 'math-games' && (
               <GamesGallery
                 games={games.filter((g) => g.category !== 'giai-tri')}
+                currentUser={currentUser}
+                onAdminLoginSuccess={handleLoginSuccess}
                 onPlayGame={(g) => handleStartGame(g)}
                 activeCategoryFilter="all"
                 defaultUploadCategory="math"
                 titleOverride="Phân Hệ: Trò Chơi Toán Học THPT"
                 subtitleOverride="Trắc nghiệm chuyên đề, đồ thị, hình học và các tệp trò chơi PowerPoint/HTML5 bám sát chương trình"
                 onGameUploaded={(newGame) => setGames((prev) => [newGame, ...prev])}
+                onDeleteGame={(id) => setGames((prev) => prev.filter((g) => g.id !== id))}
+                onUpdateGame={(updated) => setGames((prev) => prev.map((g) => g.id === updated.id ? { ...g, ...updated } : g))}
               />
             )}
 
@@ -348,12 +358,16 @@ export default function App() {
             {activeTab === 'fun-games' && (
               <GamesGallery
                 games={games.filter((g) => g.category === 'giai-tri' || g.category === 'tuong-tac')}
+                currentUser={currentUser}
+                onAdminLoginSuccess={handleLoginSuccess}
                 onPlayGame={(g) => handleStartGame(g)}
                 activeCategoryFilter="all"
                 defaultUploadCategory="entertainment"
                 titleOverride="Phân Hệ: Trò Chơi Giải Trí & Thư Giãn"
                 subtitleOverride="Game bóng bóng toán học, đố vui trí tuệ, phản xạ và các tệp game PowerPoint/HTML tương tác"
                 onGameUploaded={(newGame) => setGames((prev) => [newGame, ...prev])}
+                onDeleteGame={(id) => setGames((prev) => prev.filter((g) => g.id !== id))}
+                onUpdateGame={(updated) => setGames((prev) => prev.map((g) => g.id === updated.id ? { ...g, ...updated } : g))}
               />
             )}
 
@@ -408,6 +422,7 @@ export default function App() {
                 attempts={attempts}
                 onRefreshData={loadData}
                 onSelectGameToPlay={(g) => handleStartGame(g)}
+                onAdminLoginSuccess={handleLoginSuccess}
               />
             )}
           </>

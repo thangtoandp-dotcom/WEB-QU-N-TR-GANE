@@ -14,15 +14,22 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ extended: true, limit: '150mb' }));
 
 // Uploads directory for PowerPoint, HTML and interactive games
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads', 'games');
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.mp4')) {
+      res.setHeader('Content-Type', 'video/mp4');
+      res.setHeader('Accept-Ranges', 'bytes');
+    }
+  }
+}));
 
 // Local database file path
 const DATA_DIR = path.join(__dirname, 'data');
@@ -494,7 +501,7 @@ app.get('/api/games', (_req: Request, res: Response) => {
   res.json({ success: true, games: db.games });
 });
 
-// Upload PowerPoint / HTML game files
+// Upload PowerPoint / HTML / MP4 Video game files
 app.post('/api/games/upload', (req: Request, res: Response) => {
   try {
     const { fileName, fileData, fileType } = req.body;
@@ -507,9 +514,19 @@ app.post('/api/games/upload', (req: Request, res: Response) => {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    // Determine extension and sanitize
-    const ext = path.extname(fileName).toLowerCase() || (fileType === 'powerpoint' ? '.pptx' : '.html');
-    const cleanBase = path.basename(fileName, ext).replace(/[^a-zA-Z0-9_\-\u00C0-\u024F\u1E00-\u1EFF]/g, '_');
+    // Determine extension and sanitize (supporting .html, .htlm, .ppt, .pptx, .mp4)
+    let rawExt = path.extname(fileName).toLowerCase();
+    let ext = rawExt;
+    // Normalize user typo .htlm or .htm to standard .html
+    if (rawExt === '.htlm' || rawExt === '.htm') {
+      ext = '.html';
+    } else if (!rawExt) {
+      if (fileType === 'powerpoint') ext = '.pptx';
+      else if (fileType === 'video') ext = '.mp4';
+      else ext = '.html';
+    }
+
+    const cleanBase = path.basename(fileName, rawExt || ext).replace(/[^a-zA-Z0-9_\-\u00C0-\u024F\u1E00-\u1EFF]/g, '_');
     const uniqueName = `game_${Date.now()}_${cleanBase}${ext}`;
     const filePath = path.join(uploadsDir, uniqueName);
 
@@ -529,7 +546,14 @@ app.post('/api/games/upload', (req: Request, res: Response) => {
       ? `${(buffer.length / (1024 * 1024)).toFixed(1)} MB` 
       : `${sizeInKb} KB`;
 
-    const detectedType = ext.includes('ppt') ? 'powerpoint' : 'html';
+    let detectedType: 'powerpoint' | 'html' | 'video' = 'html';
+    if (ext === '.ppt' || ext === '.pptx' || ext === '.ppsx' || fileType === 'powerpoint') {
+      detectedType = 'powerpoint';
+    } else if (ext === '.mp4' || ext === '.webm' || ext === '.m4v' || fileType === 'video') {
+      detectedType = 'video';
+    } else {
+      detectedType = 'html';
+    }
 
     return res.json({
       success: true,
@@ -546,6 +570,7 @@ app.post('/api/games/upload', (req: Request, res: Response) => {
 
 app.post('/api/games', (req: Request, res: Response) => {
   const db = readDb();
+  const fileType = req.body.fileType || (req.body.fileUrl?.endsWith('.mp4') ? 'video' : undefined);
   const newGame = {
     id: req.body.id || `game-${Date.now()}`,
     title: req.body.title,
@@ -559,15 +584,15 @@ app.post('/api/games', (req: Request, res: Response) => {
     maxScore: Number(req.body.maxScore) || 100,
     active: req.body.active !== false,
     description: req.body.description || '',
-    color: req.body.color || '#0878DC',
-    bgCard: req.body.bgCard || '#E0F2FE',
+    color: req.body.color || (fileType === 'video' ? '#8B5CF6' : '#0878DC'),
+    bgCard: req.body.bgCard || (fileType === 'video' ? '#F3E8FF' : '#E0F2FE'),
     fileUrl: req.body.fileUrl || undefined,
     fileName: req.body.fileName || undefined,
-    fileType: req.body.fileType || undefined,
+    fileType: fileType,
     fileSize: req.body.fileSize || undefined,
     embedCode: req.body.embedCode || undefined,
     isUploaded: req.body.isUploaded ?? Boolean(req.body.fileUrl || req.body.embedCode),
-    authorName: req.body.authorName || 'Bùi Ngọc Thắng',
+    authorName: req.body.authorName || 'Thầy Bùi Ngọc Thắng',
     uploadedAt: req.body.uploadedAt || new Date().toISOString()
   };
   db.games.unshift(newGame);
@@ -589,9 +614,21 @@ app.put('/api/games/:id', (req: Request, res: Response) => {
 
 app.delete('/api/games/:id', (req: Request, res: Response) => {
   const db = readDb();
+  const gameToDelete = db.games.find((g: any) => g.id === req.params.id);
+  // If file was uploaded to local disk, unlink it safely
+  if (gameToDelete && gameToDelete.fileUrl && gameToDelete.fileUrl.startsWith('/uploads/games/')) {
+    const relFile = path.join(__dirname, 'public', gameToDelete.fileUrl);
+    if (fs.existsSync(relFile)) {
+      try {
+        fs.unlinkSync(relFile);
+      } catch (e) {
+        console.warn('Could not remove uploaded file:', e);
+      }
+    }
+  }
   db.games = db.games.filter((g: any) => g.id !== req.params.id);
   writeDb(db);
-  res.json({ success: true });
+  res.json({ success: true, message: 'Đã xóa trò chơi thành công!' });
 });
 
 // 6. Rooms (Phòng thi đấu)
@@ -705,8 +742,8 @@ app.post('/api/attempts', (req: Request, res: Response) => {
 app.post('/api/auth/teacher-login', (req: Request, res: Response) => {
   const { passcode } = req.body;
   const db = readDb();
-  const currentPass = db.settings.teacherPassword || 'thptdanphuong';
-  if (passcode === currentPass || passcode === 'thptdanphuong' || passcode === '123456') {
+  const currentPass = db.settings.teacherPassword || '768306';
+  if (passcode === currentPass || passcode === '768306' || passcode === 'thptdanphuong' || passcode === '123456') {
     return res.json({
       success: true,
       profile: {
@@ -723,8 +760,8 @@ app.post('/api/auth/teacher-login', (req: Request, res: Response) => {
 app.post('/api/auth/teacher-password', (req: Request, res: Response) => {
   const { oldPassword, newPassword } = req.body;
   const db = readDb();
-  const currentPass = db.settings.teacherPassword || 'thptdanphuong';
-  if (oldPassword !== currentPass && oldPassword !== 'thptdanphuong' && oldPassword !== '123456') {
+  const currentPass = db.settings.teacherPassword || '768306';
+  if (oldPassword !== currentPass && oldPassword !== '768306' && oldPassword !== 'thptdanphuong' && oldPassword !== '123456') {
     return res.status(400).json({ success: false, message: 'Mật khẩu cũ không chính xác!' });
   }
   db.settings.teacherPassword = newPassword;

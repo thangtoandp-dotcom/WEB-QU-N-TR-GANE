@@ -14,36 +14,58 @@ import {
   Maximize2,
   Presentation,
   FileCode,
+  Video,
   Globe,
   Volume2,
   VolumeX,
   Star,
   Gamepad2,
   FolderOpen,
-  CheckCircle2
+  CheckCircle2,
+  Download,
+  Trash2,
+  Pencil,
+  Save,
+  Loader2,
+  Film,
+  ShieldCheck,
+  Lock,
+  Eye,
+  EyeOff,
+  KeyRound,
+  AlertCircle
 } from 'lucide-react';
-import { GameItem, GameCategory } from '../types';
+import { GameItem, GameCategory, UserProfile } from '../types';
 import { GameUploadModal } from './common/GameUploadModal';
 import { soundService } from '../services/soundService';
+import { api } from '../services/api';
 
 interface GamesGalleryProps {
   games: GameItem[];
+  currentUser?: UserProfile;
+  onAdminLoginSuccess?: (profile: UserProfile) => void;
   onPlayGame: (game: GameItem) => void;
   activeCategoryFilter?: string;
   defaultUploadCategory?: 'math' | 'entertainment';
   onGameUploaded?: (newGame: GameItem) => void;
+  onDeleteGame?: (gameId: string) => void;
+  onUpdateGame?: (updated: GameItem) => void;
   titleOverride?: string;
   subtitleOverride?: string;
 }
 
-export type OriginFilterType = 'all' | 'default' | 'uploaded' | 'powerpoint' | 'html';
+export type OriginFilterType = 'all' | 'default' | 'uploaded' | 'video' | 'powerpoint' | 'html';
 
 export const GamesGallery: React.FC<GamesGalleryProps> = ({
   games,
+  currentUser,
+  onAdminLoginSuccess,
   onPlayGame,
   activeCategoryFilter = 'all',
   defaultUploadCategory,
   onGameUploaded,
+  onDeleteGame,
+  onUpdateGame,
   titleOverride,
   subtitleOverride
 }) => {
@@ -55,6 +77,31 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(soundService.isMuted());
   const [viewMode, setViewMode] = useState<'grouped' | 'grid'>('grouped');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Admin Verification State
+  const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [adminAuthError, setAdminAuthError] = useState('');
+  const [pendingActionGame, setPendingActionGame] = useState<GameItem | null>(null);
+  const [pendingActionType, setPendingActionType] = useState<'edit' | 'delete'>('edit');
+  const [hasSessionAdmin, setHasSessionAdmin] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('toan_admin_auth') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const isUserAdmin = currentUser?.role === 'teacher' || hasSessionAdmin;
+
+  // Edit Game Modal State
+  const [editingGame, setEditingGame] = useState<GameItem | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editTopic, setEditTopic] = useState('');
+  const [editDifficulty, setEditDifficulty] = useState<'Dễ' | 'Trung bình' | 'Khó' | 'Nâng cao'>('Trung bình');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // Listen to sound state
   useEffect(() => {
@@ -92,17 +139,29 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
   const isDefaultGame = (g: GameItem): boolean => {
     if (g.isDefault === true) return true;
     if (g.isDefault === false) return false;
-    // Known default IDs
     if (g.id.startsWith('g-') && !g.id.startsWith('game_custom_')) return true;
     if (!g.isUploaded && !g.id.startsWith('game_custom_')) return true;
     return false;
   };
 
+  const isVideoGame = (g: GameItem): boolean => {
+    return g.fileType === 'video' || Boolean(g.fileUrl && /\.(mp4|webm|m4v)$/i.test(g.fileUrl)) || Boolean(g.fileName && /\.(mp4|webm|m4v)$/i.test(g.fileName));
+  };
+
+  const isPowerPointGame = (g: GameItem): boolean => {
+    return g.fileType === 'powerpoint' || Boolean(g.fileUrl && /\.(ppt|pptx|ppsx)$/i.test(g.fileUrl)) || Boolean(g.fileName && /\.(ppt|pptx|ppsx)$/i.test(g.fileName));
+  };
+
+  const isHtmlGame = (g: GameItem): boolean => {
+    return g.fileType === 'html' || Boolean(g.fileUrl && /\.(html|htm|htlm)$/i.test(g.fileUrl)) || Boolean(g.fileName && /\.(html|htm|htlm)$/i.test(g.fileName));
+  };
+
   // Counts for pills
   const totalDefaultCount = useMemo(() => games.filter(isDefaultGame).length, [games]);
   const totalUploadedCount = useMemo(() => games.length - totalDefaultCount, [games, totalDefaultCount]);
-  const totalPptxCount = useMemo(() => games.filter(g => g.fileType === 'powerpoint').length, [games]);
-  const totalHtmlCount = useMemo(() => games.filter(g => g.fileType === 'html').length, [games]);
+  const totalVideoCount = useMemo(() => games.filter(isVideoGame).length, [games]);
+  const totalPptxCount = useMemo(() => games.filter(isPowerPointGame).length, [games]);
+  const totalHtmlCount = useMemo(() => games.filter(isHtmlGame).length, [games]);
 
   // Main filter
   const filteredGames = useMemo(() => {
@@ -112,8 +171,9 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
       // Origin Filter
       if (originFilter === 'default' && !isDef) return false;
       if (originFilter === 'uploaded' && isDef) return false;
-      if (originFilter === 'powerpoint' && g.fileType !== 'powerpoint') return false;
-      if (originFilter === 'html' && g.fileType !== 'html') return false;
+      if (originFilter === 'video' && !isVideoGame(g)) return false;
+      if (originFilter === 'powerpoint' && !isPowerPointGame(g)) return false;
+      if (originFilter === 'html' && !isHtmlGame(g)) return false;
 
       // Category Filter
       if (selectedCat !== 'all' && g.category !== selectedCat && selectedCat !== 'all-games') {
@@ -151,9 +211,157 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
       ? 'giai-tri'
       : 'trac-nghiem';
 
+  const handleRequestEdit = (game: GameItem) => {
+    if (isUserAdmin) {
+      setEditingGame(game);
+      setEditTitle(game.title);
+      setEditTopic(game.topic);
+      setEditDifficulty(game.difficulty);
+    } else {
+      setPendingActionGame(game);
+      setPendingActionType('edit');
+      setAdminPasswordInput('');
+      setShowAdminPassword(false);
+      setAdminAuthError('');
+      setIsAdminAuthModalOpen(true);
+    }
+  };
+
+  const handleRequestDelete = (game: GameItem) => {
+    if (isUserAdmin) {
+      handleDeleteGame(game);
+    } else {
+      setPendingActionGame(game);
+      setPendingActionType('delete');
+      setAdminPasswordInput('');
+      setShowAdminPassword(false);
+      setAdminAuthError('');
+      setIsAdminAuthModalOpen(true);
+    }
+  };
+
+  const handleVerifyAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminAuthError('');
+    const entered = adminPasswordInput.trim();
+    if (!entered) {
+      setAdminAuthError('Vui lòng nhập mật khẩu quản trị viên.');
+      return;
+    }
+
+    let isSuccess = false;
+    if (entered === '768306') {
+      isSuccess = true;
+    } else {
+      try {
+        const res = await api.teacherLogin(entered);
+        if (res.success) {
+          isSuccess = true;
+        }
+      } catch {}
+    }
+
+    if (isSuccess) {
+      try {
+        sessionStorage.setItem('toan_admin_auth', 'true');
+      } catch {}
+      setHasSessionAdmin(true);
+
+      const adminProfile: UserProfile = {
+        id: 'T-BNT',
+        name: 'Thầy Bùi Ngọc Thắng',
+        role: 'teacher',
+        school: 'Trường THPT Đan Phượng'
+      };
+      if (onAdminLoginSuccess) {
+        onAdminLoginSuccess(adminProfile);
+      }
+
+      soundService.playCorrect();
+      setIsAdminAuthModalOpen(false);
+
+      if (pendingActionType === 'edit' && pendingActionGame) {
+        const g = pendingActionGame;
+        setPendingActionGame(null);
+        setEditingGame(g);
+        setEditTitle(g.title);
+        setEditTopic(g.topic);
+        setEditDifficulty(g.difficulty);
+      } else if (pendingActionType === 'delete' && pendingActionGame) {
+        const toDel = pendingActionGame;
+        setPendingActionGame(null);
+        handleDeleteGame(toDel);
+      }
+    } else {
+      setAdminAuthError('Mật khẩu quản trị viên chưa chính xác! Vui lòng nhập đúng mật khẩu.');
+    }
+  };
+
+  const handleDeleteGame = async (game: GameItem) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa trò chơi "${game.title}" khỏi Kho trò chơi?`)) {
+      return;
+    }
+    setDeletingId(game.id);
+    try {
+      const success = await api.deleteGame(game.id);
+      if (success) {
+        soundService.playCorrect();
+        if (onDeleteGame) {
+          onDeleteGame(game.id);
+        }
+      } else {
+        alert('Không thể xóa trò chơi. Vui lòng thử lại!');
+      }
+    } catch (e: any) {
+      alert('Lỗi: ' + e.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGame || !editTitle.trim()) return;
+
+    setIsSavingEdit(true);
+    try {
+      const updates: Partial<GameItem> = {
+        title: editTitle.trim(),
+        topic: editTopic.trim(),
+        difficulty: editDifficulty
+      };
+
+      const updated = await api.updateGame(editingGame.id, updates);
+      soundService.playCorrect();
+      
+      const mergedUpdated: GameItem = {
+        ...editingGame,
+        ...updates
+      };
+
+      if (onUpdateGame) {
+        onUpdateGame(mergedUpdated);
+      }
+      setEditingGame(null);
+    } catch (err: any) {
+      alert('Lỗi cập nhật tên trò chơi: ' + err.message);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   // Render a single game card
   const renderGameCard = (game: GameItem) => {
     const isDef = isDefaultGame(game);
+    const isVid = isVideoGame(game);
+    const isPpt = isPowerPointGame(game);
+    const isHtm = isHtmlGame(game);
+
+    const cardColor = isVid 
+      ? '#7C3AED' 
+      : isPpt 
+      ? '#EA580C' 
+      : game.color || (isDef ? '#0878DC' : '#0369A1');
 
     return (
       <div
@@ -161,13 +369,17 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
         className={`bg-white rounded-2xl shadow-md overflow-hidden flex flex-col justify-between transition-all transform hover:-translate-y-1 hover:shadow-xl ${
           isDef 
             ? 'border-2 border-amber-400 ring-2 ring-amber-300/30' 
+            : isVid
+            ? 'border-2 border-purple-300 hover:border-purple-600'
+            : isPpt
+            ? 'border-2 border-orange-300 hover:border-orange-600'
             : 'border-2 border-slate-200 hover:border-[#0878DC]'
         }`}
       >
         {/* Card Header / Banner */}
         <div 
           className="p-4 text-white relative overflow-hidden"
-          style={{ backgroundColor: game.color || (isDef ? '#0878DC' : '#0369A1') }}
+          style={{ backgroundColor: cardColor }}
         >
           {/* Top badges */}
           <div className="flex items-center justify-between mb-1 gap-1 flex-wrap">
@@ -187,14 +399,20 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                 </span>
               )}
 
-              {game.fileType === 'powerpoint' && (
-                <span className="text-[11px] font-bold bg-orange-400 text-orange-950 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
-                  <Presentation className="w-3 h-3" /> PPTX
+              {/* Format Badges: MP4, PPTX, HTML5 */}
+              {isVid && (
+                <span className="text-[11px] font-bold bg-purple-950/80 text-purple-200 border border-purple-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                  <Video className="w-3 h-3 text-purple-300" /> MP4 Video
                 </span>
               )}
-              {game.fileType === 'html' && (
-                <span className="text-[11px] font-bold bg-emerald-400 text-emerald-950 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
-                  <FileCode className="w-3 h-3" /> HTML5
+              {isPpt && (
+                <span className="text-[11px] font-bold bg-orange-950/80 text-orange-200 border border-orange-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                  <Presentation className="w-3 h-3 text-orange-300" /> PPTX
+                </span>
+              )}
+              {isHtm && (
+                <span className="text-[11px] font-bold bg-emerald-950/80 text-emerald-200 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                  <FileCode className="w-3 h-3 text-emerald-300" /> HTML5
                 </span>
               )}
               {game.fileType === 'embed' && (
@@ -202,6 +420,14 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                   <Globe className="w-3 h-3" /> Trực tuyến
                 </span>
               )}
+
+              {/* File size tag */}
+              {game.fileSize && (
+                <span className="text-[10px] font-mono bg-black/40 text-white/90 px-1.5 py-0.5 rounded">
+                  {game.fileSize}
+                </span>
+              )}
+
               <span className="text-xs font-bold bg-white text-slate-900 px-2.5 py-0.5 rounded-full shadow-sm">
                 {game.difficulty}
               </span>
@@ -210,6 +436,8 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
 
           <h3 className="text-xl font-bold font-serif mt-2 line-clamp-1 drop-shadow-sm flex items-center gap-1.5">
             {isDef && <Star className="w-4 h-4 text-[#FFDE59] fill-[#FFDE59] shrink-0" />}
+            {isVid && <Video className="w-4 h-4 text-purple-200 shrink-0" />}
+            {isPpt && <Presentation className="w-4 h-4 text-orange-200 shrink-0" />}
             <span title={game.title}>{game.title}</span>
           </h3>
 
@@ -248,14 +476,55 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
             </div>
           </div>
 
-          {/* Author info note */}
+          {/* Author info note & File actions */}
           <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
             <span>Tác giả: <strong className="text-slate-700">{game.authorName || (isDef ? 'Hệ thống TOAN GAME HUB' : 'Thầy Bùi Ngọc Thắng')}</strong></span>
-            {isDef && (
-              <span className="text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                Tích hợp sẵn
-              </span>
-            )}
+            
+            <div className="flex items-center gap-1.5">
+              {/* Edit game title button - Protected: Only Admin (Password 768306) */}
+              <button
+                onClick={() => handleRequestEdit(game)}
+                className={`p-1 rounded-md transition-colors cursor-pointer flex items-center gap-1 ${
+                  isUserAdmin
+                    ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+                    : 'text-amber-600 hover:text-amber-800 hover:bg-amber-50'
+                }`}
+                title={isUserAdmin ? "Chỉnh sửa trò chơi (Quyền Quản trị viên)" : "Chỉnh sửa trò chơi (Yêu cầu mật khẩu Quản trị viên)"}
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                {!isUserAdmin && <Lock className="w-2.5 h-2.5 text-amber-500" />}
+              </button>
+
+              {/* Download original file if available */}
+              {game.fileUrl && (
+                <a
+                  href={game.fileUrl}
+                  download={game.fileName || 'game-file'}
+                  className="text-slate-600 hover:text-[#0878DC] p-1 rounded-md hover:bg-slate-100 transition-colors"
+                  title="Tải file game này về máy tính"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </a>
+              )}
+
+              {/* Delete button if uploaded game - Protected */}
+              {!isDef && (
+                <button
+                  onClick={() => handleRequestDelete(game)}
+                  disabled={deletingId === game.id}
+                  className="text-rose-500 hover:text-rose-700 p-1 rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
+                  title={isUserAdmin ? "Xóa tệp game này khỏi Kho trò chơi" : "Xóa trò chơi (Yêu cầu Quản trị viên)"}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {isDef && (
+                <span className="text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  Tích hợp sẵn
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Buttons: BẮT ĐẦU & XEM HƯỚNG DẪN */}
@@ -273,12 +542,14 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
               className={`py-2.5 px-3 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow cursor-pointer transition-all transform active:scale-95 group ${
                 isDef 
                   ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-[#0878DC] hover:from-amber-700 hover:to-[#052C6E]' 
+                  : isVid
+                  ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-800 hover:to-indigo-700'
                   : 'bg-gradient-to-r from-[#063B8E] to-[#0878DC] hover:from-[#052C6E] hover:to-[#0664B8]'
               }`}
               title="Mở rộng hết toàn màn hình máy tính để chơi"
             >
               <Maximize2 className="w-4 h-4 text-[#FFDE59] group-hover:scale-110 transition-transform" />
-              <span>{isDef ? 'Chơi Mặc Định' : 'Mở toàn màn hình'}</span>
+              <span>{isVid ? 'Xem & Chơi Video' : isDef ? 'Chơi Mặc Định' : 'Mở toàn màn hình'}</span>
             </button>
           </div>
         </div>
@@ -321,17 +592,33 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
             {/* Upload Button */}
             <button
               onClick={() => setIsUploadModalOpen(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow hover:shadow-lg transition-all cursor-pointer font-serif text-sm sm:text-base active:scale-95 shrink-0"
-              title="Tải tệp game PowerPoint (.pptx), tệp HTML5 hoặc liên kết tương tác"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow hover:shadow-lg transition-all cursor-pointer font-serif text-sm sm:text-base active:scale-95 shrink-0"
+              title="Tải lên tệp Game định dạng .html (.htlm), .ppt, .pptx, hoặc .mp4"
             >
               <UploadCloud className="w-5 h-5" />
-              <span>
-                {selectedCat === 'giai-tri' || defaultUploadCategory === 'entertainment'
-                  ? 'Tải Game Giải trí lên'
-                  : 'Tải file Game lên'}
-              </span>
+              <span>Tải file Game lên</span>
             </button>
           </div>
+        </div>
+
+        {/* Feature Notice Bar: Upload formats supported */}
+        <div className="p-3 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-xl border border-indigo-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs sm:text-sm font-serif">
+          <div className="flex items-center gap-2">
+            <span className="p-1 rounded-md bg-indigo-600 text-white font-bold text-xs">MỚI</span>
+            <span className="text-slate-700">
+              Phân hệ <strong>Kho trò chơi</strong> hỗ trợ tải lên và lưu trữ các tệp: 
+              <span className="font-bold text-emerald-700 ml-1">.html (.htlm)</span>, 
+              <span className="font-bold text-orange-700 ml-1">.ppt, .pptx</span> và 
+              <span className="font-bold text-purple-700 ml-1">.mp4</span>. Mọi tệp tải lên được lưu giữ vĩnh viễn và trình chiếu toàn màn hình.
+            </span>
+          </div>
+
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="text-indigo-700 hover:text-indigo-900 font-bold underline cursor-pointer shrink-0"
+          >
+            + Tải file ngay
+          </button>
         </div>
 
         {/* Origin / Source Selector (Default Games vs Uploaded Games) */}
@@ -362,7 +649,7 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                   ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-300 font-extrabold'
                   : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
               }`}
-              title="Hiển thị riêng các trò chơi mặc định có sẵn của hệ thống (Ai là triệu phú, Vòng quay, Trắc nghiệm, Sudoku, Hình học Oxyz...)"
+              title="Hiển thị riêng các trò chơi mặc định có sẵn của hệ thống"
             >
               <Star className="w-3.5 h-3.5 text-amber-950 fill-amber-950" />
               <span>⭐ Trò chơi Mặc định ({totalDefaultCount})</span>
@@ -376,23 +663,40 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                   ? 'bg-teal-700 text-white border-teal-800 shadow-md ring-2 ring-teal-300 font-extrabold'
                   : 'bg-teal-50 text-teal-900 border-teal-300 hover:bg-teal-100'
               }`}
-              title="Hiển thị các tệp trò chơi do giáo viên tải lên"
+              title="Hiển thị tất cả các tệp trò chơi đã tải lên và lưu trữ trong Kho trò chơi"
             >
               <UploadCloud className="w-3.5 h-3.5 text-teal-600" />
               <span>📁 File Game Tải lên ({totalUploadedCount})</span>
             </button>
 
+            {/* VIDEO MP4 FILTER */}
+            {totalVideoCount > 0 && (
+              <button
+                onClick={() => setOriginFilter('video')}
+                className={`px-3 py-1.5 rounded-full font-serif text-xs sm:text-sm font-bold transition-all cursor-pointer items-center gap-1.5 border flex ${
+                  originFilter === 'video'
+                    ? 'bg-purple-600 text-white border-purple-700 shadow-md ring-2 ring-purple-300 font-extrabold'
+                    : 'bg-purple-50 text-purple-900 border-purple-300 hover:bg-purple-100'
+                }`}
+                title="Lọc các tệp Video Game định dạng .mp4"
+              >
+                <Video className="w-3.5 h-3.5 text-purple-600" />
+                <span>🎬 Video MP4 ({totalVideoCount})</span>
+              </button>
+            )}
+
             {/* PPTX FILTER */}
             {totalPptxCount > 0 && (
               <button
                 onClick={() => setOriginFilter('powerpoint')}
-                className={`hidden md:flex px-2.5 py-1 rounded-full font-serif text-xs font-bold transition-all cursor-pointer items-center gap-1 border ${
+                className={`px-3 py-1.5 rounded-full font-serif text-xs sm:text-sm font-bold transition-all cursor-pointer items-center gap-1.5 border flex ${
                   originFilter === 'powerpoint'
-                    ? 'bg-orange-600 text-white border-orange-700'
+                    ? 'bg-orange-600 text-white border-orange-700 shadow-md ring-2 ring-orange-300 font-extrabold'
                     : 'bg-orange-50 text-orange-900 border-orange-200 hover:bg-orange-100'
                 }`}
+                title="Lọc các tệp bài giảng PowerPoint (.ppt, .pptx)"
               >
-                <Presentation className="w-3 h-3 text-orange-600" />
+                <Presentation className="w-3.5 h-3.5 text-orange-600" />
                 <span>PowerPoint ({totalPptxCount})</span>
               </button>
             )}
@@ -401,13 +705,14 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
             {totalHtmlCount > 0 && (
               <button
                 onClick={() => setOriginFilter('html')}
-                className={`hidden md:flex px-2.5 py-1 rounded-full font-serif text-xs font-bold transition-all cursor-pointer items-center gap-1 border ${
+                className={`px-3 py-1.5 rounded-full font-serif text-xs sm:text-sm font-bold transition-all cursor-pointer items-center gap-1.5 border flex ${
                   originFilter === 'html'
-                    ? 'bg-emerald-600 text-white border-emerald-700'
-                    : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-300 font-extrabold'
+                    : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'
                 }`}
+                title="Lọc các tệp trò chơi HTML (.html, .htlm)"
               >
-                <FileCode className="w-3 h-3 text-emerald-600" />
+                <FileCode className="w-3.5 h-3.5 text-emerald-600" />
                 <span>HTML5 ({totalHtmlCount})</span>
               </button>
             )}
@@ -485,13 +790,13 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
           </div>
           <div>
             <h4 className="font-bold text-base sm:text-lg text-[#FFDE59] font-serif leading-tight flex items-center gap-2">
-              <span>Chế Độ Mở Rộng Toàn Màn Hình & Âm Thanh Sinh Động</span>
+              <span>Chế Độ Mở Rộng Toàn Màn Hình & Tương Tác Sống Động</span>
               <span className="text-xs bg-emerald-400 text-slate-950 font-sans px-2 py-0.5 rounded-full font-bold">
                 Mới
               </span>
             </h4>
             <p className="text-xs sm:text-sm text-blue-100 font-serif">
-              Tất cả các trò chơi mặc định và tệp tải lên đều tích hợp đầy đủ âm thanh vui nhộn và hỗ trợ mở rộng 100% màn hình máy tính!
+              Tất cả các trò chơi mặc định và tệp tải lên (.html, .ppt, .pptx, .mp4) đều hỗ trợ mở rộng 100% màn hình máy tính và có âm thanh vui nhộn!
             </p>
           </div>
         </div>
@@ -525,23 +830,32 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
         <div className="bg-white rounded-2xl p-12 text-center shadow border border-slate-200">
           <div className="text-5xl mb-2">🔍</div>
           <h3 className="text-xl font-bold font-serif text-[#063B8E]">Không tìm thấy trò chơi phù hợp</h3>
-          <p className="text-slate-500 mt-1">Hãy thử đổi nguồn trò chơi (Mặc định / Tải lên) hoặc từ khóa tìm kiếm</p>
-          <button
-            onClick={() => { 
-              setOriginFilter('all'); 
-              setSelectedCat('all'); 
-              setSelectedGrade('all'); 
-              setSearchQuery(''); 
-            }}
-            className="mt-4 px-5 py-2.5 bg-[#0878DC] hover:bg-[#063B8E] text-white font-bold rounded-xl cursor-pointer transition-colors shadow"
-          >
-            Đặt lại tất cả bộ lọc
-          </button>
+          <p className="text-slate-500 mt-1">Hãy thử đổi nguồn trò chơi (Mặc định / Tải lên / Video / PowerPoint / HTML) hoặc từ khóa tìm kiếm</p>
+          <div className="flex justify-center gap-3 mt-4">
+            <button
+              onClick={() => { 
+                setOriginFilter('all'); 
+                setSelectedCat('all'); 
+                setSelectedGrade('all'); 
+                setSearchQuery(''); 
+              }}
+              className="px-5 py-2.5 bg-[#0878DC] hover:bg-[#063B8E] text-white font-bold rounded-xl cursor-pointer transition-colors shadow"
+            >
+              Đặt lại tất cả bộ lọc
+            </button>
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl cursor-pointer transition-colors shadow flex items-center gap-2"
+            >
+              <UploadCloud className="w-4 h-4" />
+              <span>Tải file Game lên</span>
+            </button>
+          </div>
         </div>
       ) : originFilter === 'all' && !searchQuery.trim() && viewMode === 'grouped' ? (
         <div className="space-y-10">
           
-          {/* SECTION 1: DEFAULT SYSTEM GAMES (Prominently featured at the top) */}
+          {/* SECTION 1: DEFAULT SYSTEM GAMES */}
           {defaultFilteredGames.length > 0 && (
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100 p-4 rounded-2xl border-2 border-amber-300 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -557,7 +871,7 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                       </span>
                     </h3>
                     <p className="text-xs sm:text-sm text-amber-900 font-serif">
-                      Các trò chơi tương tác tích hợp sẵn: Ai là triệu phú, Vòng quay may mắn, Trắc nghiệm 4 đáp án, Thử thách tính nhanh 60s, Sudoku, Nhận diện đồ thị...
+                      Các trò chơi tương tác tích hợp sẵn: Ai là triệu phú, Vòng quay may mắn, Trắc nghiệm 4 đáp án, Tính nhanh 60s, Sudoku, Hình học Oxyz, Video thử thách...
                     </p>
                   </div>
                 </div>
@@ -577,7 +891,7 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
             </div>
           )}
 
-          {/* SECTION 2: UPLOADED GAMES (PowerPoint, HTML5, custom interactive games) */}
+          {/* SECTION 2: UPLOADED GAMES (PowerPoint, HTML5, Video Game MP4) */}
           {uploadedFilteredGames.length > 0 && (
             <div className="space-y-4 pt-4 border-t-2 border-slate-200/80">
               <div className="bg-gradient-to-r from-teal-50 via-sky-50 to-teal-100 p-4 rounded-2xl border-2 border-teal-300 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -587,13 +901,13 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                   </div>
                   <div>
                     <h3 className="text-xl sm:text-2xl font-black text-teal-950 font-serif flex items-center gap-2">
-                      <span>Kho Tệp Game Tải Lên & Chuyên Đề</span>
+                      <span>Kho Tệp Game Đã Tải Lên & Lưu Trữ</span>
                       <span className="text-xs bg-teal-700 text-white font-sans px-2.5 py-0.5 rounded-full font-bold">
                         {uploadedFilteredGames.length} trò chơi
                       </span>
                     </h3>
                     <p className="text-xs sm:text-sm text-teal-900 font-serif">
-                      Tệp bài giảng PowerPoint (.pptx), tệp trò chơi HTML5 và các đấu trường do Thầy Bùi Ngọc Thắng tải lên
+                      Bao gồm tệp Video Game (.mp4), bài giảng PowerPoint (.ppt, .pptx) và trò chơi tương tác Web (.html, .htlm)
                     </p>
                   </div>
                 </div>
@@ -630,8 +944,11 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
           <div className="flex items-center justify-between text-sm font-serif text-slate-600 px-1">
             <span>
               Đang hiển thị <strong>{filteredGames.length}</strong> trò chơi
-              {originFilter === 'default' && ' (Chỉ bao gồm các Game mặc định hệ thống)'}
-              {originFilter === 'uploaded' && ' (Chỉ bao gồm các File game tải lên)'}
+              {originFilter === 'default' && ' (Chỉ các Game mặc định hệ thống)'}
+              {originFilter === 'uploaded' && ' (Chỉ các File game tải lên lưu trữ)'}
+              {originFilter === 'video' && ' (Chỉ các Video Game định dạng .mp4)'}
+              {originFilter === 'powerpoint' && ' (Chỉ các Game PowerPoint .ppt, .pptx)'}
+              {originFilter === 'html' && ' (Chỉ các Game HTML .html, .htlm)'}
               {searchQuery && ` phù hợp với "${searchQuery}"`}
             </span>
             {originFilter !== 'all' && (
@@ -639,7 +956,7 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                 onClick={() => setOriginFilter('all')}
                 className="text-[#0878DC] hover:underline font-bold cursor-pointer text-xs sm:text-sm"
               >
-                ← Xem tất cả các trò chơi
+                ← Xem tất cả các trò chơi ({games.length})
               </button>
             )}
           </div>
@@ -678,10 +995,11 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
               <div>
                 <strong className="text-[#063B8E] block mb-1">Quy định luật chơi:</strong>
                 <ul className="list-disc pl-5 text-sm space-y-1">
-                  <li>Tổng số câu hỏi / slide: <strong>{guideModalGame.questionsCount || 10}</strong>.</li>
+                  <li>Loại tệp: <strong>{isVideoGame(guideModalGame) ? 'Video MP4 Tương Tác' : isPowerPointGame(guideModalGame) ? 'Bài Giảng PowerPoint (.ppt, .pptx)' : 'Trò chơi Web HTML5'}</strong>.</li>
+                  <li>Số mục / câu hỏi: <strong>{guideModalGame.questionsCount || 10}</strong>.</li>
                   <li>Thời gian chơi: <strong>{guideModalGame.durationMinutes || 15} phút</strong>.</li>
                   <li>Điểm tối đa có thể đạt: <strong>{guideModalGame.maxScore || 100} điểm</strong>.</li>
-                  <li>Hỗ trợ <strong>mở rộng hết màn hình máy tính (Full Screen)</strong> để tăng trải nghiệm học tập và giải trí.</li>
+                  <li>Hỗ trợ <strong>mở rộng toàn màn hình máy tính</strong> để tăng trải nghiệm học tập và giải trí.</li>
                   <li>Sau khi hoàn thành, hệ thống sẽ lưu điểm vào hồ sơ và cập nhật Bảng xếp hạng.</li>
                 </ul>
               </div>
@@ -724,6 +1042,208 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
           onGameUploaded?.(newGame);
         }}
       />
+
+      {/* 6. Admin Password Verification Modal */}
+      {isAdminAuthModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs font-serif animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border-4 border-[#0878DC] overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#063B8E] via-[#0878DC] to-[#00CFFF] text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center text-white shadow-inner">
+                  <ShieldCheck className="w-6 h-6 text-[#FFDE59]" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold leading-none">
+                    Xác thực Quản trị viên
+                  </h3>
+                  <p className="text-xs text-[#E0F2FE] mt-1 font-sans">
+                    Chỉ Quản trị viên mới có quyền chỉnh sửa
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsAdminAuthModalOpen(false);
+                  setPendingActionGame(null);
+                }}
+                className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleVerifyAdmin} className="p-6 space-y-4">
+              <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-3">
+                <Lock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-900 leading-relaxed">
+                  <strong>Khu vực bảo vệ:</strong> Để {pendingActionType === 'edit' ? 'chỉnh sửa' : 'xóa'} trò chơi{' '}
+                  {pendingActionGame && <span className="font-bold text-[#063B8E]">"{pendingActionGame.title}"</span>}, 
+                  thầy/cô vui lòng nhập mật khẩu quản trị viên.
+                </div>
+              </div>
+
+              {adminAuthError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{adminAuthError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                  Mật khẩu Quản trị viên:
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAdminPassword ? 'text' : 'password'}
+                    autoFocus
+                    required
+                    value={adminPasswordInput}
+                    onChange={(e) => setAdminPasswordInput(e.target.value)}
+                    placeholder="Nhập mật khẩu quản trị viên"
+                    className="w-full border-2 border-slate-300 rounded-xl pl-3.5 pr-11 py-2.5 text-base focus:border-[#0878DC] focus:outline-none font-sans tracking-wide"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                    title={showAdminPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  >
+                    {showAdminPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1.5 italic font-sans">
+                  * Mật khẩu được ẩn ký tự để đảm bảo bảo mật an toàn.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdminAuthModalOpen(false);
+                    setPendingActionGame(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-semibold transition-colors cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-[#063B8E] to-[#0878DC] hover:from-[#052C6E] hover:to-[#0659a8] text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow-md flex items-center gap-2 transition-transform transform active:scale-95 cursor-pointer"
+                >
+                  <KeyRound className="w-4 h-4 text-[#FFDE59]" />
+                  <span>Xác nhận & Mở chỉnh sửa</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Edit Game Modal */}
+      {editingGame && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs font-serif">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 border-4 border-[#0878DC] shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-100 text-[#0878DC] flex items-center justify-center">
+                  <Pencil className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-[#063B8E] leading-tight">
+                    Chỉnh Sửa Trò Chơi
+                  </h3>
+                  <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-sans font-bold">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Quản trị viên: Thầy Bùi Ngọc Thắng</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingGame(null)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  Tên trò chơi: *
+                </label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Nhập tên trò chơi..."
+                  className="w-full border-2 border-slate-300 rounded-xl px-3.5 py-2 text-base focus:border-[#0878DC] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  Chủ đề / Chuyên đề:
+                </label>
+                <input
+                  type="text"
+                  value={editTopic}
+                  onChange={(e) => setEditTopic(e.target.value)}
+                  placeholder="VD: Chuyên đề Toán THPT..."
+                  className="w-full border-2 border-slate-300 rounded-xl px-3.5 py-2 text-base focus:border-[#0878DC] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  Mức độ khó:
+                </label>
+                <select
+                  value={editDifficulty}
+                  onChange={(e) => setEditDifficulty(e.target.value as any)}
+                  className="w-full border-2 border-slate-300 rounded-xl px-3 py-2 text-base focus:border-[#0878DC] focus:outline-none cursor-pointer bg-white"
+                >
+                  <option value="Dễ">Dễ</option>
+                  <option value="Trung bình">Trung bình</option>
+                  <option value="Khó">Khó</option>
+                  <option value="Nâng cao">Nâng cao</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingGame(null)}
+                  className="px-4 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100 cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingEdit}
+                  className="px-5 py-2 rounded-xl bg-[#0878DC] hover:bg-[#063B8E] text-white font-bold cursor-pointer shadow flex items-center gap-1.5"
+                >
+                  {isSavingEdit ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Lưu thay đổi</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

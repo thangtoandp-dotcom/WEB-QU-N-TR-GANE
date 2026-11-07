@@ -195,6 +195,29 @@ export const DEFAULT_SYSTEM_GAMES: GameItem[] = [
     isDefault: true,
     isUploaded: false,
     authorName: 'Thầy Bùi Ngọc Thắng'
+  },
+  {
+    id: 'g-uploaded-video-toan-danphuong',
+    title: 'Game Video: Thử Thách Đạo Hàm & Khảo Sát Đồ Thị',
+    category: 'trac-nghiem',
+    categoryName: 'Game Video Toán học',
+    grade: 12,
+    topic: 'Khảo sát hàm số, cực trị & đồ thị tương tác',
+    difficulty: 'Trung bình',
+    questionsCount: 5,
+    durationMinutes: 10,
+    maxScore: 100,
+    active: true,
+    description: 'Trò chơi học tập dạng Video MP4 bám sát chuyên đề Toán THPT Đan Phượng, hỗ trợ trình chiếu toàn màn hình và dừng hình giải toán.',
+    color: '#8B5CF6',
+    bgCard: '#F5F3FF',
+    fileType: 'video',
+    fileUrl: '/uploads/games/demo_video_game_toan_danphuong.mp4',
+    fileName: 'demo_video_game_toan_danphuong.mp4',
+    fileSize: '148 KB',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Thầy Bùi Ngọc Thắng'
   }
 ];
 
@@ -507,7 +530,9 @@ export const api = {
             color: g.thumbnail_color?.includes('indigo') || g.thumbnail_color?.includes('blue') ? '#0878DC' : g.color || '#0878DC',
             bgCard: 'from-blue-600 to-indigo-700',
             fileUrl: g.embed_url || g.file_url || undefined,
-            fileType: g.html_content ? 'html' : (g.file_type || (g.embed_url ? 'embed' : 'html')),
+            fileType: (g.file_type === 'video' || (g.file_url && g.file_url.includes('.mp4')) || (g.embed_url && g.embed_url.includes('.mp4'))) 
+              ? 'video' 
+              : (g.html_content ? 'html' : (g.file_type || (g.embed_url ? 'embed' : 'html'))),
             embedCode: g.html_content || g.embed_code || undefined,
             isUploaded: true,
             isDefault: false,
@@ -527,6 +552,7 @@ export const api = {
       const data = await res.json();
       localGames = (data.games || []).map((lg: any) => ({
         ...lg,
+        fileType: lg.fileType || (lg.fileUrl?.endsWith('.mp4') ? 'video' : (lg.fileUrl?.includes('ppt') ? 'powerpoint' : 'html')),
         isDefault: defaultIds.has(lg.id),
         isUploaded: !defaultIds.has(lg.id)
       }));
@@ -563,7 +589,7 @@ export const api = {
     return [...defaultGames, ...uploadedGames];
   },
 
-  async uploadGameFile(fileName: string, fileData: string, fileType: string): Promise<{ success: boolean; fileUrl?: string; fileName?: string; fileType?: 'powerpoint' | 'html' | 'embed'; fileSize?: string; message?: string }> {
+  async uploadGameFile(fileName: string, fileData: string, fileType: string): Promise<{ success: boolean; fileUrl?: string; fileName?: string; fileType?: 'powerpoint' | 'html' | 'video' | 'embed'; fileSize?: string; message?: string }> {
     try {
       const res = await fetch('/api/games/upload', {
         method: 'POST',

@@ -4,13 +4,15 @@ import {
   FileCode, 
   FileSpreadsheet, 
   Presentation, 
+  Video,
   Link, 
   X, 
   CheckCircle2, 
   AlertCircle, 
   Loader2, 
   HelpCircle,
-  Sparkles
+  Sparkles,
+  Film
 } from 'lucide-react';
 import { GameItem, GameCategory } from '../../types';
 import { api } from '../../services/api';
@@ -31,7 +33,7 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
   const [uploadMode, setUploadMode] = useState<'file' | 'link'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState('');
-  const [fileType, setFileType] = useState<'powerpoint' | 'html' | 'embed'>('powerpoint');
+  const [fileType, setFileType] = useState<'powerpoint' | 'html' | 'video' | 'embed'>('powerpoint');
   const [fileSizeStr, setFileSizeStr] = useState('');
   
   // Form fields
@@ -62,16 +64,20 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
     setErrorMsg('');
 
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext === 'ppt' || ext === 'pptx' || ext === 'ppsx') {
+    if (ext === 'mp4' || ext === 'webm' || ext === 'm4v') {
+      setFileType('video');
+      if (!title) setTitle(file.name.replace(/\.[^/.]+$/, ''));
+      if (!topic) setTopic('Video Game Toán học tương tác');
+    } else if (ext === 'ppt' || ext === 'pptx' || ext === 'ppsx') {
       setFileType('powerpoint');
       if (!title) setTitle(file.name.replace(/\.[^/.]+$/, ''));
       if (!topic) setTopic('Chuyên đề PowerPoint tương tác');
-    } else if (ext === 'html' || ext === 'htm') {
+    } else if (ext === 'html' || ext === 'htm' || ext === 'htlm') {
       setFileType('html');
       if (!title) setTitle(file.name.replace(/\.[^/.]+$/, ''));
       if (!topic) setTopic('Trò chơi tương tác HTML5');
     } else {
-      setErrorMsg('Định dạng tệp không được hỗ trợ. Vui lòng chọn tệp PowerPoint (.pptx, .ppt, .ppsx) hoặc HTML (.html, .htm).');
+      setErrorMsg('Định dạng tệp không được hỗ trợ. Vui lòng chọn tệp Game (.html, .htlm, .ppt, .pptx, .mp4).');
       setSelectedFile(null);
       return;
     }
@@ -90,7 +96,7 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
     }
 
     if (uploadMode === 'file' && !selectedFile) {
-      setErrorMsg('Vui lòng chọn tệp PowerPoint (.pptx) hoặc HTML (.html) để tải lên!');
+      setErrorMsg('Vui lòng chọn tệp Game (.html, .htlm, .ppt, .pptx, .mp4) để tải lên!');
       return;
     }
 
@@ -138,9 +144,21 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
       else if (category === 'tu-duy') catName = 'Game Tư duy và Trí tuệ';
       else if (category === 'tuong-tac') catName = 'Game Tương tác';
 
-      // Pick background color
-      const color = category === 'giai-tri' ? '#E11D48' : '#0878DC';
-      const bgCard = category === 'giai-tri' ? '#FFE4E6' : '#E0F2FE';
+      // Pick background color based on type and category
+      let color = '#0878DC';
+      let bgCard = '#E0F2FE';
+      if (finalFileType === 'video') {
+        color = '#8B5CF6';
+        bgCard = '#F3E8FF';
+      } else if (finalFileType === 'powerpoint') {
+        color = '#EA580C';
+        bgCard = '#FFEDD5';
+      } else if (category === 'giai-tri') {
+        color = '#E11D48';
+        bgCard = '#FFE4E6';
+      }
+
+      const typeLabel = finalFileType === 'video' ? 'Video Game (.mp4)' : finalFileType === 'powerpoint' ? 'PowerPoint (.pptx/.ppt)' : 'HTML5';
 
       const newGame: Partial<GameItem> = {
         title: title.trim(),
@@ -149,11 +167,11 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
         grade,
         topic: topic.trim() || 'Toán THPT',
         difficulty,
-        questionsCount: finalFileType === 'powerpoint' ? 10 : 1,
+        questionsCount: finalFileType === 'powerpoint' ? 10 : (finalFileType === 'video' ? 5 : 1),
         durationMinutes: Number(durationMinutes) || 15,
         maxScore: Number(maxScore) || 100,
         active: true,
-        description: description.trim() || `Trò chơi tương tác dạng ${finalFileType === 'powerpoint' ? 'PowerPoint' : 'HTML5'} do giáo viên Bùi Ngọc Thắng và tổ Toán tải lên.`,
+        description: description.trim() || `Tệp trò chơi dạng ${typeLabel} do giáo viên Bùi Ngọc Thắng tải lên lưu trữ tại Kho trò chơi.`,
         color,
         bgCard,
         fileUrl: finalFileUrl,
@@ -193,10 +211,10 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
             </div>
             <div>
               <h3 className="text-2xl font-bold text-[#063B8E]">
-                Tải Lên Game Tương Tác Mới
+                Tải Lên File Game Vào Kho Trò Chơi
               </h3>
               <p className="text-slate-500 text-sm">
-                Hỗ trợ tệp PowerPoint (.pptx, .ppt), HTML (.html) & toàn màn hình
+                Hỗ trợ tải tệp: <strong>.html (.htlm), .ppt, .pptx, .mp4</strong> lưu trữ trực tiếp
               </p>
             </div>
           </div>
@@ -226,8 +244,8 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
                 uploadMode === 'file' ? 'bg-[#0878DC] text-white shadow-md' : 'text-slate-600 hover:bg-white'
               }`}
             >
-              <Presentation className="w-4 h-4" />
-              <span>Tải tệp từ máy tính (.pptx, .html)</span>
+              <UploadCloud className="w-4 h-4" />
+              <span>Tải file từ máy tính (.html, .ppt, .pptx, .mp4)</span>
             </button>
             <button
               type="button"
@@ -250,28 +268,40 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pptx,.ppt,.ppsx,.html,.htm"
+                accept=".pptx,.ppt,.ppsx,.html,.htm,.htlm,.mp4,.webm,.m4v"
                 onChange={handleFileChange}
                 className="hidden"
               />
               
-              <div className="flex justify-center gap-3 mb-3">
-                <div className="p-3 bg-rose-100 text-rose-600 rounded-2xl border border-rose-200">
-                  <Presentation className="w-7 h-7" />
+              {/* 3 Supported File Badges */}
+              <div className="flex flex-wrap justify-center gap-2.5 mb-3">
+                <div className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-xl border border-purple-200 flex items-center gap-1.5 text-xs font-bold shadow-xs">
+                  <Video className="w-4 h-4 text-purple-600" />
+                  <span>Video Game (.mp4)</span>
                 </div>
-                <div className="p-3 bg-blue-100 text-[#0878DC] rounded-2xl border border-blue-200">
-                  <FileCode className="w-7 h-7" />
+                <div className="px-3 py-1.5 bg-amber-100 text-amber-800 rounded-xl border border-amber-200 flex items-center gap-1.5 text-xs font-bold shadow-xs">
+                  <Presentation className="w-4 h-4 text-amber-600" />
+                  <span>PowerPoint (.ppt, .pptx)</span>
+                </div>
+                <div className="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-xl border border-emerald-200 flex items-center gap-1.5 text-xs font-bold shadow-xs">
+                  <FileCode className="w-4 h-4 text-emerald-600" />
+                  <span>HTML Web Game (.html, .htlm)</span>
                 </div>
               </div>
 
               {selectedFile ? (
-                <div className="space-y-1">
-                  <div className="font-bold text-[#063B8E] text-lg flex items-center justify-center gap-1.5">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    <span>{fileName}</span>
+                <div className="space-y-1.5 bg-white/80 p-3 rounded-xl border border-[#0878DC]/30 max-w-md mx-auto">
+                  <div className="font-bold text-[#063B8E] text-base flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span className="truncate">{fileName}</span>
                   </div>
-                  <div className="text-xs text-slate-500">
-                    Định dạng: <strong className="uppercase">{fileType}</strong> • Dung lượng: <strong>{fileSizeStr}</strong>
+                  <div className="flex items-center justify-center gap-2 text-xs">
+                    <span className={`px-2.5 py-0.5 rounded-full font-bold text-white ${
+                      fileType === 'video' ? 'bg-purple-600' : fileType === 'powerpoint' ? 'bg-amber-600' : 'bg-emerald-600'
+                    }`}>
+                      {fileType === 'video' ? '🎬 VIDEO GAME (.MP4)' : fileType === 'powerpoint' ? '📊 POWERPOINT' : '💻 HTML5 GAME'}
+                    </span>
+                    <span className="text-slate-500">Dung lượng: <strong>{fileSizeStr}</strong></span>
                   </div>
                   <button
                     type="button"
@@ -279,18 +309,18 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
                       e.stopPropagation();
                       fileInputRef.current?.click();
                     }}
-                    className="text-xs text-[#0878DC] hover:underline pt-1 cursor-pointer block mx-auto"
+                    className="text-xs text-[#0878DC] hover:underline pt-1 cursor-pointer block mx-auto font-bold"
                   >
-                    Bấm để chọn file khác
+                    Bấm để chọn tệp khác
                   </button>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  <div className="text-base font-bold text-slate-700">
-                    Kéo thả file Game hoặc bấm vào đây để duyệt tệp
+                <div className="space-y-1.5">
+                  <div className="text-base font-bold text-slate-800">
+                    Kéo thả file Game hoặc bấm vào đây để duyệt tệp từ máy tính
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Hỗ trợ tệp <strong>PowerPoint</strong> (.pptx, .ppt, .ppsx) và tệp <strong>HTML Web Game</strong> (.html, .htm) dung lượng tối đa 100MB
+                  <p className="text-xs text-slate-600 max-w-md mx-auto">
+                    Hỗ trợ tệp <strong>.html (.htlm)</strong>, <strong>.ppt, .pptx</strong> và <strong>.mp4</strong> (dung lượng tối đa 150MB). File sau khi tải sẽ được lưu trữ vĩnh viễn trong Kho trò chơi.
                   </p>
                 </div>
               )}

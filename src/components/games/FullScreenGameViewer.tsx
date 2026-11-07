@@ -10,10 +10,20 @@ import {
   Clock, 
   CheckCircle2, 
   ExternalLink,
-  Presentation,
-  FileCode,
-  ShieldCheck,
-  Trophy
+  Presentation, 
+  FileCode, 
+  Video,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  FastForward,
+  Rewind,
+  ShieldCheck, 
+  Trophy,
+  Sparkles,
+  HelpCircle,
+  Repeat
 } from 'lucide-react';
 import { GameItem, UserProfile } from '../../types';
 import { api } from '../../services/api';
@@ -35,12 +45,39 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
   onFinished
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [keyCounter, setKeyCounter] = useState(0);
   const [timeLeft, setTimeLeft] = useState((game.durationMinutes || 15) * 60);
   const [isCompleted, setIsCompleted] = useState(false);
   const [score, setScore] = useState(game.maxScore || 100);
-  const [showControls, setShowControls] = useState(true);
+
+  // Video player state
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isLooping, setIsLooping] = useState(false);
+  const [isMuted, setIsMuted] = useState(soundService.isMuted());
+  const [showChallengeOverlay, setShowChallengeOverlay] = useState(false);
+  const [selectedChallengeAnswer, setSelectedChallengeAnswer] = useState<number | null>(null);
+  const [challengeFeedback, setChallengeFeedback] = useState<'correct' | 'wrong' | null>(null);
+
+  // Detect file type
+  const isVideo = game.fileType === 'video' || (game.fileUrl && /\.(mp4|webm|m4v)$/i.test(game.fileUrl)) || (game.fileName && /\.(mp4|webm|m4v)$/i.test(game.fileName));
+  const isPowerPoint = game.fileType === 'powerpoint' || (game.fileName && /\.(pptx|ppt|ppsx)$/i.test(game.fileName));
+  const isHtml = game.fileType === 'html' || (game.fileName && /\.(html|htm|htlm)$/i.test(game.fileName));
+
+  // Sync with soundService
+  useEffect(() => {
+    return soundService.subscribe((muted) => {
+      setIsMuted(muted);
+      if (videoRef.current) {
+        videoRef.current.muted = muted;
+      }
+    });
+  }, []);
 
   // Listen to browser fullscreen changes
   useEffect(() => {
@@ -56,6 +93,22 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     };
   }, []);
+
+  // Keyboard shortcut: F11 or Space
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+      if (e.code === 'Space' && isVideo && e.target === document.body) {
+        e.preventDefault();
+        togglePlayPause();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen, isPlaying, isVideo]);
 
   // Timer countdown
   useEffect(() => {
@@ -97,6 +150,45 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
 
   const handleReload = () => {
     setKeyCounter((prev) => prev + 1);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  const togglePlayPause = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      soundService.playClick();
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+      soundService.playClick();
+    }
+  };
+
+  const seekVideo = (secondsDelta: number) => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = Math.max(0, Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + secondsDelta));
+    soundService.playClick();
+  };
+
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+    }
+    soundService.playClick();
+  };
+
+  const toggleMute = () => {
+    const newMuted = soundService.toggleMute();
+    setIsMuted(newMuted);
+    if (videoRef.current) {
+      videoRef.current.muted = newMuted;
+    }
   };
 
   const handleFinish = async () => {
@@ -128,20 +220,41 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
   };
 
   const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs < 0) return '00:00';
     const m = Math.floor(secs / 60);
-    const s = secs % 60;
+    const s = Math.floor(secs % 60);
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   // Determine iframe source URL
   let iframeSrc = game.fileUrl || '';
-  const isPowerPoint = game.fileType === 'powerpoint' || (game.fileName && /\.(pptx|ppt|ppsx)$/i.test(game.fileName));
-  const isHtml = game.fileType === 'html' || (game.fileName && /\.(html|htm)$/i.test(game.fileName));
-
-  // If PowerPoint file is hosted publicly, use Microsoft Office Online Viewer
   if (isPowerPoint && iframeSrc.startsWith('http')) {
     iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(iframeSrc)}`;
   }
+
+  // Interactive checkpoint question sample
+  const checkpoint = {
+    question: `Câu hỏi tương tác từ bài giảng ${game.title}: Điểm cực trị và đạo hàm của hàm số đạt giá trị gì?`,
+    options: [
+      'A. y\' = 0 hoặc đạo hàm không xác định tại điểm đó',
+      'B. y\' luôn dương trên toàn tập xác định',
+      'C. y\' luôn âm trên toàn tập xác định',
+      'D. Đạo hàm luôn bằng 1'
+    ],
+    correctIndex: 0
+  };
+
+  const handleAnswerChallenge = (index: number) => {
+    setSelectedChallengeAnswer(index);
+    if (index === checkpoint.correctIndex) {
+      setChallengeFeedback('correct');
+      soundService.playCorrect();
+      setScore(Math.min(game.maxScore || 100, score + 10));
+    } else {
+      setChallengeFeedback('wrong');
+      soundService.playWrong();
+    }
+  };
 
   return (
     <div 
@@ -174,13 +287,18 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
               <span className="font-bold text-base sm:text-lg text-white line-clamp-1">
                 {game.title}
               </span>
-              {isPowerPoint ? (
-                <span className="bg-rose-600 text-white text-xs px-2.5 py-0.5 rounded-full font-sans font-bold flex items-center gap-1 shrink-0">
+              {isVideo ? (
+                <span className="bg-purple-600 text-white text-xs px-2.5 py-0.5 rounded-full font-sans font-bold flex items-center gap-1 shrink-0 shadow-sm border border-purple-400">
+                  <Video className="w-3.5 h-3.5" />
+                  <span>Video Game (.MP4)</span>
+                </span>
+              ) : isPowerPoint ? (
+                <span className="bg-orange-600 text-white text-xs px-2.5 py-0.5 rounded-full font-sans font-bold flex items-center gap-1 shrink-0 shadow-sm border border-orange-400">
                   <Presentation className="w-3.5 h-3.5" />
                   <span>PowerPoint Game</span>
                 </span>
               ) : (
-                <span className="bg-cyan-500 text-[#041E42] text-xs px-2.5 py-0.5 rounded-full font-sans font-bold flex items-center gap-1 shrink-0">
+                <span className="bg-emerald-600 text-white text-xs px-2.5 py-0.5 rounded-full font-sans font-bold flex items-center gap-1 shrink-0 shadow-sm border border-emerald-400">
                   <FileCode className="w-3.5 h-3.5" />
                   <span>HTML5 Web Game</span>
                 </span>
@@ -266,11 +384,252 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
 
       </div>
 
-      {/* Main Game Stage / Iframe Screen */}
+      {/* Main Game Stage */}
       <div className="flex-1 w-full h-full relative bg-[#020B16] flex items-center justify-center overflow-hidden">
         
-        {/* If direct HTML document provided (from Supabase html_content or uploaded HTML) */}
-        {game.embedCode && !game.embedCode.includes('<iframe') ? (
+        {/* CASE 1: MP4 VIDEO GAME PLAYER */}
+        {isVideo && game.fileUrl ? (
+          <div className="w-full h-full flex flex-col justify-between relative bg-black">
+            {/* Video Element */}
+            <div 
+              className="flex-1 relative flex items-center justify-center cursor-pointer group"
+              onClick={togglePlayPause}
+            >
+              <video
+                ref={videoRef}
+                src={game.fileUrl}
+                autoPlay
+                playsInline
+                loop={isLooping}
+                muted={isMuted}
+                onTimeUpdate={() => {
+                  if (videoRef.current) {
+                    setVideoCurrentTime(videoRef.current.currentTime);
+                  }
+                }}
+                onLoadedMetadata={() => {
+                  if (videoRef.current) {
+                    setVideoDuration(videoRef.current.duration);
+                  }
+                }}
+                onEnded={() => {
+                  setIsPlaying(false);
+                  setShowChallengeOverlay(true);
+                }}
+                className="max-h-full max-w-full object-contain mx-auto"
+              />
+
+              {/* Big Center Play/Pause Indicator on hover/pause */}
+              {!isPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-2xs transition-opacity">
+                  <div className="w-20 h-20 rounded-full bg-purple-600/90 text-white flex items-center justify-center shadow-2xl border-4 border-white/80 transform hover:scale-110 transition-transform">
+                    <Play className="w-10 h-10 ml-1.5" />
+                  </div>
+                </div>
+              )}
+
+              {/* Floating Challenge trigger button on the top right */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowChallengeOverlay(prev => !prev);
+                  if (videoRef.current && !videoRef.current.paused) {
+                    videoRef.current.pause();
+                    setIsPlaying(false);
+                  }
+                }}
+                className="absolute top-4 right-4 bg-purple-700/85 hover:bg-purple-600 text-white px-3.5 py-1.5 rounded-xl font-bold font-serif text-xs sm:text-sm flex items-center gap-1.5 border border-purple-400 shadow-lg cursor-pointer backdrop-blur-sm active:scale-95 z-30"
+                title="Bấm để mở câu hỏi đố vui tương tác của Video"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>Thử thách câu hỏi Video</span>
+              </button>
+            </div>
+
+            {/* Video Interactive Controls Bar */}
+            <div className="bg-gradient-to-t from-black via-slate-950/90 to-transparent p-3 sm:p-4 text-white space-y-2 z-20">
+              {/* Timeline Slider */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono text-[#00CFFF] min-w-[45px]">
+                  {formatTime(videoCurrentTime)}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max={videoDuration || 100}
+                  step="0.1"
+                  value={videoCurrentTime}
+                  onChange={(e) => {
+                    const time = Number(e.target.value);
+                    setVideoCurrentTime(time);
+                    if (videoRef.current) {
+                      videoRef.current.currentTime = time;
+                    }
+                  }}
+                  className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400"
+                />
+                <span className="text-xs font-mono text-slate-400 min-w-[45px] text-right">
+                  {formatTime(videoDuration)}
+                </span>
+              </div>
+
+              {/* Action Buttons Row */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                {/* Play, Rewind, Forward */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={togglePlayPause}
+                    className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow cursor-pointer transition-transform active:scale-95"
+                    title={isPlaying ? 'Tạm dừng (Space)' : 'Phát tiếp (Space)'}
+                  >
+                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                  </button>
+
+                  <button
+                    onClick={() => seekVideo(-10)}
+                    className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+                    title="Tua lùi 10 giây"
+                  >
+                    <Rewind className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => seekVideo(10)}
+                    className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+                    title="Tua tới 10 giây"
+                  >
+                    <FastForward className="w-4 h-4" />
+                  </button>
+
+                  {/* Sound Toggle */}
+                  <button
+                    onClick={toggleMute}
+                    className={`p-2 rounded-xl border cursor-pointer ${
+                      isMuted 
+                        ? 'bg-red-500/20 text-red-300 border-red-400/50' 
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50'
+                    }`}
+                    title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {/* Speed & Loop & Fullscreen */}
+                <div className="flex items-center gap-2">
+                  {/* Speed options */}
+                  <div className="flex items-center bg-white/10 rounded-xl p-0.5 text-xs font-bold font-sans">
+                    {[0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                      <button
+                        key={speed}
+                        onClick={() => handleSpeedChange(speed)}
+                        className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                          playbackSpeed === speed ? 'bg-purple-600 text-white' : 'text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {speed}x
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Loop toggle */}
+                  <button
+                    onClick={() => setIsLooping(prev => !prev)}
+                    className={`p-2 rounded-xl border cursor-pointer ${
+                      isLooping 
+                        ? 'bg-purple-600/40 text-purple-300 border-purple-400' 
+                        : 'bg-white/10 text-slate-400 border-transparent hover:bg-white/20'
+                    }`}
+                    title={isLooping ? 'Đang lặp lại video' : 'Không lặp video'}
+                  >
+                    <Repeat className="w-4 h-4" />
+                  </button>
+
+                  {/* Fullscreen button */}
+                  <button
+                    onClick={toggleFullscreen}
+                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer shadow"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                    <span>Toàn màn hình</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Challenge Modal Overlay on Video */}
+            {showChallengeOverlay && (
+              <div className="absolute inset-0 z-40 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl p-6 max-w-lg w-full border-4 border-purple-600 shadow-2xl text-slate-800 space-y-4 font-serif">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-purple-600" />
+                      <h4 className="text-xl font-bold text-[#063B8E]">
+                        Thử Thách Video Toán Học
+                      </h4>
+                    </div>
+                    <button
+                      onClick={() => setShowChallengeOverlay(false)}
+                      className="text-slate-400 hover:text-slate-700 cursor-pointer font-sans font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <p className="text-sm font-bold text-slate-700">
+                    {checkpoint.question}
+                  </p>
+
+                  <div className="space-y-2">
+                    {checkpoint.options.map((opt, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleAnswerChallenge(idx)}
+                        className={`w-full text-left p-3 rounded-xl border text-sm font-serif transition-all cursor-pointer ${
+                          selectedChallengeAnswer === idx
+                            ? idx === checkpoint.correctIndex
+                              ? 'bg-emerald-100 border-emerald-500 text-emerald-900 font-bold'
+                              : 'bg-red-100 border-red-500 text-red-900 font-bold'
+                            : 'bg-slate-50 border-slate-200 hover:bg-purple-50 hover:border-purple-300'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+
+                  {challengeFeedback === 'correct' && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Chính xác tuyệt vời! Bạn được cộng thêm 10 điểm thưởng!</span>
+                    </div>
+                  )}
+
+                  {challengeFeedback === 'wrong' && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs">
+                      Chưa chính xác! Hãy quan sát kỹ lại nội dung video để tìm đáp án đúng nhé!
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        setShowChallengeOverlay(false);
+                        if (videoRef.current) {
+                          videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+                        }
+                      }}
+                      className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm cursor-pointer shadow"
+                    >
+                      Tiếp tục xem Video
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : game.embedCode && !game.embedCode.includes('<iframe') ? (
+          /* CASE 2: DIRECT HTML DOCUMENT */
           <iframe
             key={keyCounter}
             srcDoc={game.embedCode}
@@ -280,12 +639,14 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
           />
         ) : game.embedCode && game.embedCode.includes('<iframe') ? (
+          /* CASE 3: EMBED CODE WITH IFRAME */
           <div 
             key={keyCounter}
             className="w-full h-full flex items-center justify-center [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
             dangerouslySetInnerHTML={{ __html: game.embedCode }}
           />
         ) : iframeSrc ? (
+          /* CASE 4: IFRAME URL (HTML or Office Online PowerPoint) */
           <iframe
             key={keyCounter}
             src={iframeSrc}
@@ -295,6 +656,7 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
           />
         ) : (
+          /* FALLBACK BANNER */
           <div className="text-center p-8 text-white space-y-4 max-w-md">
             <Presentation className="w-16 h-16 text-[#00CFFF] mx-auto animate-pulse" />
             <h3 className="text-2xl font-bold font-serif text-[#FFDE59]">{game.title}</h3>

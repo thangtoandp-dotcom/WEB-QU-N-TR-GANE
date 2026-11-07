@@ -24,7 +24,8 @@ import {
   KeyRound,
   ShieldCheck,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Lock
 } from 'lucide-react';
 import { GameItem, Student, ClassItem, GameRoom, GameAttempt, UserProfile, Question } from '../types';
 import { api, SUPABASE_SCHEMA_SQL, excelService } from '../services/api';
@@ -39,6 +40,7 @@ interface AdminViewProps {
   attempts: GameAttempt[];
   onRefreshData: () => void;
   onSelectGameToPlay?: (game: GameItem) => void;
+  onAdminLoginSuccess?: (profile: UserProfile) => void;
 }
 
 export const AdminView: React.FC<AdminViewProps> = ({
@@ -48,7 +50,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
   classes,
   rooms,
   attempts,
-  onRefreshData
+  onRefreshData,
+  onSelectGameToPlay,
+  onAdminLoginSuccess
 }) => {
   const [activeSidebar, setActiveSidebar] = useState<
     'overview' | 'games' | 'ai-generator' | 'questions' | 'students' | 'classes' | 'rooms' | 'results' | 'supabase'
@@ -351,6 +355,117 @@ export const AdminView: React.FC<AdminViewProps> = ({
     return true;
   });
 
+  const hasSession = typeof window !== 'undefined' && sessionStorage.getItem('toan_admin_auth') === 'true';
+  const isAuth = currentUser.role === 'teacher' || hasSession;
+  const [gatePasscode, setGatePasscode] = useState('');
+  const [showGatePasscode, setShowGatePasscode] = useState(false);
+  const [gateError, setGateError] = useState('');
+
+  if (!isAuth) {
+    const handleGateLogin = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setGateError('');
+      const entered = gatePasscode.trim();
+      if (!entered) {
+        setGateError('Vui lòng nhập mật khẩu quản trị viên.');
+        return;
+      }
+
+      if (entered === '768306') {
+        try {
+          sessionStorage.setItem('toan_admin_auth', 'true');
+        } catch {}
+        if (onAdminLoginSuccess) {
+          onAdminLoginSuccess({
+            id: 'T-BNT',
+            name: 'Thầy Bùi Ngọc Thắng',
+            role: 'teacher',
+            school: 'Trường THPT Đan Phượng'
+          });
+        }
+        return;
+      }
+
+      try {
+        const res = await api.teacherLogin(entered);
+        if (res.success && res.profile) {
+          try {
+            sessionStorage.setItem('toan_admin_auth', 'true');
+          } catch {}
+          if (onAdminLoginSuccess) {
+            onAdminLoginSuccess(res.profile);
+          }
+          return;
+        }
+      } catch {}
+
+      setGateError('Mật khẩu quản trị viên không chính xác. Vui lòng thử lại!');
+    };
+
+    return (
+      <div className="max-w-md mx-auto my-12 bg-white rounded-3xl shadow-2xl border-4 border-[#0878DC] overflow-hidden animate-in zoom-in-95 font-serif">
+        <div className="bg-gradient-to-r from-[#063B8E] via-[#0878DC] to-[#00CFFF] text-white p-6 text-center">
+          <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center shadow-inner">
+            <Lock className="w-9 h-9 text-[#FFDE59]" />
+          </div>
+          <h2 className="text-2xl font-bold">Khu Vực Quản Trị Viên</h2>
+          <p className="text-xs text-[#E0F2FE] mt-1 font-sans">
+            Chỉ Quản trị viên mới có quyền chỉnh sửa và quản lý hệ thống
+          </p>
+        </div>
+
+        <form onSubmit={handleGateLogin} className="p-6 space-y-4">
+          <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-blue-900 leading-relaxed">
+            Khu vực này dành riêng cho giáo viên quản trị (Thầy Bùi Ngọc Thắng) để chỉnh sửa trò chơi, quản lý học sinh, đề thi và cấu hình trực tuyến.
+          </div>
+
+          {gateError && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{gateError}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">
+              Mật khẩu Quản trị viên:
+            </label>
+            <div className="relative">
+              <input
+                type={showGatePasscode ? 'text' : 'password'}
+                required
+                autoFocus
+                value={gatePasscode}
+                onChange={(e) => setGatePasscode(e.target.value)}
+                placeholder="Nhập mật khẩu quản trị viên"
+                className="w-full border-2 border-slate-300 rounded-xl pl-3.5 pr-11 py-2.5 text-base focus:border-[#0878DC] focus:outline-none font-sans tracking-wide"
+              />
+              <button
+                type="button"
+                onClick={() => setShowGatePasscode(!showGatePasscode)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                title={showGatePasscode ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              >
+                {showGatePasscode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1.5 italic font-sans">
+              * Mật khẩu được ẩn ký tự để đảm bảo bảo mật an toàn.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-[#063B8E] hover:bg-[#052C6E] text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 text-base transition-transform transform active:scale-95 cursor-pointer"
+          >
+            <ShieldCheck className="w-5 h-5 text-[#FFDE59]" />
+            <span>Đăng nhập Quản trị viên</span>
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-3xl shadow-xl border-2 border-[#0878DC]/20 overflow-hidden">
       
@@ -392,7 +507,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <input
               type="password"
               required
-              placeholder="Mật khẩu cũ (vd: 123456)"
+              placeholder="Mật khẩu cũ (vd: 768306)"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-sm font-serif w-full sm:w-44 focus:outline-none"

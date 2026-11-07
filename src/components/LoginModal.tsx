@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, GraduationCap, Users, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, GraduationCap, Users, ShieldCheck, CheckCircle2, Eye, EyeOff, Lock } from 'lucide-react';
 import { UserProfile, Student } from '../types';
 import { api } from '../services/api';
 
@@ -20,6 +20,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 }) => {
   const [role, setRole] = useState<'teacher' | 'student'>(defaultRole);
   const [teacherPasscode, setTeacherPasscode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedStudentCode, setSelectedStudentCode] = useState(studentsList[0]?.code || '');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -35,13 +36,37 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const handleTeacherLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    const entered = teacherPasscode.trim();
+    if (!entered) {
+      setErrorMsg('Vui lòng nhập mật khẩu quản trị viên.');
+      return;
+    }
+
     try {
-      const res = await api.teacherLogin(teacherPasscode.trim());
+      if (entered === '768306') {
+        const adminProfile: UserProfile = {
+          id: 'T-BNT',
+          name: 'Thầy Bùi Ngọc Thắng',
+          role: 'teacher',
+          school: 'Trường THPT Đan Phượng'
+        };
+        try {
+          sessionStorage.setItem('toan_admin_auth', 'true');
+        } catch {}
+        onLoginSuccess(adminProfile);
+        onClose();
+        return;
+      }
+
+      const res = await api.teacherLogin(entered);
       if (res.success && res.profile) {
+        try {
+          sessionStorage.setItem('toan_admin_auth', 'true');
+        } catch {}
         onLoginSuccess(res.profile);
         onClose();
       } else {
-        setErrorMsg(res.message || 'Mật khẩu quản trị chưa đúng (Gợi ý: thptdanphuong hoặc 123456)');
+        setErrorMsg('Mật khẩu quản trị viên chưa chính xác. Vui lòng thử lại!');
       }
     } catch {
       setErrorMsg('Lỗi kết nối máy chủ xác thực.');
@@ -143,17 +168,29 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">
-                  Mật khẩu quản trị:
+                  Mật khẩu Quản trị viên:
                 </label>
-                <input
-                  type="password"
-                  value={teacherPasscode}
-                  onChange={(e) => setTeacherPasscode(e.target.value)}
-                  placeholder="Nhập mật khẩu (hoặc để trống để đăng nhập nhanh)"
-                  className="w-full border-2 border-slate-300 rounded-xl px-3.5 py-2.5 text-base focus:border-[#0878DC] focus:outline-none"
-                />
-                <p className="text-xs text-slate-500 mt-1 italic">
-                  💡 Gợi ý thử nghiệm: Bấm "Đăng nhập ngay" hoặc dùng mã <span className="font-mono font-bold">123456</span>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={teacherPasscode}
+                    onChange={(e) => setTeacherPasscode(e.target.value)}
+                    placeholder="Nhập mật khẩu quản trị viên"
+                    className="w-full border-2 border-slate-300 rounded-xl pl-3.5 pr-11 py-2.5 text-base focus:border-[#0878DC] focus:outline-none font-sans tracking-wide"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                    title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1 font-serif">
+                  <Lock className="w-3 h-3 text-[#0878DC]" />
+                  <span>Chỉ Quản trị viên mới có quyền truy cập và chỉnh sửa hệ thống.</span>
                 </p>
               </div>
 
