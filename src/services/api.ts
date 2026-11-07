@@ -2,6 +2,202 @@ import * as XLSX from 'xlsx';
 import { Student, GameItem, GameRoom, GameAttempt, ClassItem, Question, GameCategory } from '../types';
 import { supabase } from '../lib/supabase';
 
+// 10 Guaranteed Default System Games (Always available in TOAN GAME HUB)
+export const DEFAULT_SYSTEM_GAMES: GameItem[] = [
+  {
+    id: 'g-trieu-phu-toan',
+    title: 'Ai là triệu phú Toán học THPT',
+    category: 'tuong-tac',
+    categoryName: 'Ai là triệu phú Toán học',
+    grade: 'all',
+    topic: 'Chinh phục 15 câu hỏi Toán THPT đỉnh cao',
+    difficulty: 'Nâng cao',
+    questionsCount: 15,
+    durationMinutes: 15,
+    maxScore: 150,
+    active: true,
+    description: 'Format chuẩn Ai Là Triệu Phú với 4 sự trợ giúp: 50:50, Hỏi ý kiến khán giả, Đổi câu hỏi, Gọi thầy cô. Chinh phục đỉnh cao 150 điểm!',
+    color: '#0891B2',
+    bgCard: '#CFFAFE',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Hệ thống TOAN GAME HUB'
+  },
+  {
+    id: 'g-vong-quay-may-man',
+    title: 'Vòng quay may mắn Toán học',
+    category: 'tuong-tac',
+    categoryName: 'Vòng quay may mắn',
+    grade: 'all',
+    topic: 'Kiến thức tổng hợp khối 10-11-12',
+    difficulty: 'Dễ',
+    questionsCount: 8,
+    durationMinutes: 8,
+    maxScore: 120,
+    active: true,
+    description: 'Quay vòng quay để nhận điểm thưởng ngẫu nhiên và giải cứu các câu hỏi Toán học kịch tính, kết hợp âm thanh sinh động và phần thưởng hấp dẫn!',
+    color: '#D97706',
+    bgCard: '#FFEDD5',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Hệ thống TOAN GAME HUB'
+  },
+  {
+    id: 'g-trac-nghiem-1',
+    title: 'Trắc nghiệm Toán học 4 đáp án',
+    category: 'trac-nghiem',
+    categoryName: 'Game Trắc nghiệm Toán học',
+    grade: 'all',
+    topic: 'Hàm số, Lượng giác & Hình học không gian',
+    difficulty: 'Trung bình',
+    questionsCount: 10,
+    durationMinutes: 10,
+    maxScore: 100,
+    active: true,
+    description: 'Thử thách 10 câu hỏi trắc nghiệm Toán THPT bám sát cấu trúc đề thi tốt nghiệp và kiểm tra định kỳ với hệ thống tính giờ và tự động chấm điểm.',
+    color: '#0878DC',
+    bgCard: '#E0F2FE',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Hệ thống TOAN GAME HUB'
+  },
+  {
+    id: 'g-60s-tinh-nhanh',
+    title: 'Thử thách tính nhanh 60 giây',
+    category: 'trac-nghiem',
+    categoryName: 'Game Trắc nghiệm Toán học',
+    grade: 'all',
+    topic: 'Đại số & Giải tích phản xạ nhanh',
+    difficulty: 'Khó',
+    questionsCount: 15,
+    durationMinutes: 1,
+    maxScore: 100,
+    active: true,
+    description: 'Chạy đua với thời gian 60 giây! Giải càng nhiều phép tính và câu hỏi ngắn càng nhận điểm bứt phá, rèn phản xạ nhạy bén cho kỳ thi.',
+    color: '#0284C7',
+    bgCard: '#E0F2FE',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Hệ thống TOAN GAME HUB'
+  },
+  {
+    id: 'g-sudoku-toan',
+    title: 'Sudoku Ma trận Toán học',
+    category: 'tu-duy',
+    categoryName: 'Game Tư duy và Trí tuệ',
+    grade: 'all',
+    topic: 'Tư duy logic tổ hợp & Số học',
+    difficulty: 'Khó',
+    questionsCount: 1,
+    durationMinutes: 15,
+    maxScore: 100,
+    active: true,
+    description: 'Điền các con số từ 1 đến 9 vào lưới 9x9 sao cho mỗi hàng, mỗi cột và mỗi ô 3x3 không trùng lặp, rèn luyện tính kiên nhẫn và suy luận sắc bén.',
+    color: '#15803D',
+    bgCard: '#DCFCE7',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Hệ thống TOAN GAME HUB'
+  },
+  {
+    id: 'g-hinh-hoc-do-thi',
+    title: 'Nhận diện đồ thị hàm số & Hình học không gian',
+    category: 'hinh-hoc',
+    categoryName: 'Game Hình học',
+    grade: 12,
+    topic: 'Khảo sát hàm số, Khối đa diện & Oxyz',
+    difficulty: 'Trung bình',
+    questionsCount: 10,
+    durationMinutes: 10,
+    maxScore: 100,
+    active: true,
+    description: 'Quan sát đồ thị parabol, hàm bậc ba, hàm phân thức và nhận diện bảng biến thiên, tính chất hình học không gian Oxyz thực tế.',
+    color: '#9333EA',
+    bgCard: '#F3E8FF',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Hệ thống TOAN GAME HUB'
+  },
+  {
+    id: 'g-tu-duy-logic',
+    title: 'Game Tư duy & Tìm quy luật số',
+    category: 'tu-duy',
+    categoryName: 'Game Tư duy và Trí tuệ',
+    grade: 'all',
+    topic: 'Dãy số, Cấp số cộng, Cấp số nhân & Logic',
+    difficulty: 'Trung bình',
+    questionsCount: 8,
+    durationMinutes: 12,
+    maxScore: 100,
+    active: true,
+    description: 'Khám phá các dãy số bí ẩn, quy luật hình học và bảng tư duy logic toán học đỉnh cao, kích thích tư duy giải toán sáng tạo.',
+    color: '#16A34A',
+    bgCard: '#DCFCE7',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Hệ thống TOAN GAME HUB'
+  },
+  {
+    id: 'g-giai-tri-memory',
+    title: 'Lật thẻ trí nhớ Công thức Toán',
+    category: 'giai-tri',
+    categoryName: 'Game Giải trí Không giới hạn',
+    grade: 'all',
+    topic: 'Công thức Lượng giác, Đạo hàm & Hình học',
+    difficulty: 'Dễ',
+    questionsCount: 16,
+    durationMinutes: 5,
+    maxScore: 100,
+    active: true,
+    description: 'Rèn luyện trí nhớ và phản xạ mắt bằng cách lật ghép các cặp công thức toán học tương ứng, giúp nhớ bài lâu và giải trí lành mạnh.',
+    color: '#7C3AED',
+    bgCard: '#EDE9FE',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Hệ thống TOAN GAME HUB'
+  },
+  {
+    id: 'g-uploaded-powerpoint-ham-so',
+    title: 'Game PowerPoint: Khảo Sát Hàm Số & Đạo Hàm THPT',
+    category: 'trac-nghiem',
+    categoryName: 'Game Trắc nghiệm Toán',
+    grade: 12,
+    topic: 'Khảo sát hàm số, cực trị và tiệm cận',
+    difficulty: 'Trung bình',
+    questionsCount: 5,
+    durationMinutes: 15,
+    maxScore: 100,
+    active: true,
+    description: 'Tệp trò chơi bài giảng PowerPoint (.pptx) trực quan hóa các dạng bài tập đạo hàm và khảo sát hàm số, bám sát đề thi tốt nghiệp.',
+    color: '#0878DC',
+    bgCard: '#E0F2FE',
+    fileType: 'powerpoint',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Thầy Bùi Ngọc Thắng'
+  },
+  {
+    id: 'g-uploaded-html5-ban-bong',
+    title: 'Game HTML5: Bắn Bóng Toán Học & Phản Xạ Nhanh',
+    category: 'giai-tri',
+    categoryName: 'Game Giải trí Không giới hạn',
+    grade: 'all',
+    topic: 'Toán học phản xạ nhanh & Giải trí',
+    difficulty: 'Dễ',
+    questionsCount: 10,
+    durationMinutes: 5,
+    maxScore: 100,
+    active: true,
+    description: 'Trò chơi tương tác HTML5 bắn bóng toán học siêu vui nhộn, vừa thư giãn đầu óc vừa kích thích phản xạ tính nhẩm siêu tốc.',
+    color: '#10B981',
+    bgCard: '#D1FAE5',
+    fileType: 'html',
+    isDefault: true,
+    isUploaded: false,
+    authorName: 'Thầy Bùi Ngọc Thắng'
+  }
+];
+
 // API client interacting with Supabase Cloud & Express backend
 export const api = {
   async getDb() {
@@ -248,9 +444,18 @@ export const api = {
   },
 
   async getGames(): Promise<GameItem[]> {
+    // 1. Guaranteed built-in default games (Always present, always priority at the top)
+    const defaultGames: GameItem[] = DEFAULT_SYSTEM_GAMES.map(g => ({
+      ...g,
+      isDefault: true,
+      isUploaded: false
+    }));
+    const defaultIds = new Set(defaultGames.map(g => g.id));
+    const defaultTitles = new Set(defaultGames.map(g => g.title.toLowerCase().trim()));
+
     let supabaseGames: GameItem[] = [];
 
-    // 1. Fetch 34+ games directly from Supabase
+    // 2. Fetch uploaded & custom games from Supabase
     try {
       const { data, error } = await supabase.from('games').select('*').order('created_at', { ascending: false });
       if (!error && data && data.length > 0) {
@@ -304,7 +509,8 @@ export const api = {
             fileUrl: g.embed_url || g.file_url || undefined,
             fileType: g.html_content ? 'html' : (g.file_type || (g.embed_url ? 'embed' : 'html')),
             embedCode: g.html_content || g.embed_code || undefined,
-            isUploaded: Boolean(g.is_custom_upload || g.html_content || g.is_uploaded),
+            isUploaded: true,
+            isDefault: false,
             authorName: g.author || g.author_name || 'Thầy Bùi Ngọc Thắng',
             uploadedAt: g.created_at || g.created_date
           };
@@ -314,25 +520,47 @@ export const api = {
       console.warn('Supabase getGames fallback', e);
     }
 
-    // 2. Also combine with local system templates (Ai là triệu phú, Vòng quay, Sudoku)
+    // 3. Also fetch local backend games
+    let localGames: GameItem[] = [];
     try {
       const res = await fetch('/api/games');
       const data = await res.json();
-      const localGames: GameItem[] = data.games || [];
-
-      if (supabaseGames.length === 0) return localGames;
-
-      const existingTitles = new Set(supabaseGames.map(g => g.title.toLowerCase().trim()));
-      const combined = [...supabaseGames];
-      for (const lg of localGames) {
-        if (!existingTitles.has(lg.title.toLowerCase().trim())) {
-          combined.push(lg);
-        }
-      }
-      return combined;
-    } catch {
-      return supabaseGames;
+      localGames = (data.games || []).map((lg: any) => ({
+        ...lg,
+        isDefault: defaultIds.has(lg.id),
+        isUploaded: !defaultIds.has(lg.id)
+      }));
+    } catch (e) {
+      console.warn('Local games fetch fallback', e);
     }
+
+    // 4. Merge: Default games FIRST, then uploaded files (deduplicated)
+    const uploadedGames: GameItem[] = [];
+    const seenTitles = new Set(defaultTitles);
+    const seenIds = new Set(defaultIds);
+
+    // Add Supabase uploaded games
+    for (const sg of supabaseGames) {
+      const t = sg.title.toLowerCase().trim();
+      if (!seenIds.has(sg.id) && !seenTitles.has(t)) {
+        seenIds.add(sg.id);
+        seenTitles.add(t);
+        uploadedGames.push(sg);
+      }
+    }
+
+    // Add local uploaded games
+    for (const lg of localGames) {
+      const t = lg.title.toLowerCase().trim();
+      if (!seenIds.has(lg.id) && !seenTitles.has(t)) {
+        seenIds.add(lg.id);
+        seenTitles.add(t);
+        uploadedGames.push(lg);
+      }
+    }
+
+    // Return default games first, then all custom uploaded games
+    return [...defaultGames, ...uploadedGames];
   },
 
   async uploadGameFile(fileName: string, fileData: string, fileType: string): Promise<{ success: boolean; fileUrl?: string; fileName?: string; fileType?: 'powerpoint' | 'html' | 'embed'; fileSize?: string; message?: string }> {

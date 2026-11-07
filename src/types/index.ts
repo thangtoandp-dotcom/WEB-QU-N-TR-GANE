@@ -59,6 +59,7 @@ export interface GameItem {
   fileSize?: string;
   embedCode?: string;
   isUploaded?: boolean;
+  isDefault?: boolean;
   authorName?: string;
   uploadedAt?: string;
 }
