@@ -22,6 +22,50 @@ const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads', 'games');
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
+
+// Dedicated route for uploaded game assets with NFC/NFD unicode tolerance and streaming support
+app.get('/uploads/games/:filename(*)', (req: Request, res: Response, next) => {
+  const rawName = req.params.filename;
+  try {
+    const decodedName = decodeURIComponent(rawName);
+    const directPath = path.join(UPLOADS_DIR, decodedName);
+    if (fs.existsSync(directPath) && fs.statSync(directPath).isFile()) {
+      if (decodedName.endsWith('.mp4')) {
+        res.setHeader('Content-Type', 'video/mp4');
+        res.setHeader('Accept-Ranges', 'bytes');
+      } else if (decodedName.endsWith('.pptx')) {
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+      }
+      return res.sendFile(directPath);
+    }
+
+    // Fallbacks for known aliases
+    if (decodedName.includes('Hộp') || decodedName.includes('hop_qua') || decodedName.includes('a3caeeb6')) {
+      const aliasPath = path.join(UPLOADS_DIR, 'game_hop_qua_ao_thuat.mp4');
+      if (fs.existsSync(aliasPath)) {
+        res.setHeader('Content-Type', 'video/mp4');
+        res.setHeader('Accept-Ranges', 'bytes');
+        return res.sendFile(aliasPath);
+      }
+    }
+
+    if (decodedName.includes('Rung_Chuông') || decodedName.includes('rung_chuong') || decodedName.includes('1794045063088')) {
+      if (decodedName.endsWith('.html')) {
+        const htmlPath = path.join(UPLOADS_DIR, 'game_rung_chuong_vang_2026.html');
+        if (fs.existsSync(htmlPath)) return res.sendFile(htmlPath);
+      }
+      const aliasPath = path.join(UPLOADS_DIR, 'game_rung_chuong_vang_2026.pptx');
+      if (fs.existsSync(aliasPath)) {
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+        return res.sendFile(aliasPath);
+      }
+    }
+  } catch (err) {
+    console.warn('Uploads fallback error:', err);
+  }
+  next();
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.mp4')) {

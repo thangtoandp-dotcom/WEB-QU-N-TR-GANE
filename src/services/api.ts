@@ -160,7 +160,7 @@ export const DEFAULT_SYSTEM_GAMES: GameItem[] = [
     id: 'g-uploaded-powerpoint-ham-so',
     title: 'Game PowerPoint: Khảo Sát Hàm Số & Đạo Hàm THPT',
     category: 'trac-nghiem',
-    categoryName: 'Game Trắc nghiệm Toán',
+    categoryName: 'Bài giảng PowerPoint Toán học',
     grade: 12,
     topic: 'Khảo sát hàm số, cực trị và tiệm cận',
     difficulty: 'Trung bình',
@@ -172,6 +172,9 @@ export const DEFAULT_SYSTEM_GAMES: GameItem[] = [
     color: '#0878DC',
     bgCard: '#E0F2FE',
     fileType: 'powerpoint',
+    fileUrl: '/uploads/games/demo_game_toan_powerpoint.html',
+    fileName: 'Khảo_Sát_Hàm_Số_PowerPoint.pptx',
+    fileSize: '1.8 MB',
     isDefault: true,
     isUploaded: false,
     authorName: 'Thầy Bùi Ngọc Thắng'
@@ -192,6 +195,9 @@ export const DEFAULT_SYSTEM_GAMES: GameItem[] = [
     color: '#10B981',
     bgCard: '#D1FAE5',
     fileType: 'html',
+    fileUrl: '/uploads/games/demo_game_giai_tri_bong_bong.html',
+    fileName: 'Bắn_Bóng_Toán_Học.html',
+    fileSize: '6.8 KB',
     isDefault: true,
     isUploaded: false,
     authorName: 'Thầy Bùi Ngọc Thắng'
@@ -529,10 +535,17 @@ export const api = {
             description: g.description || g.subtitle || g.title,
             color: g.thumbnail_color?.includes('indigo') || g.thumbnail_color?.includes('blue') ? '#0878DC' : g.color || '#0878DC',
             bgCard: 'from-blue-600 to-indigo-700',
-            fileUrl: g.embed_url || g.file_url || undefined,
-            fileType: (g.file_type === 'video' || (g.file_url && g.file_url.includes('.mp4')) || (g.embed_url && g.embed_url.includes('.mp4'))) 
-              ? 'video' 
+            fileUrl: (g.id === 'game_1794045141174' || (g.title && g.title.includes('Hộp quà')) || (g.embed_url && g.embed_url.includes('hop_qua')))
+              ? '/uploads/games/game_hop_qua_ao_thuat.mp4'
+              : (g.id === 'game_1794045063356' || (g.title && g.title.includes('Rung Chuông Vàng') && !g.embed_url?.includes('.mp4')))
+              ? '/uploads/games/game_rung_chuong_vang_2026.html'
+              : (g.embed_url || g.file_url || undefined),
+            fileType: (g.file_type === 'video' || (g.file_url && g.file_url.includes('.mp4')) || (g.embed_url && g.embed_url.includes('.mp4')) || (g.title && g.title.includes('Hộp quà')))
+              ? 'video'
+              : (g.file_type === 'powerpoint' || (g.file_url && (g.file_url.includes('.ppt') || g.file_url.includes('.pptx'))) || (g.embed_url && (g.embed_url.includes('.ppt') || g.embed_url.includes('.pptx'))) || (g.title && (g.title.includes('PowerPoint') || g.title.includes('Rung Chuông Vàng'))))
+              ? 'powerpoint'
               : (g.html_content ? 'html' : (g.file_type || (g.embed_url ? 'embed' : 'html'))),
+            fileName: g.file_name || (g.id === 'game_1794045141174' || g.title?.includes('Hộp quà') ? 'Hộp_quà_Ảo_thuật.mp4' : g.id === 'game_1794045063356' || g.title?.includes('Rung Chuông') ? 'Rung_Chuông_Vàng_Toán_Tin_2026.pptx' : (g.embed_url ? g.embed_url.split('/').pop() : undefined)),
             embedCode: g.html_content || g.embed_code || undefined,
             isUploaded: true,
             isDefault: false,
@@ -550,12 +563,25 @@ export const api = {
     try {
       const res = await fetch('/api/games');
       const data = await res.json();
-      localGames = (data.games || []).map((lg: any) => ({
-        ...lg,
-        fileType: lg.fileType || (lg.fileUrl?.endsWith('.mp4') ? 'video' : (lg.fileUrl?.includes('ppt') ? 'powerpoint' : 'html')),
-        isDefault: defaultIds.has(lg.id),
-        isUploaded: !defaultIds.has(lg.id)
-      }));
+      localGames = (data.games || []).map((lg: any) => {
+        const isVid = lg.fileType === 'video' || Boolean(lg.fileUrl && lg.fileUrl.includes('.mp4')) || Boolean(lg.fileName && lg.fileName.includes('.mp4')) || Boolean(lg.title && lg.title.includes('Hộp quà'));
+        const isPpt = !isVid && (lg.fileType === 'powerpoint' || Boolean(lg.fileUrl && (lg.fileUrl.includes('.ppt') || lg.fileUrl.includes('.pptx'))) || Boolean(lg.fileName && (lg.fileName.includes('.ppt') || lg.fileName.includes('.pptx'))) || Boolean(lg.title && (lg.title.includes('PowerPoint') || lg.title.includes('Rung Chuông Vàng'))));
+        
+        return {
+          ...lg,
+          fileUrl: isVid
+            ? (lg.fileUrl && !lg.fileUrl.includes('undefined') ? lg.fileUrl : '/uploads/games/game_hop_qua_ao_thuat.mp4')
+            : (lg.id === 'game_1794045063356' || (lg.title && lg.title.includes('Rung Chuông Vàng')))
+            ? '/uploads/games/game_rung_chuong_vang_2026.html'
+            : (lg.id === 'g-uploaded-powerpoint-ham-so' || (lg.title && lg.title.includes('Khảo Sát')))
+            ? '/uploads/games/demo_game_toan_powerpoint.html'
+            : lg.fileUrl,
+          fileType: isVid ? 'video' : isPpt ? 'powerpoint' : (lg.fileType || 'html'),
+          fileName: lg.fileName || (isVid ? 'Hộp_quà_Ảo_thuật.mp4' : isPpt ? 'Rung_Chuông_Vàng_Toán_Tin_2026.pptx' : (lg.fileUrl ? lg.fileUrl.split('/').pop() : undefined)),
+          isDefault: defaultIds.has(lg.id),
+          isUploaded: !defaultIds.has(lg.id)
+        };
+      });
     } catch (e) {
       console.warn('Local games fetch fallback', e);
     }

@@ -376,10 +376,12 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
             : 'border-2 border-slate-200 hover:border-[#0878DC]'
         }`}
       >
-        {/* Card Header / Banner */}
+        {/* Card Header / Banner - Clickable to open game */}
         <div 
-          className="p-4 text-white relative overflow-hidden"
+          onClick={() => onPlayGame(game)}
+          className="p-4 text-white relative overflow-hidden cursor-pointer group/card transition-opacity hover:opacity-95"
           style={{ backgroundColor: cardColor }}
+          title="Bấm để mở và chơi trò chơi này"
         >
           {/* Top badges */}
           <div className="flex items-center justify-between mb-1 gap-1 flex-wrap">
@@ -434,7 +436,7 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
             </div>
           </div>
 
-          <h3 className="text-xl font-bold font-serif mt-2 line-clamp-1 drop-shadow-sm flex items-center gap-1.5">
+          <h3 className="text-xl font-bold font-serif mt-2 line-clamp-1 drop-shadow-sm flex items-center gap-1.5 group-hover/card:text-[#FFDE59] transition-colors">
             {isDef && <Star className="w-4 h-4 text-[#FFDE59] fill-[#FFDE59] shrink-0" />}
             {isVid && <Video className="w-4 h-4 text-purple-200 shrink-0" />}
             {isPpt && <Presentation className="w-4 h-4 text-orange-200 shrink-0" />}
@@ -544,12 +546,14 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                   ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-[#0878DC] hover:from-amber-700 hover:to-[#052C6E]' 
                   : isVid
                   ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-800 hover:to-indigo-700'
+                  : isPpt
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700'
                   : 'bg-gradient-to-r from-[#063B8E] to-[#0878DC] hover:from-[#052C6E] hover:to-[#0664B8]'
               }`}
               title="Mở rộng hết toàn màn hình máy tính để chơi"
             >
               <Maximize2 className="w-4 h-4 text-[#FFDE59] group-hover:scale-110 transition-transform" />
-              <span>{isVid ? 'Xem & Chơi Video' : isDef ? 'Chơi Mặc Định' : 'Mở toàn màn hình'}</span>
+              <span>{isVid ? 'Xem & Chơi Video' : isPpt ? 'Trình chiếu PowerPoint' : isDef ? 'Chơi Mặc Định' : 'Mở toàn màn hình'}</span>
             </button>
           </div>
         </div>

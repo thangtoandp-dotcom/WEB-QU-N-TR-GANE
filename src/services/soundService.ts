@@ -263,6 +263,36 @@ class SoundService {
   }
 
   /**
+   * Âm thanh chuông vàng ngân vang (Rung Chuông Vàng & Hết giờ 15s)
+   */
+  public playBell(): void {
+    if (this.muted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const bellFrequencies = [880, 1760, 2640]; // A5 and harmonics
+
+    bellFrequencies.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.25 / (idx + 1), now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 1.25);
+    });
+  }
+
+  /**
    * Âm thanh lật thẻ bài
    */
   public playCardFlip(): void {

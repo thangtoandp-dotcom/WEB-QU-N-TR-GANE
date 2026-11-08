@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rung Chuông Vàng Toán - Tin 2026 | THPT Đan Phượng</title>
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
+  <script src="/vendor/katex/katex.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Times New Roman", Times, serif; }
+    body { background: #030E1E; color: #FFFFFF; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
+    
+    .header {
+      background: linear-gradient(90deg, #042866 0%, #063B8E 50%, #0878DC 100%);
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #00CFFF;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      z-index: 20;
+    }
+    .header-title { font-size: 19px; font-weight: bold; color: #FFDE59; display: flex; align-items: center; gap: 10px; }
+    .header-badge { background: #E11D48; color: white; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 6px 14px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+    .btn:hover { background: rgba(255,255,255,0.25); border-color: #00CFFF; }
+    .btn-primary { background: linear-gradient(90deg, #00CFFF, #0878DC); color: #041E42; border: none; font-weight: 800; }
+    .btn-primary:hover { filter: brightness(1.1); transform: scale(1.02); }
+    .btn-accent { background: #E11D48; color: white; border: none; }
+    .btn-accent:hover { background: #BE123C; }
+    
+    .stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px; position: relative; }
+    
+    .slide-card {
+      background: linear-gradient(135deg, #062354 0%, #073880 50%, #094F9E 100%);
+      width: 100%;
+      max-width: 1080px;
+      height: 100%;
+      max-height: 620px;
+      border: 3.5px solid #00CFFF;
+      border-radius: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,207,255,0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 28px 44px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .watermark { position: absolute; top: 14px; right: 28px; font-size: 13px; color: #00CFFF; font-style: italic; }
+    .slide-badge { display: inline-block; background: #FFDE59; color: #041E42; font-size: 14px; font-weight: 900; padding: 4px 16px; border-radius: 999px; text-transform: uppercase; width: fit-content; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    
+    .question-box { flex: 1; display: flex; flex-direction: column; justify-content: center; margin: 10px 0; }
+    .question-text { font-size: 26px; line-height: 1.45; font-weight: bold; color: #FFFFFF; text-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+    
+    .slide-media { display: flex; gap: 14px; align-items: center; justify-content: center; margin-top: 14px; max-height: 180px; }
+    .slide-media img { max-height: 160px; max-width: 280px; object-fit: contain; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); }
+    
+    .timer-container { display: flex; align-items: center; gap: 14px; background: rgba(0,0,0,0.4); padding: 8px 18px; border-radius: 20px; border: 1.5px solid #FFDE59; width: fit-content; }
+    .timer-circle { width: 44px; height: 44px; border-radius: 50%; background: #E11D48; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; font-family: monospace; box-shadow: 0 0 12px rgba(225,29,72,0.8); }
+    .timer-circle.warning { animation: pulse 0.5s infinite alternate; background: #DC2626; }
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+    
+    .answer-box { background: rgba(16, 185, 129, 0.2); border: 2px solid #10B981; border-radius: 16px; padding: 14px 20px; margin-top: 12px; display: none; }
+    .answer-box.revealed { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .answer-title { font-size: 13px; text-transform: uppercase; color: #6EE7B7; font-weight: bold; }
+    .answer-content { font-size: 22px; font-weight: bold; color: #FFFFFF; margin-top: 4px; }
+    
+    .footer-bar { background: #041B3B; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.15); z-index: 10; }
+    .nav-controls { display: flex; align-items: center; gap: 12px; }
+    .slide-counter { font-size: 14px; font-weight: bold; color: #00CFFF; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Toolbar -->
+  <div class="header">
+    <div class="header-title">
+      <span class="header-badge">PowerPoint Game</span>
+      <span>Rung Chuông Vàng Toán - Tin 2026</span>
+    </div>
+    <div class="header-actions">
+      <a href="/uploads/games/game_rung_chuong_vang_2026.pptx" download="Rung_Chuong_Vang_Toan_Tin_2026.pptx" class="btn" title="Tải file .pptx gốc để chiếu trên PowerPoint máy tính">
+        📥 Tải file .PPTX gốc
+      </a>
+      <button class="btn btn-primary" onclick="toggleFullscreen()">
+        ⛶ Toàn màn hình
+      </button>
+    </div>
+  </div>
+
+  <!-- Stage -->
+  <div class="stage" id="stage">
+    <div class="slide-card">
+      <div class="watermark">THPT Đan Phượng • Thầy Bùi Ngọc Thắng</div>
+      
+      <div>
+        <div class="slide-badge" id="slideBadge">Slide 1 / 26</div>
+        <div class="question-box">
+          <div class="question-text" id="questionText">Đang tải slide...</div>
+          <div class="slide-media" id="slideMedia"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px;">
+        <div class="timer-container" id="timerBox">
+          <div class="timer-circle" id="timerNum">15</div>
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: #FFDE59; font-weight: bold;">Thời gian suy nghĩ</div>
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
+              <button class="btn" style="padding: 2px 8px; font-size: 11px;" onclick="startTimer()">▶ Bắt đầu</button>
+              <button class="btn" style="padding: 2px 8px; font-size: 11px;" onclick="resetTimer()">↺ Đặt lại</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-accent" id="revealBtn" onclick="toggleAnswer()">
+          💡 Hiện đáp án
+        </button>
+      </div>
+
+      <div class="answer-box" id="answerBox">
+        <div class="answer-title">Đáp án chính xác:</div>
+        <div class="answer-content" id="answerContent">...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Nav -->
+  <div class="footer-bar">
+    <div class="slide-counter" id="slideCounter">Slide 1 trên 26</div>
+    <div class="nav-controls">
+      <button class="btn" onclick="prevSlide()">◀ Slide trước</button>
+      <select id="slideSelect" class="btn" style="background:#063B8E;" onchange="goToSlide(this.value)">
+        ${slides.map((s, i) => `<option value="${i}">Slide ${i+1}: ${s.title}</option>`).join("")}
+      </select>
+      <button class="btn btn-primary" onclick="nextSlide()">Slide tiếp theo ▶</button>
+    </div>
+    <div>
+      <span style="font-size: 12px; color: #94A3B8;">Dùng phím mũi tên ⬅ ➡ để chuyển slide</span>
+    </div>
+  </div>
+
+  <audio id="bellSound" src="/uploads/games/slides_rcv/media1.mp3" preload="auto"></audio>
+
+  <script>
+    const slides = ${JSON.stringify(slides)};
+    let currentIndex = 0;
+    let timerInterval = null;
+    let timeLeft = 15;
+    let answerVisible = false;
+
+    function renderSlide(index) {
+      currentIndex = index;
+      const s = slides[index];
+      document.getElementById("slideBadge").innerText = "Slide " + (index + 1) + " / " + slides.length;
+      document.getElementById("slideCounter").innerText = "Slide " + (index + 1) + " trên " + slides.length;
+      document.getElementById("slideSelect").value = index;
+      document.getElementById("questionText").innerText = s.question;
+      
+      const mediaBox = document.getElementById("slideMedia");
+      mediaBox.innerHTML = "";
+      if (s.images && s.images.length > 0) {
+        s.images.slice(0, 2).forEach(src => {
+          const img = document.createElement("img");
+          img.src = src;
+          mediaBox.appendChild(img);
+        });
+      }
+
+      answerVisible = false;
+      document.getElementById("answerBox").classList.remove("revealed");
+      document.getElementById("answerContent").innerText = s.answer || "Không có đáp án văn bản";
+      document.getElementById("revealBtn").innerText = "💡 Hiện đáp án";
+
+      if (s.hasTimer) {
+        document.getElementById("timerBox").style.display = "flex";
+        resetTimer();
+        startTimer();
+      } else {
+        document.getElementById("timerBox").style.display = "none";
+        clearInterval(timerInterval);
+      }
+    }
+
+    function toggleAnswer() {
+      answerVisible = !answerVisible;
+      const box = document.getElementById("answerBox");
+      const btn = document.getElementById("revealBtn");
+      if (answerVisible) {
+        box.classList.add("revealed");
+        btn.innerText = "Ẩn đáp án";
+        try {
+          const bell = document.getElementById("bellSound");
+          if (bell) { bell.currentTime = 0; bell.play().catch(()=>{}); }
+        } catch(e){}
+      } else {
+        box.classList.remove("revealed");
+        btn.innerText = "💡 Hiện đáp án";
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      const timerNum = document.getElementById("timerNum");
+      timerNum.classList.remove("warning");
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 5) timerNum.classList.add("warning");
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          timeLeft = 0;
+          timerNum.innerText = "0";
+          try {
+            const bell = document.getElementById("bellSound");
+            if (bell) { bell.currentTime = 0; bell.play().catch(()=>{}); }
+          } catch(e){}
+          return;
+        }
+        timerNum.innerText = timeLeft;
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timeLeft = 15;
+      const timerNum = document.getElementById("timerNum");
+      timerNum.innerText = "15";
+      timerNum.classList.remove("warning");
+    }
+
+    function nextSlide() {
+      if (currentIndex < slides.length - 1) {
+        renderSlide(currentIndex + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        renderSlide(currentIndex - 1);
+      }
+    }
+
+    function goToSlide(val) {
+      renderSlide(Number(val));
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(()=>{});
+      } else {
+        document.exitFullscreen().catch(()=>{});
+      }
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === "F11") {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
+
+    renderSlide(0);
+  </script>
+</body>
+</html>
