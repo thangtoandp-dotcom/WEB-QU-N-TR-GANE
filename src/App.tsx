@@ -177,6 +177,17 @@ export default function App() {
     setActiveTab('all-games');
   };
 
+  const handleGameUploaded = (newGame: GameItem) => {
+    // 1. Immediately prepend to state so it renders without delay
+    setGames((prev) => [newGame, ...prev.filter((g) => g.id !== newGame.id)]);
+    // 2. Refresh from backend to ensure persistent ordering
+    api.getGames().then((refreshed) => {
+      if (refreshed && refreshed.length > 0) {
+        setGames(refreshed);
+      }
+    }).catch((e) => console.warn('Refetch games error:', e));
+  };
+
   const renderActiveGamePlayer = () => {
     if (!activePlayingGame) return null;
 
@@ -334,7 +345,7 @@ export default function App() {
                 onAdminLoginSuccess={handleLoginSuccess}
                 onPlayGame={(g) => handleStartGame(g)}
                 activeCategoryFilter="all"
-                onGameUploaded={(newGame) => setGames((prev) => [newGame, ...prev])}
+                onGameUploaded={handleGameUploaded}
                 onDeleteGame={(id) => setGames((prev) => prev.filter((g) => g.id !== id))}
                 onUpdateGame={(updated) => setGames((prev) => prev.map((g) => g.id === updated.id ? { ...g, ...updated } : g))}
               />
@@ -351,7 +362,7 @@ export default function App() {
                 defaultUploadCategory="math"
                 titleOverride="Phân Hệ: Trò Chơi Toán Học THPT"
                 subtitleOverride="Trắc nghiệm chuyên đề, đồ thị, hình học và các tệp trò chơi PowerPoint/HTML5 bám sát chương trình"
-                onGameUploaded={(newGame) => setGames((prev) => [newGame, ...prev])}
+                onGameUploaded={handleGameUploaded}
                 onDeleteGame={(id) => setGames((prev) => prev.filter((g) => g.id !== id))}
                 onUpdateGame={(updated) => setGames((prev) => prev.map((g) => g.id === updated.id ? { ...g, ...updated } : g))}
               />
@@ -368,7 +379,7 @@ export default function App() {
                 defaultUploadCategory="entertainment"
                 titleOverride="Phân Hệ: Trò Chơi Giải Trí & Thư Giãn"
                 subtitleOverride="Game bóng bóng toán học, đố vui trí tuệ, phản xạ và các tệp game PowerPoint/HTML tương tác"
-                onGameUploaded={(newGame) => setGames((prev) => [newGame, ...prev])}
+                onGameUploaded={handleGameUploaded}
                 onDeleteGame={(id) => setGames((prev) => prev.filter((g) => g.id !== id))}
                 onUpdateGame={(updated) => setGames((prev) => prev.map((g) => g.id === updated.id ? { ...g, ...updated } : g))}
               />

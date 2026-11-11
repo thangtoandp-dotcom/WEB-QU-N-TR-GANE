@@ -78,6 +78,7 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
   const [isMuted, setIsMuted] = useState(soundService.isMuted());
   const [viewMode, setViewMode] = useState<'grouped' | 'grid'>('grouped');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadSuccessMsg, setUploadSuccessMsg] = useState('');
 
   // Admin Verification State
   const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
@@ -137,11 +138,13 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
 
   // Helper to determine if a game is built-in default
   const isDefaultGame = (g: GameItem): boolean => {
-    if (g.isDefault === true) return true;
+    if (g.isUploaded === true) return false;
     if (g.isDefault === false) return false;
-    if (g.id.startsWith('g-') && !g.id.startsWith('game_custom_')) return true;
-    if (!g.isUploaded && !g.id.startsWith('game_custom_')) return true;
-    return false;
+    if (g.isDefault === true) return true;
+    if (g.id.startsWith('game_upload_') || g.id.startsWith('game_custom_') || g.id.startsWith('game_') || g.id.startsWith('upload_')) return false;
+    if (g.id.startsWith('g-uploaded-')) return false;
+    if (g.fileUrl || g.fileName || g.fileType === 'powerpoint' || g.fileType === 'video') return false;
+    return g.id.startsWith('g-');
   };
 
   const isVideoGame = (g: GameItem): boolean => {
@@ -159,7 +162,7 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
 
   // Counts for pills
   const totalDefaultCount = useMemo(() => games.filter(isDefaultGame).length, [games]);
-  const totalUploadedCount = useMemo(() => games.length - totalDefaultCount, [games, totalDefaultCount]);
+  const totalUploadedCount = useMemo(() => games.filter((g) => !isDefaultGame(g)).length, [games]);
   const totalVideoCount = useMemo(() => games.filter(isVideoGame).length, [games]);
   const totalPptxCount = useMemo(() => games.filter(isPowerPointGame).length, [games]);
   const totalHtmlCount = useMemo(() => games.filter(isHtmlGame).length, [games]);
@@ -612,6 +615,31 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
           </div>
         </div>
 
+        {/* Upload Success Alert Banner */}
+        {uploadSuccessMsg && (
+          <div className="p-4 bg-emerald-50 border-2 border-emerald-400 rounded-2xl text-emerald-950 font-serif flex items-center justify-between gap-3 shadow-md animate-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-bold text-base text-emerald-950">
+                  {uploadSuccessMsg}
+                </p>
+                <p className="text-xs text-emerald-800 font-sans">
+                  Tệp trò chơi đã được lưu vĩnh viễn vào hệ thống và hiển thị ngay tại mục <strong>Kho Tệp Game Đã Tải Lên & Lưu Trữ</strong>.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setUploadSuccessMsg('')}
+              className="px-3 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-xs font-bold font-sans cursor-pointer whitespace-nowrap"
+            >
+              Đóng ✕
+            </button>
+          </div>
+        )}
+
         {/* Feature Notice Bar: Upload formats supported */}
         <div className="p-3 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-xl border border-indigo-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs sm:text-sm font-serif">
           <div className="flex items-center gap-2">
@@ -1047,9 +1075,13 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
       <GameUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        defaultCategory={uploadCategoryToUse}
         onGameUploaded={(newGame) => {
           setIsUploadModalOpen(false);
+          setOriginFilter('all');
+          setSelectedCat('all');
+          setSelectedGrade('all');
+          setSearchQuery('');
+          setUploadSuccessMsg(`Tải lên thành công! Tệp "${newGame.title}" đã được lưu an toàn vào Kho trò chơi.`);
           onGameUploaded?.(newGame);
         }}
       />

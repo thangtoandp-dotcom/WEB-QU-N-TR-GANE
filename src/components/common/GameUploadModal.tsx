@@ -112,6 +112,7 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
       let finalFileType = fileType;
       let finalFileSize = fileSizeStr;
 
+      let htmlContent = '';
       if (uploadMode === 'file' && selectedFile) {
         // Read file as base64
         const reader = new FileReader();
@@ -131,6 +132,15 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
         finalFileUrl = uploadRes.fileUrl;
         finalFileType = uploadRes.fileType || fileType;
         finalFileSize = uploadRes.fileSize || fileSizeStr;
+
+        // If file is HTML, also read raw text for instant inline rendering fallback
+        if (finalFileType === 'html') {
+          try {
+            htmlContent = await selectedFile.text();
+          } catch (e) {
+            console.warn('Could not read HTML text:', e);
+          }
+        }
       } else if (uploadMode === 'link') {
         finalFileUrl = embedLink.trim();
         finalFileType = 'embed';
@@ -159,8 +169,10 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
       }
 
       const typeLabel = finalFileType === 'video' ? 'Video Game (.mp4)' : finalFileType === 'powerpoint' ? 'PowerPoint (.pptx/.ppt)' : 'HTML5';
+      const gameId = `game_upload_${Date.now()}`;
 
-      const newGame: Partial<GameItem> = {
+      const newGame: GameItem = {
+        id: gameId,
         title: title.trim(),
         category,
         categoryName: catName,
@@ -178,8 +190,9 @@ export const GameUploadModal: React.FC<GameUploadModalProps> = ({
         fileName: selectedFile ? selectedFile.name : (embedLink.slice(0, 30) + '...'),
         fileType: finalFileType,
         fileSize: finalFileSize,
-        embedCode: uploadMode === 'link' ? embedLink.trim() : undefined,
+        embedCode: uploadMode === 'link' ? embedLink.trim() : (htmlContent ? htmlContent : undefined),
         isUploaded: true,
+        isDefault: false,
         authorName: 'Thầy Bùi Ngọc Thắng',
         uploadedAt: new Date().toISOString()
       };

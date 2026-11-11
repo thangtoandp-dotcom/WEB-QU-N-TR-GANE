@@ -642,7 +642,7 @@ app.post('/api/games', (req: Request, res: Response) => {
   const db = readDb();
   const fileType = req.body.fileType || (req.body.fileUrl?.endsWith('.mp4') ? 'video' : undefined);
   const newGame = {
-    id: req.body.id || `game-${Date.now()}`,
+    id: req.body.id || `game_upload_${Date.now()}`,
     title: req.body.title,
     category: req.body.category || 'trac-nghiem',
     categoryName: req.body.categoryName || 'Game Trắc nghiệm Toán học',
@@ -654,14 +654,15 @@ app.post('/api/games', (req: Request, res: Response) => {
     maxScore: Number(req.body.maxScore) || 100,
     active: req.body.active !== false,
     description: req.body.description || '',
-    color: req.body.color || (fileType === 'video' ? '#8B5CF6' : '#0878DC'),
-    bgCard: req.body.bgCard || (fileType === 'video' ? '#F3E8FF' : '#E0F2FE'),
+    color: req.body.color || (fileType === 'video' ? '#8B5CF6' : fileType === 'powerpoint' ? '#EA580C' : '#0878DC'),
+    bgCard: req.body.bgCard || (fileType === 'video' ? '#F3E8FF' : fileType === 'powerpoint' ? '#FFEDD5' : '#E0F2FE'),
     fileUrl: req.body.fileUrl || undefined,
     fileName: req.body.fileName || undefined,
     fileType: fileType,
     fileSize: req.body.fileSize || undefined,
     embedCode: req.body.embedCode || undefined,
-    isUploaded: req.body.isUploaded ?? Boolean(req.body.fileUrl || req.body.embedCode),
+    isUploaded: true,
+    isDefault: false,
     authorName: req.body.authorName || 'Thầy Bùi Ngọc Thắng',
     uploadedAt: req.body.uploadedAt || new Date().toISOString()
   };

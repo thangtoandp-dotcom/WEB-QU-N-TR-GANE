@@ -586,30 +586,45 @@ export const api = {
       console.warn('Local games fetch fallback', e);
     }
 
-    // 4. Merge: Default games FIRST, then uploaded files (deduplicated)
+    // 4. Merge: Default games FIRST, then uploaded files (deduplicated, sorted newest first)
     const uploadedGames: GameItem[] = [];
     const seenTitles = new Set(defaultTitles);
     const seenIds = new Set(defaultIds);
 
-    // Add Supabase uploaded games
-    for (const sg of supabaseGames) {
-      const t = sg.title.toLowerCase().trim();
-      if (!seenIds.has(sg.id) && !seenTitles.has(t)) {
-        seenIds.add(sg.id);
-        seenTitles.add(t);
-        uploadedGames.push(sg);
-      }
-    }
-
-    // Add local uploaded games
+    // Add local uploaded games FIRST (they have real files on disk and accurate upload info)
     for (const lg of localGames) {
       const t = lg.title.toLowerCase().trim();
       if (!seenIds.has(lg.id) && !seenTitles.has(t)) {
         seenIds.add(lg.id);
         seenTitles.add(t);
-        uploadedGames.push(lg);
+        uploadedGames.push({
+          ...lg,
+          isUploaded: true,
+          isDefault: false
+        });
       }
     }
+
+    // Add any additional Supabase uploaded games
+    for (const sg of supabaseGames) {
+      const t = sg.title.toLowerCase().trim();
+      if (!seenIds.has(sg.id) && !seenTitles.has(t)) {
+        seenIds.add(sg.id);
+        seenTitles.add(t);
+        uploadedGames.push({
+          ...sg,
+          isUploaded: true,
+          isDefault: false
+        });
+      }
+    }
+
+    // Sort uploaded games by uploadedAt/created_at descending so newly uploaded files are always at the TOP
+    uploadedGames.sort((a, b) => {
+      const timeA = new Date(a.uploadedAt || 0).getTime();
+      const timeB = new Date(b.uploadedAt || 0).getTime();
+      return timeB - timeA;
+    });
 
     // Return default games first, then all custom uploaded games
     return [...defaultGames, ...uploadedGames];
@@ -629,39 +644,59 @@ export const api = {
   },
 
   async addGame(game: Partial<GameItem>): Promise<GameItem | null> {
-    // 1. Save to Supabase
-    try {
-      await supabase.from('games').insert([{
-        id: game.id || `game_${Date.now()}`,
-        title: game.title,
-        subtitle: game.topic,
-        description: game.description,
-        category: game.category,
-        category_name: game.categoryName,
-        grade: game.grade?.toString() || 'all',
-        difficulty: game.difficulty || 'Trung bình',
-        estimated_minutes: game.durationMinutes || 15,
-        html_content: game.embedCode || null,
-        embed_url: game.fileUrl || null,
-        is_custom_upload: true,
-        author: game.authorName || 'Thầy Bùi Ngọc Thắng'
-      }]);
-    } catch (e) {
-      console.warn('Supabase addGame error', e);
-    }
+    const gameId = game.id || `game_upload_${Date.now()}`;
+    const payload = {
+      ...game,
+      id: gameId,
+      isUploaded: true,
+      isDefault: false,
+      uploadedAt: game.uploadedAt || new Date().toISOString()
+    };
 
-    // 2. Also sync to local backend
+    let savedGame: GameItem | null = null;
+
+    // 1. Save to local backend FIRST (Guaranteed fast, reliable, and persistent in database.json)
     try {
       const res = await fetch('/api/games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(game)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
-      return data.game;
-    } catch {
-      return null;
+      if (data.success && data.game) {
+        savedGame = {
+          ...data.game,
+          isUploaded: true,
+          isDefault: false
+        };
+      }
+    } catch (err) {
+      console.warn('Local addGame error:', err);
     }
+
+    // 2. Also sync to Supabase in parallel
+    try {
+      await supabase.from('games').insert([{
+        id: gameId,
+        title: payload.title,
+        subtitle: payload.topic,
+        description: payload.description,
+        category: payload.category,
+        category_name: payload.categoryName,
+        grade: payload.grade?.toString() || 'all',
+        difficulty: payload.difficulty || 'Trung bình',
+        estimated_minutes: payload.durationMinutes || 15,
+        html_content: payload.embedCode || null,
+        embed_url: payload.fileUrl || null,
+        game_source_type: payload.fileType || 'upload',
+        is_custom_upload: true,
+        author: payload.authorName || 'Thầy Bùi Ngọc Thắng'
+      }]);
+    } catch (e) {
+      console.warn('Supabase addGame sync warning', e);
+    }
+
+    return savedGame || (payload as GameItem);
   },
 
   async updateGame(id: string, updates: Partial<GameItem>): Promise<GameItem | null> {
