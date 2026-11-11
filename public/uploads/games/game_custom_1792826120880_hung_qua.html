@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trò Chơi Hứng Quả Chín</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Màu trời */
+            font-family: 'Inter', sans-serif;
+            touch-action: none; /* Prevent scroll on mobile */
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .interactive {
+            pointer-events: auto;
+        }
+        /* Custom Button Style */
+        .btn-play {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-play:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        /* CSS cho màn hình Giới thiệu */
+        .text-glow {
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.7), 0 0 20px rgba(250, 204, 21, 0.5), 0 0 30px rgba(250, 204, 21, 0.3);
+        }
+        .btn-glow {
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="ui-layer">
+        <!-- Header: Score and Lives -->
+        <div class="p-4 flex justify-between items-start text-white text-2xl font-bold drop-shadow-md">
+            <div>
+                <span id="scoreDisplay" class="bg-black/30 px-4 py-2 rounded-full border border-white/20">Điểm: 0</span>
+            </div>
+            <div class="flex flex-col items-end gap-3">
+                <span id="livesDisplay" class="bg-red-500/80 px-4 py-2 rounded-full border border-white/20">❤️❤️❤️</span>
+                <button id="pauseBtn" class="bg-blue-500/80 hover:bg-blue-600 px-4 py-2 rounded-full border border-white/20 text-lg transition-colors interactive shadow-lg">
+                    ⏸ Tạm dừng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intro Screen (Màn hình giới thiệu Tác giả) -->
+    <div id="introScreen" class="absolute inset-0 bg-[#111827] flex items-center justify-center interactive z-[60] transition-opacity duration-300">
+        <div class="bg-[#1E293B] rounded-2xl p-5 sm:p-10 max-w-3xl w-11/12 sm:w-auto text-center shadow-[0_0_25px_rgba(0,0,0,0.8)] border border-slate-700">
+            <p class="text-slate-400 uppercase tracking-[0.1em] sm:tracking-[0.15em] text-xs sm:text-sm md:text-base mb-6 font-semibold">
+                Sản phẩm game được sáng tạo bởi
+            </p>
+            
+            <h2 class="text-yellow-400 font-bold text-3xl sm:text-4xl md:text-5xl mb-2 text-glow" style="font-family: 'Times New Roman', serif;">
+                Thầy giáo
+            </h2>
+            <h1 class="text-yellow-400 font-extrabold text-[6.5vw] sm:text-5xl md:text-6xl lg:text-7xl uppercase mb-8 text-glow tracking-wide whitespace-nowrap">
+                BÙI NGỌC THẮNG
+            </h1>
+            
+            <p class="text-white text-sm sm:text-lg md:text-xl font-medium mb-12 whitespace-nowrap">
+                Đơn vị công tác: Trường THPT Đan Phượng
+            </p>
+            
+            <button id="continueBtn" class="bg-[#4ADE80] hover:bg-[#22C55E] text-white font-bold text-lg sm:text-xl py-3 px-8 sm:px-12 rounded-full btn-glow transition-transform transform hover:scale-105 interactive">
+                Tiếp tục ➡
+            </button>
+        </div>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pauseScreen" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center interactive z-[45] hidden opacity-0 transition-opacity duration-300">
+        <h2 class="text-5xl font-extrabold text-white mb-8 tracking-widest drop-shadow-xl text-glow">TẠM DỪNG</h2>
+        <button id="resumeBtn" class="bg-blue-500 hover:bg-blue-400 text-white font-bold text-xl py-3 px-10 rounded-full btn-glow transition-transform transform hover:scale-105 interactive shadow-2xl">
+            ▶ Tiếp Tục Chơi
+        </button>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="startScreen" class="absolute inset-0 bg-black/60 flex items-center justify-center interactive z-50 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 max-w-md text-center shadow-2xl transform transition-all border-4 border-green-500">
+            <h1 class="text-4xl font-extrabold text-green-700 mb-4 tracking-tight">HỨNG QUẢ CHÍN</h1>
+            <p class="text-gray-600 mb-6 text-lg">
+                Di chuyển chuột hoặc vuốt màn hình để điều khiển em bé.<br>
+                Hãy dùng vợt hứng những quả chín rơi từ cây cổ thụ!<br>
+                Đừng để rơi mất nhé!
+            </p>
+            <button id="startBtn" class="btn-play text-white font-bold text-xl py-3 px-10 rounded-full w-full interactive">
+                Bắt Đầu Chơi
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="absolute inset-0 bg-black/80 flex items-center justify-center interactive z-50 hidden opacity-0 transition-opacity duration-500">
+        <div class="bg-white rounded-3xl p-8 max-w-sm text-center shadow-2xl border-4 border-red-500">
+            <h2 class="text-4xl font-extrabold text-red-600 mb-2">Thua Rồi!</h2>
+            <p class="text-gray-700 mb-6 text-xl">Điểm của bạn: <span id="finalScore" class="font-bold text-2xl text-green-600">0</span></p>
+            <button id="restartBtn" class="btn-play text-white font-bold py-3 px-8 rounded-full w-full interactive">
+                Chơi Lại
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // UI Elements
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
+        const introScreen = document.getElementById('introScreen');
+        const continueBtn = document.getElementById('continueBtn');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScore = document.getElementById('finalScore');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const pauseScreen = document.getElementById('pauseScreen');
+        const resumeBtn = document.getElementById('resumeBtn');
+
+        // Game Configuration
+        let width, height;
+        let score = 0;
+        let lives = 3;
+        let gameState = 'START'; // START, PLAYING, GAMEOVER
+        let animationId;
+        
+        // Arrays & Objects
+        let fruits = [];
+        let particles = [];
+        const fruitTypes = ['🍎', '🍊', '🍑', '🥭'];
+        
+        // Danh sách công thức Nguyên hàm - Tích phân chuẩn Toán 12
+        const mathFormulas = [
+            "∫ xᵅ dx = xᵅ⁺¹ / (α + 1) + C",
+            "∫ 1/x dx = ln|x| + C",
+            "∫ eˣ dx = eˣ + C",
+            "∫ aˣ dx = aˣ / ln a + C",
+            "∫ sin x dx = -cos x + C",
+            "∫ cos x dx = sin x + C",
+            "∫ 1/cos²x dx = tan x + C",
+            "∫ 1/sin²x dx = -cot x + C"
+        ];
+        
+        let spawnTimer = 0;
+        let spawnInterval = 100; // Frames between spawns
+        let fruitSpeedBase = 3;
+
+        // Player (Net & Child)
+        const player = {
+            x: 0,
+            y: 0,
+            netWidth: 80,
+            netHeight: 30,
+            targetX: 0
+        };
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Set player initial Y position (near bottom)
+            player.y = height - 120;
+            if(gameState === 'START') player.x = width / 2;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Input Handling
+        function updateTargetX(e) {
+            if (gameState !== 'PLAYING') return;
+            
+            let clientX;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            player.targetX = clientX;
+        }
+
+        window.addEventListener('mousemove', updateTargetX);
+        window.addEventListener('touchmove', updateTargetX, { passive: false });
+        // Prevent default touch to avoid scrolling
+        window.addEventListener('touchstart', (e) => {
+            if(e.target === canvas) e.preventDefault();
+            updateTargetX(e);
+        }, { passive: false });
+
+        function drawBackground() {
+            // Sky gradient
+            let skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#A0D8EF'); // Light blue
+            skyGradient.addColorStop(1, '#E0F6FF');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Ground - Lớp cỏ xanh
+            ctx.fillStyle = '#8BC34A'; 
+            ctx.beginPath();
+            ctx.ellipse(width/2, height - 30, width * 0.8, 100, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#7CB342';
+            ctx.beginPath();
+            ctx.ellipse(width/2, height, width, 80, 0, 0, Math.PI*2);
+            ctx.fill();
+
+            // Vẽ một số bụi cây nền bên trái
+            ctx.fillStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.arc(50, height - 80, 60, 0, Math.PI*2);
+            ctx.arc(120, height - 60, 50, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#388E3C';
+            ctx.beginPath();
+            ctx.arc(80, height - 70, 40, 0, Math.PI*2);
+            ctx.fill();
+            
+            // Vẽ hoa nhỏ dưới đất
+            drawFlower(100, height - 40, '#FF4081');
+            drawFlower(150, height - 20, '#FFEB3B');
+
+            // Draw Giant Tree
+            drawTree();
+        }
+
+        function drawFlower(x, y, color) {
+            ctx.fillStyle = color;
+            for(let i=0; i<5; i++) {
+                ctx.beginPath();
+                ctx.ellipse(x + Math.cos(i*Math.PI*2/5)*8, y + Math.sin(i*Math.PI*2/5)*8, 5, 5, 0, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+        }
+
+        function drawTree() {
+            const treeX = width / 2; // Cây nằm chính giữa màn hình
+            
+            // Thân cây (Trunk) - Màu nâu gỗ có vân
+            ctx.fillStyle = '#8D6E63';
+            ctx.beginPath();
+            ctx.moveTo(treeX - 80, height);
+            ctx.quadraticCurveTo(treeX - 40, height - 200, treeX - 150, 50); // Cành trái
+            ctx.lineTo(treeX + 150, 50); // Cành phải
+            ctx.quadraticCurveTo(treeX + 80, height - 200, treeX + 100, height);
+            ctx.fill();
+            
+            // Vân gỗ
+            ctx.strokeStyle = '#5D4037';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(treeX - 20, height); ctx.quadraticCurveTo(treeX, height - 150, treeX - 40, 100);
+            ctx.moveTo(treeX + 30, height); ctx.quadraticCurveTo(treeX + 10, height - 100, treeX + 50, 150);
+            ctx.stroke();
+
+            // Nấm dưới gốc cây
+            drawMushroom(treeX - 60, height - 30);
+            drawMushroom(treeX + 40, height - 20);
+
+            // Tán lá (Canopy) - Từng cụm lá to
+            ctx.fillStyle = '#2E7D32'; // Xanh lá đậm
+            const leafCenters = [
+                {x: treeX - 100, y: 100, r: 150},
+                {x: treeX + 100, y: 80, r: 160},
+                {x: treeX - 250, y: 50, r: 140},
+                {x: treeX, y: -20, r: 200},
+                {x: treeX + 200, y: 0, r: 130},
+                {x: treeX - 150, y: 180, r: 100},
+                {x: treeX + 50, y: 190, r: 120}
+            ];
+
+            // Vẽ viền tối cho lá
+            ctx.fillStyle = '#1B5E20';
+            leafCenters.forEach(leaf => {
+                ctx.beginPath();
+                ctx.arc(leaf.x, leaf.y + 10, leaf.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Vẽ cụm lá sáng
+            ctx.fillStyle = '#4CAF50';
+            leafCenters.forEach(leaf => {
+                ctx.beginPath();
+                ctx.arc(leaf.x, leaf.y, leaf.r * 0.95, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Vẽ quả tĩnh trên cây (Táo & Cam)
+            const staticFruits = [
+                {x: treeX - 180, y: 80, type: '🍎'}, {x: treeX - 50, y: 40, type: '🍊'},
+                {x: treeX + 120, y: 90, type: '🍎'}, {x: treeX + 40, y: 150, type: '🍊'},
+                {x: treeX - 120, y: 160, type: '🍎'}, {x: treeX - 250, y: -10, type: '🍊'}
+            ];
+            staticFruits.forEach(f => {
+                ctx.font = `65px Arial`;
+                ctx.fillText(f.type, f.x, f.y);
+            });
+        }
+
+        function drawMushroom(x, y) {
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(x - 6, y - 15, 12, 15); // Cuống nấm
+            ctx.fillStyle = '#E53935';
+            ctx.beginPath();
+            ctx.arc(x, y - 15, 20, Math.PI, 0); // Mũ nấm
+            ctx.fill();
+            ctx.fillStyle = '#FFF'; // Chấm bi
+            ctx.beginPath(); ctx.arc(x - 8, y - 22, 3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + 8, y - 20, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x, y - 26, 3, 0, Math.PI*2); ctx.fill();
+        }
+
+        function drawPlayer() {
+            // Smooth movement towards target
+            if (gameState === 'PLAYING') {
+                player.x += (player.targetX - player.x) * 0.2;
+            }
+
+            // Scale factor để làm em bé lớn hơn (1.6 lần)
+            const scale = 1.6;
+
+            // Constrain to screen theo kích thước mới
+            const padding = 60 * scale;
+            if (player.x < padding) player.x = padding;
+            if (player.x > width - padding) player.x = width - padding;
+
+            const px = player.x;
+            const py = player.y - 30; // Nâng y lên một chút để chân không bị lún xuống cỏ
+
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.scale(scale, scale);
+
+            // Vẽ chân (quần đùi trắng, giày trắng)
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath(); ctx.roundRect(-30, 55, 25, 20, 5); ctx.fill(); // Quần trái
+            ctx.beginPath(); ctx.roundRect(5, 55, 25, 20, 5); ctx.fill();  // Quần phải
+            
+            ctx.fillStyle = '#FFCCBC'; // Da chân
+            ctx.fillRect(-20, 70, 10, 15);
+            ctx.fillRect(10, 70, 10, 15);
+            
+            ctx.fillStyle = '#F5F5F5'; // Giày
+            ctx.beginPath(); ctx.ellipse(-15, 85, 12, 8, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(15, 85, 12, 8, 0, 0, Math.PI*2); ctx.fill();
+
+            // Thân áo khoác hồng (Hoodie)
+            ctx.fillStyle = '#FFB6C1'; 
+            ctx.beginPath();
+            ctx.roundRect(-35, 5, 70, 55, 15);
+            ctx.fill();
+            // Khóa kéo và sọc trắng
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(-10, 5, 20, 55);
+            ctx.fillStyle = '#CCC'; // Đường khóa
+            ctx.fillRect(-1, 5, 2, 55);
+
+            // Tay trái (bỏ thõng hoặc vung)
+            ctx.fillStyle = '#FFB6C1';
+            ctx.beginPath(); ctx.roundRect(-45, 15, 18, 35, 8); ctx.fill();
+            ctx.fillStyle = '#FFCCBC'; // Bàn tay
+            ctx.beginPath(); ctx.arc(-36, 52, 7, 0, Math.PI*2); ctx.fill();
+
+            // Đầu và mặt
+            ctx.fillStyle = '#FFCCBC'; // Màu da
+            ctx.beginPath();
+            ctx.arc(0, -30, 35, 0, Math.PI*2);
+            ctx.fill();
+
+            // Mắt to tròn Chibi
+            ctx.fillStyle = '#3E2723';
+            ctx.beginPath(); ctx.ellipse(-15, -25, 6, 9, 0, 0, Math.PI*2); ctx.fill(); // Mắt trái
+            ctx.beginPath(); ctx.ellipse(15, -25, 6, 9, 0, 0, Math.PI*2); ctx.fill(); // Mắt phải
+            // Đốm sáng mắt
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath(); ctx.arc(-17, -28, 2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(13, -28, 2, 0, Math.PI*2); ctx.fill();
+            
+            // Má hồng
+            ctx.fillStyle = 'rgba(255, 105, 180, 0.4)';
+            ctx.beginPath(); ctx.arc(-22, -18, 5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(22, -18, 5, 0, Math.PI*2); ctx.fill();
+            
+            // Miệng nhỏ tươi tắn
+            ctx.strokeStyle = '#D84315';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(0, -15, 4, 0, Math.PI); ctx.stroke();
+
+            // Tóc mái màu đen
+            ctx.fillStyle = '#212121';
+            ctx.beginPath();
+            ctx.arc(0, -40, 35, Math.PI, 0); // Đỉnh đầu
+            ctx.moveTo(-35, -40);
+            ctx.quadraticCurveTo(-20, -15, 0, -35); // Mái chéo
+            ctx.quadraticCurveTo(20, -20, 35, -40);
+            ctx.fill();
+
+            // Mũ len tai thỏ (Bunny Beanie)
+            ctx.fillStyle = '#FFF';
+            // Tai thỏ
+            ctx.beginPath(); ctx.ellipse(-18, -85, 10, 25, -0.3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(18, -85, 10, 25, 0.3, 0, Math.PI*2); ctx.fill();
+            // Lòng tai hồng nhạt
+            ctx.fillStyle = '#FFCDD2';
+            ctx.beginPath(); ctx.ellipse(-18, -82, 5, 15, -0.3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(18, -82, 5, 15, 0.3, 0, Math.PI*2); ctx.fill();
+            
+            // Vành mũ
+            ctx.fillStyle = '#F5F5F5';
+            ctx.beginPath();
+            ctx.arc(0, -45, 36, Math.PI, 0); // Vòm mũ
+            ctx.fill();
+            ctx.beginPath();
+            ctx.roundRect(-38, -50, 76, 18, 8); // Viền mũ dưới
+            ctx.fill();
+
+            // Vợt hứng quả (Net) - Tay phải cầm giơ lên, ngửa lên trên
+            const netX = 50;
+            const netY = -45;
+            
+            // Cán vợt gỗ
+            ctx.strokeStyle = '#8D6E63';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(25, 30); // Tay cầm
+            ctx.lineTo(netX, netY + 15); // Điểm gắn lưới
+            ctx.stroke();
+
+            // Tay phải cầm vợt
+            ctx.fillStyle = '#FFB6C1';
+            ctx.beginPath(); ctx.roundRect(15, 15, 15, 20, 5); ctx.fill(); // Tay áo
+            ctx.fillStyle = '#FFCCBC'; 
+            ctx.beginPath(); ctx.arc(23, 30, 8, 0, Math.PI*2); ctx.fill(); // Bàn tay nắm
+
+            // Lưới vợt (Lưới thòng xuống)
+            ctx.fillStyle = 'rgba(236, 240, 241, 0.7)'; // Màu lưới xám nhạt
+            ctx.beginPath();
+            ctx.moveTo(netX - 30, netY);
+            ctx.bezierCurveTo(netX - 30, netY + 45, netX + 30, netY + 45, netX + 30, netY);
+            ctx.fill();
+            
+            // Vòng vợt (Ngửa lên trên với góc xoay = 0)
+            ctx.strokeStyle = '#A1887F';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.ellipse(netX, netY, 30, 12, 0, 0, Math.PI*2);
+            ctx.stroke();
+
+            ctx.restore();
+            
+            // Cập nhật tọa độ xét va chạm lưới cho nhân vật theo tỷ lệ scale
+            player.netHitX = px + netX * scale;
+            player.netHitY = py + netY * scale;
+        }
+
+        class Fruit {
+            constructor() {
+                // Quả rơi từ tán cây ở giữa màn hình
+                const treeX = width / 2;
+                this.x = treeX - 220 + Math.random() * 440;
+                this.x = Math.max(50, Math.min(width - 50, this.x));
+                
+                this.y = 80 + Math.random() * 100;
+                this.type = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+                
+                // Gắn công thức Toán ngẫu nhiên cho quả
+                this.formula = mathFormulas[Math.floor(Math.random() * mathFormulas.length)];
+                
+                this.speed = fruitSpeedBase + Math.random() * 2;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.1;
+                this.size = 65; 
+            }
+
+            update() {
+                this.y += this.speed;
+                this.rotation += this.rotSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Vẽ quả (cho xoay tự do)
+                ctx.save();
+                ctx.rotate(this.rotation);
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.type, 0, 0);
+                ctx.restore(); // Phục hồi state để text công thức không bị xoay theo
+
+                const fontSize = 24; // Tăng cỡ chữ lên lớn hơn
+                // Sử dụng Times New Roman in nghiêng để chuẩn format ký hiệu Toán học
+                ctx.font = `bold italic ${fontSize}px 'Times New Roman', serif`;
+                const textWidth = ctx.measureText(this.formula).width;
+                
+                // Căn chỉnh kích thước khung bảng lớn hơn
+                const paddingX = 24;
+                const paddingY = 18;
+                const bgW = textWidth + paddingX;
+                const bgH = fontSize + paddingY;
+                const bgX = -bgW / 2;
+                const bgY = this.size / 2;
+                
+                // Thêm bóng đổ cho bảng công thức để dễ nhìn hơn trên nền trời
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetY = 4;
+
+                // Vẽ khung nền cho công thức (bo góc)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.strokeStyle = '#1B5E20'; // Viền xanh lá cây sẫm
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.roundRect(bgX, bgY, bgW, bgH, 10);
+                ctx.fill();
+                
+                // Tắt bóng đổ để nét vẽ viền và chữ không bị mờ
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.stroke();
+
+                // Ghi chữ công thức vào trong bảng bằng màu đỏ đô nổi bật
+                ctx.fillStyle = '#B71C1C'; 
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // Đẩy text xuống một chút xíu cho ở giữa hình chữ nhật
+                ctx.fillText(this.formula, 0, bgY + bgH / 2 + 1);
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.life = 1.0;
+                this.vy = -2 - Math.random();
+            }
+            update() {
+                this.y += this.vy;
+                this.life -= 0.02;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(${this.color}, ${this.life})`;
+                ctx.font = "bold 24px Arial";
+                ctx.fillText(this.text, this.x, this.y);
+            }
+        }
+
+        function spawnFruitManager() {
+            spawnTimer++;
+            if (spawnTimer >= spawnInterval) {
+                fruits.push(new Fruit());
+                spawnTimer = 0;
+                
+                // Slowly increase difficulty
+                if (spawnInterval > 30) spawnInterval -= 1;
+                fruitSpeedBase += 0.05;
+            }
+        }
+
+        function checkCollisions() {
+            for (let i = fruits.length - 1; i >= 0; i--) {
+                let f = fruits[i];
+                
+                // Kiểm tra va chạm với tâm lưới vợt (tăng kích thước vùng hứng vì vợt to hơn)
+                const hitBoxRadius = 55;
+                if (f.y > player.netHitY - 30 && f.y < player.netHitY + 60) {
+                    if (Math.abs(f.x - player.netHitX) < hitBoxRadius) {
+                        // CATCHED!
+                        score += 10;
+                        updateUI();
+                        particles.push(new Particle(f.x, f.y, "+10", "46, 204, 113"));
+                        fruits.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                // Missed (hit ground)
+                if (f.y > height - 50) {
+                    lives--;
+                    updateUI();
+                    particles.push(new Particle(f.x, f.y, "Trượt!", "231, 76, 60"));
+                    fruits.splice(i, 1);
+                    
+                    if (lives <= 0) {
+                        endGame();
+                    }
+                }
+            }
+        }
+
+        function updateUI() {
+            scoreDisplay.innerText = `Điểm: ${score}`;
+            let heartStr = '';
+            for(let i=0; i<lives; i++) heartStr += '❤️';
+            livesDisplay.innerText = heartStr || '💔';
+        }
+
+        function updateAndDrawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                if (gameState === 'PLAYING') {
+                    p.update();
+                }
+                p.draw();
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function gameLoop() {
+            if (gameState === 'START' || gameState === 'GAMEOVER') return;
+
+            // Clear & Draw BG
+            ctx.clearRect(0, 0, width, height);
+            drawBackground();
+
+            if (gameState === 'PLAYING') {
+                // Logic Updates
+                spawnFruitManager();
+                checkCollisions();
+            }
+            
+            // Draw & Update Fruits
+            fruits.forEach(f => {
+                if (gameState === 'PLAYING') f.update();
+                f.draw();
+            });
+
+            drawPlayer();
+            updateAndDrawParticles();
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            gameState = 'PLAYING';
+            score = 0;
+            lives = 3;
+            fruits = [];
+            particles = [];
+            spawnTimer = 0;
+            spawnInterval = 80;
+            fruitSpeedBase = 3;
+            
+            player.targetX = width / 2;
+            player.x = width / 2;
+
+            updateUI();
+            
+            // Reset Pause Button state
+            pauseBtn.innerHTML = '⏸ Tạm dừng';
+            pauseBtn.classList.remove('bg-green-500/80', 'hover:bg-green-600');
+            pauseBtn.classList.add('bg-blue-500/80', 'hover:bg-blue-600');
+            pauseScreen.classList.add('hidden', 'opacity-0');
+            
+            startScreen.classList.add('opacity-0');
+            gameOverScreen.classList.add('opacity-0');
+            
+            setTimeout(() => {
+                startScreen.classList.add('hidden');
+                gameOverScreen.classList.add('hidden');
+                // Kick off loop
+                if(animationId) cancelAnimationFrame(animationId);
+                gameLoop();
+            }, 300);
+        }
+
+        function endGame() {
+            gameState = 'GAMEOVER';
+            cancelAnimationFrame(animationId);
+            
+            finalScore.innerText = score;
+            
+            gameOverScreen.classList.remove('hidden');
+            // Small delay to allow CSS transition
+            setTimeout(() => {
+                gameOverScreen.classList.remove('opacity-0');
+            }, 50);
+        }
+
+        // Draw initial static background before start
+        drawBackground();
+        drawPlayer();
+
+        // Event Listeners for Buttons
+        continueBtn.addEventListener('click', () => {
+            introScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                introScreen.classList.add('hidden');
+            }, 300);
+        });
+
+        function togglePause() {
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                pauseScreen.classList.remove('hidden');
+                setTimeout(() => pauseScreen.classList.remove('opacity-0'), 10);
+                pauseBtn.innerHTML = '▶ Tiếp tục';
+                pauseBtn.classList.remove('bg-blue-500/80', 'hover:bg-blue-600');
+                pauseBtn.classList.add('bg-green-500/80', 'hover:bg-green-600');
+            } else if (gameState === 'PAUSED') {
+                gameState = 'PLAYING';
+                pauseScreen.classList.add('opacity-0');
+                setTimeout(() => pauseScreen.classList.add('hidden'), 300);
+                pauseBtn.innerHTML = '⏸ Tạm dừng';
+                pauseBtn.classList.remove('bg-green-500/80', 'hover:bg-green-600');
+                pauseBtn.classList.add('bg-blue-500/80', 'hover:bg-blue-600');
+            }
+        }
+
+        pauseBtn.addEventListener('click', togglePause);
+        resumeBtn.addEventListener('click', togglePause);
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+    </script>
+</body>
+</html>

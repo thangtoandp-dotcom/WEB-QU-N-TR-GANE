@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đấu Trường Trải Nghiệm - HĐTN HN Lớp 12</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- Cấu hình Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { dark: '#0f172a', primary: '#3b82f6', secondary: '#8b5cf6', accent: '#f59e0b' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at center, #1e1b4b, #0f172a); color: white; overflow-x: hidden; user-select: none; }
+        .glass-panel { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1rem; }
+        .btn-option { transition: all 0.2s ease; cursor: pointer; }
+        .btn-option:hover:not(:disabled) { transform: scale(1.02); background: rgba(255,255,255,0.2); border-color: #3b82f6; }
+        .btn-option:active:not(:disabled) { transform: scale(0.98); }
+        .correct-answer { background: linear-gradient(135deg, #10b981, #059669) !important; border-color: #34d399 !important; color: white !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); animation: pulse-green 1s infinite; }
+        .wrong-answer { background: linear-gradient(135deg, #ef4444, #dc2626) !important; border-color: #f87171 !important; color: white !important; opacity: 0.7; }
+        .disabled-option { opacity: 0.6; cursor: not-allowed; }
+        .active-team { border: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.2); transform: scale(1.05); box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+        
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; }
+        .timer-warning { background-color: #f59e0b !important; }
+        .timer-critical { background-color: #ef4444 !important; animation: pulse-red 0.5s infinite; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        canvas#confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+        
+        /* Chỉnh thanh scroll */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Pháo hoa Canvas -->
+    <canvas id="confetti" class="hidden"></canvas>
+
+    <!-- MÀN HÌNH CHÍNH (INTRO) -->
+    <div id="intro-screen" class="w-full max-w-4xl glass-panel p-8 text-center flex flex-col items-center justify-center fade-in">
+        <div class="mb-4">
+            <span class="text-6xl mb-4 block">🏆</span>
+            <h1 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-yellow-400 uppercase drop-shadow-lg mb-2">Đấu Trường Trải Nghiệm</h1>
+            <h2 class="text-xl md:text-2xl font-semibold text-blue-200">HĐTN, HN – HÀNH TRANG LỚP 12</h2>
+            <p class="mt-4 text-gray-300 italic">"Chia sẻ cảm xúc – Kết nối trải nghiệm – Vượt qua khó khăn – Hướng tới tương lai"</p>
+        </div>
+
+        <div class="w-full max-w-2xl mt-8 bg-black/30 p-6 rounded-xl border border-white/10">
+            <h3 class="text-2xl font-bold mb-4 text-white/90">THIẾT LẬP ĐỘI CHƠI</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-blue-500"></div>
+                    <input type="text" id="team1-name" value="Đội 1" class="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500 font-bold" placeholder="Tên đội 1">
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-green-500"></div>
+                    <input type="text" id="team2-name" value="Đội 2" class="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:border-green-500 font-bold" placeholder="Tên đội 2">
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-orange-500"></div>
+                    <input type="text" id="team3-name" value="Đội 3" class="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:border-orange-500 font-bold" placeholder="Tên đội 3">
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-purple-500"></div>
+                    <input type="text" id="team4-name" value="Đội 4" class="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-bold" placeholder="Tên đội 4">
+                </div>
+            </div>
+            
+            <div class="mt-6 flex flex-col md:flex-row justify-center items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="text-gray-300">Thời gian (giây):</label>
+                    <input type="number" id="setting-time" value="25" class="w-20 bg-white/10 border border-white/20 rounded px-2 py-1 text-center text-white font-bold" min="10" max="60">
+                </div>
+                <button id="btn-toggle-sound-intro" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition">
+                    🔊 Bật Âm Thanh
+                </button>
+            </div>
+        </div>
+
+        <button id="btn-start" class="mt-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-12 rounded-full text-2xl shadow-[0_0_20px_rgba(59,130,246,0.5)] transition transform hover:scale-105 active:scale-95">
+            ▶ BẮT ĐẦU ĐẤU TRƯỜNG
+        </button>
+    </div>
+
+    <!-- MÀN HÌNH TRÒ CHƠI -->
+    <div id="game-screen" class="w-full max-w-6xl hidden flex-col h-full fade-in">
+        
+        <!-- Header: Tiêu đề & Controls -->
+        <div class="flex justify-between items-center mb-4 bg-black/40 p-3 rounded-xl border border-white/10">
+            <h1 class="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 uppercase hidden md:block">Đấu Trường Trải Nghiệm</h1>
+            <div class="flex gap-2 w-full md:w-auto justify-center">
+                <button id="btn-sound" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm font-bold transition">🔊 BẬT</button>
+                <button id="btn-pause" class="bg-yellow-600 hover:bg-yellow-500 p-2 rounded text-sm font-bold transition">⏸ TẠM DỪNG</button>
+                <button id="btn-restart" class="bg-red-600 hover:bg-red-500 p-2 rounded text-sm font-bold transition">🔄 CHƠI LẠI</button>
+            </div>
+        </div>
+
+        <!-- Bảng điểm 4 đội -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4" id="scoreboard">
+            <!-- Render via JS -->
+        </div>
+
+        <!-- Khu vực câu hỏi -->
+        <div class="glass-panel p-4 md:p-8 flex-grow flex flex-col relative">
+            
+            <!-- Trạng thái vòng chơi -->
+            <div class="flex justify-between items-center border-b border-white/20 pb-3 mb-4">
+                <div class="text-lg md:text-2xl font-bold bg-white/10 px-4 py-1 rounded-full text-yellow-300 border border-yellow-500/30">
+                    LƯỢT CỦA: <span id="current-team-name" class="uppercase">Đội 1</span>
+                </div>
+                <div class="text-lg md:text-xl font-bold text-gray-300">
+                    CÂU <span id="current-question-num" class="text-white">1</span>/28
+                </div>
+            </div>
+
+            <!-- Thanh đếm ngược -->
+            <div class="w-full bg-gray-800 rounded-full h-4 md:h-6 mb-6 overflow-hidden relative border border-white/10">
+                <div id="timer-bar" class="bg-blue-500 h-full transition-all duration-100 ease-linear w-full"></div>
+                <div id="timer-text" class="absolute inset-0 flex items-center justify-center text-xs md:text-sm font-black drop-shadow-md">25s</div>
+            </div>
+
+            <!-- Nội dung câu hỏi -->
+            <div class="flex-grow flex flex-col justify-center">
+                <h2 id="question-text" class="text-2xl md:text-3xl font-bold mb-8 text-center leading-relaxed drop-shadow-md">
+                    <!-- Nội dung câu hỏi ở đây -->
+                </h2>
+
+                <!-- 4 Đáp án -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl mx-auto" id="options-container">
+                    <!-- Render via JS -->
+                </div>
+            </div>
+            
+            <!-- Thông báo kết quả (Ẩn mặc định) -->
+            <div id="result-overlay" class="absolute inset-0 flex items-center justify-center bg-black/80 rounded-xl hidden z-10 backdrop-blur-sm">
+                <div class="text-center p-8 bg-gray-900 rounded-2xl border-2 border-white/20 shadow-2xl transform scale-90 transition-transform" id="result-card">
+                    <div id="result-icon" class="text-6xl mb-4">🎉</div>
+                    <h2 id="result-title" class="text-4xl font-black mb-2 text-green-400">CHÍNH XÁC!</h2>
+                    <p id="result-score" class="text-2xl font-bold text-white mb-6">+100 ĐIỂM</p>
+                    <button id="btn-next" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition">Tiếp tục ⏭</button>
+                </div>
+            </div>
+            
+            <!-- Pause Overlay -->
+            <div id="pause-overlay" class="absolute inset-0 flex items-center justify-center bg-black/80 rounded-xl hidden z-20 backdrop-blur-sm">
+                <div class="text-center">
+                    <h2 class="text-5xl font-black mb-6 text-yellow-400">ĐÃ TẠM DỪNG</h2>
+                    <button id="btn-resume" class="bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-10 rounded-full text-2xl shadow-lg transition transform hover:scale-105">
+                        ▶ TIẾP TỤC
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH KẾT THÚC -->
+    <div id="end-screen" class="w-full max-w-5xl hidden flex-col items-center justify-center glass-panel p-8 fade-in z-50">
+        <h1 class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-2 uppercase text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">
+            ĐẤU TRƯỜNG ĐÃ KHÉP LẠI
+        </h1>
+        <h2 class="text-2xl md:text-3xl font-bold text-white mb-8 text-center">🎊 CHÚC MỪNG CÁC ĐỘI ĐÃ HOÀN THÀNH THỬ THÁCH! 🎊</h2>
+        
+        <div class="w-full bg-black/40 rounded-xl border border-white/20 p-6 mb-8">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-gray-300 text-lg md:text-xl border-b border-white/20">
+                        <th class="py-3 px-4">Đội</th>
+                        <th class="py-3 px-4 text-center">Số câu đúng</th>
+                        <th class="py-3 px-4 text-right">Tổng Điểm</th>
+                    </tr>
+                </thead>
+                <tbody id="final-results-table">
+                    <!-- Render via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-xl md:text-2xl font-medium text-blue-200 italic text-center mb-8 bg-blue-900/40 p-4 rounded-lg border border-blue-500/30">
+            "Mỗi trải nghiệm đều là một bài học. Mỗi khó khăn đều là cơ hội để trưởng thành."
+        </p>
+
+        <button id="btn-home" class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition">
+            🏠 VỀ TRANG CHỦ
+        </button>
+    </div>
+
+    <script>
+        // === DỮ LIỆU CÂU HỎI (28 Câu, Độ khó tăng dần) ===
+        // Mức 1: Nhận biết, thông hiểu (1-7)
+        // Mức 2: Thông hiểu, vận dụng (8-14)
+        // Mức 3: Vận dụng (15-21)
+        // Mức 4: Vận dụng cao (22-28)
+        const questionsData = [
+            // --- MỨC 1 (Câu 1-7) ---
+            {
+                id: 1, teamIdx: 0,
+                question: "Lợi ích lớn nhất khi học sinh lớp 12 tham gia các Hoạt động trải nghiệm, hướng nghiệp (HĐTN, HN) là gì?",
+                options: [
+                    "Được cộng điểm trực tiếp vào kỳ thi Tốt nghiệp THPT.",
+                    "Giúp giải tỏa căng thẳng và khám phá năng lực, sở thích bản thân.",
+                    "Được nghỉ học các môn văn hóa trên lớp.",
+                    "Nhận được giấy khen để dễ dàng xin việc làm ngay."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 2, teamIdx: 1,
+                question: "Khi làm việc nhóm trong một dự án trải nghiệm, điều quan trọng nhất để nhóm hoạt động hiệu quả là:",
+                options: [
+                    "Chỉ bầu một người giỏi nhất làm mọi việc để đảm bảo kết quả.",
+                    "Tôn trọng ý kiến, phân công công việc rõ ràng và hợp tác.",
+                    "Cãi nhau đến cùng để bảo vệ quan điểm cá nhân.",
+                    "Ai thích làm phần nào thì làm, không cần thống nhất."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 3, teamIdx: 2,
+                question: "Học sinh lớp 12 thường gặp áp lực lớn về học tập. Cách tốt nhất để quản lý thời gian là:",
+                options: [
+                    "Học ngày đêm, cắt bỏ hoàn toàn thời gian ngủ và nghỉ ngơi.",
+                    "Lập kế hoạch cụ thể, chia nhỏ mục tiêu và ưu tiên việc quan trọng.",
+                    "Chỉ học những môn mình thích, bỏ qua các môn khác.",
+                    "Học theo cảm hứng, lúc nào thích thì học."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 4, teamIdx: 3,
+                question: "Trong một buổi chia sẻ về định hướng nghề nghiệp, thái độ tích cực nhất là:",
+                options: [
+                    "Ngủ hoặc làm việc riêng vì nghĩ mình đã biết chọn nghề gì.",
+                    "Ghi chép lại những thông tin hữu ích và đặt câu hỏi cho diễn giả.",
+                    "Chỉ nói chuyện riêng với bạn bè xung quanh.",
+                    "Chờ buổi chia sẻ kết thúc để về sớm."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 5, teamIdx: 0,
+                question: "Khi đối mặt với sự tự ti khi thuyết trình trước đám đông trong giờ HĐTN, bạn nên làm gì?",
+                options: [
+                    "Trốn tránh và xin giáo viên cho làm việc khác.",
+                    "Chuẩn bị kỹ nội dung, hít thở sâu và luyện tập trước gương.",
+                    "Nhờ bạn bè thuyết trình hộ trong mọi trường hợp.",
+                    "Đứng im trên bục và không nói gì."
+                ],
+                answer: 1 // B (Phân bố đáp án: Tạm thời B, sẽ đảo vị trí ngẫu nhiên lúc render)
+            },
+            {
+                id: 6, teamIdx: 1,
+                question: "Mục đích của việc lập kế hoạch cá nhân đối với học sinh lớp 12 là:",
+                options: [
+                    "Để giáo viên chủ nhiệm kiểm tra và chấm điểm.",
+                    "Giúp bản thân có định hướng rõ ràng, theo dõi tiến độ và chủ động.",
+                    "Để khoe với bạn bè về những dự định lớn lao.",
+                    "Chỉ để cho vui, không có tác dụng thực tế."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 7, teamIdx: 2,
+                question: "Khi cảm thấy quá mệt mỏi và kiệt sức vì lịch học và hoạt động dày đặc, bạn nên:",
+                options: [
+                    "Cố gắng chịu đựng một mình vì ai cũng vậy.",
+                    "Tạm dừng lại nghỉ ngơi, điều chỉnh lịch học và chia sẻ với người thân.",
+                    "Bỏ học vài ngày mà không báo cáo ai để đi chơi.",
+                    "Trút giận lên bạn bè và những người xung quanh."
+                ],
+                answer: 1 // B
+
+            // --- MỨC 2 (Câu 8-14) ---
+            },
+            {
+                id: 8, teamIdx: 3,
+                question: "Bạn được giao làm nhóm trưởng nhưng một thành viên trong nhóm liên tục không hoàn thành nhiệm vụ. Bạn xử lý thế nào?",
+                options: [
+                    "Loại thành viên đó ra khỏi nhóm ngay lập tức không cần báo trước.",
+                    "Tự làm luôn phần việc của bạn đó để không ảnh hưởng điểm số chung.",
+                    "Trò chuyện riêng để tìm hiểu nguyên nhân và cùng tìm cách hỗ trợ bạn.",
+                    "Lên mạng xã hội đăng bài nói xấu thành viên đó."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 9, teamIdx: 0,
+                question: "Một bạn trong lớp học rất giỏi nhưng lại không muốn tham gia bất kỳ HĐTN nào vì cho rằng 'phí thời gian'. Bạn sẽ:",
+                options: [
+                    "Đồng tình và cũng xin nghỉ tham gia các hoạt động đó.",
+                    "Mặc kệ bạn ấy, ai lo việc người nấy.",
+                    "Chia sẻ về những kỹ năng mềm mà hoạt động mang lại để bạn hiểu thêm.",
+                    "Cô lập và không chơi với bạn ấy nữa."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 10, teamIdx: 1,
+                question: "Khi đang thực hiện một chiến dịch thiện nguyện, quỹ dự kiến của nhóm bị thiếu hụt. Nhóm nên làm gì?",
+                options: [
+                    "Hủy bỏ toàn bộ chiến dịch vì không đủ tiền.",
+                    "Bắt buộc mỗi thành viên phải nộp thêm tiền túi thật nhiều.",
+                    "Họp nhóm, đánh giá lại kinh phí và tìm các phương án gây quỹ sáng tạo.",
+                    "Chuyển trách nhiệm cho giáo viên giải quyết."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 11, teamIdx: 2,
+                question: "Trong việc chọn ngành nghề, bạn thấy mình thích ngành X nhưng gia đình lại muốn bạn học ngành Y. Bạn nên làm gì đầu tiên?",
+                options: [
+                    "Cãi lời gia đình bằng mọi giá, tự ý đăng ký ngành X.",
+                    "Từ bỏ đam mê, ngoan ngoãn học ngành Y để gia đình vui lòng.",
+                    "Tìm hiểu kỹ cả 2 ngành, sau đó đối thoại từ tốn và thuyết phục gia đình.",
+                    "Tuyệt thực để phản đối quyết định của gia đình."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 12, teamIdx: 3,
+                question: "Một học sinh lớp 12 cảm thấy căng thẳng vì vừa phải chuẩn bị thi tốt nghiệp vừa tham gia HĐTN. Biện pháp phù hợp nhất?",
+                options: [
+                    "Bỏ hoàn toàn các hoạt động tập thể.",
+                    "Cố gắng làm tất cả mà không cần lập kế hoạch.",
+                    "Lập bảng thời gian, xác định ưu tiên và trao đổi với thầy cô nếu quá tải.",
+                    "Chờ đến khi gần hết thời gian mới bắt đầu thực hiện."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 13, teamIdx: 0,
+                question: "Bạn thấy một người bạn cùng lớp đang có dấu hiệu trầm cảm do áp lực học tập. Cách hỗ trợ tốt nhất là:",
+                options: [
+                    "Tránh xa vì sợ bị lây tâm trạng tiêu cực.",
+                    "Khuyên bạn ấy 'đừng nghĩ nhiều nữa, cứ vui lên'.",
+                    "Lắng nghe bạn chia sẻ không phán xét và khuyên bạn gặp chuyên gia tâm lý/thầy cô.",
+                    "Kể chuyện của bạn ấy cho nhiều người khác nghe để họ giúp."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 14, teamIdx: 1,
+                question: "Khi tham gia tổ chức một sự kiện trường, hệ thống âm thanh đột nhiên bị hỏng. Bạn là ban tổ chức, bạn sẽ:",
+                options: [
+                    "Hoảng loạn và khóc lóc.",
+                    "Đổ lỗi cho người phụ trách kỹ thuật trước mặt mọi người.",
+                    "Giữ bình tĩnh, dùng loa tay/nói chay để trấn an và cử người đi sửa gấp.",
+                    "Tuyên bố kết thúc sự kiện ngay lập tức."
+                ],
+                answer: 2 // C
+
+            // --- MỨC 3 (Câu 15-21) ---
+            },
+            {
+                id: 15, teamIdx: 2,
+                question: "Trong một buổi thảo luận, hai nhóm có quan điểm trái ngược và bắt đầu tranh cãi gay gắt. Bạn là người điều phối, bạn sẽ:",
+                options: [
+                    "Bênh vực nhóm có ý kiến giống mình và bác bỏ nhóm kia.",
+                    "Yêu cầu dừng lại, nhắc nhở quy tắc thảo luận và tóm tắt điểm chung của hai bên.",
+                    "Mặc kệ cho hai nhóm tranh cãi đến khi phân thắng bại.",
+                    "Đuổi cả hai nhóm ra khỏi phòng thảo luận."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 16, teamIdx: 3,
+                question: "Bạn tham gia một cuộc thi khởi nghiệp và thất bại ở vòng loại. Bài học trưởng thành lớn nhất từ trải nghiệm này là:",
+                options: [
+                    "Cuộc thi không công bằng, ban giám khảo thiên vị.",
+                    "Bản thân không có năng lực, không bao giờ thi nữa.",
+                    "Phân tích nguyên nhân thất bại, rút kinh nghiệm để hoàn thiện dự án sau.",
+                    "Che giấu thất bại này với mọi người vì xấu hổ."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 17, teamIdx: 0,
+                question: "Sau kỳ thi Thử Đại học, điểm số của bạn thấp hơn nhiều so với mục tiêu. Phản ứng nào thể hiện sự trưởng thành?",
+                options: [
+                    "Suy sụp, nhốt mình trong phòng và chán nản kéo dài.",
+                    "Chấp nhận thực tế, rà soát lại lỗi sai và điều chỉnh phương pháp ôn tập.",
+                    "Đổ lỗi cho đề thi quá khó hoặc do giáo viên dạy không sát.",
+                    "Đổi mục tiêu thi sang một trường cực kỳ thấp dù không thích."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 18, teamIdx: 1,
+                question: "Nhóm của bạn có một bạn học sinh khuyết tật. Để tôn trọng sự khác biệt và giúp bạn hòa nhập, nhóm nên:",
+                options: [
+                    "Phân công cho bạn ấy những việc dễ nhất hoặc không cần làm gì để 'được nghỉ'.",
+                    "Trao đổi trực tiếp để biết thế mạnh của bạn, phân công việc phù hợp năng lực.",
+                    "Bỏ qua bạn ấy trong các cuộc thảo luận vì sợ bạn không hiểu.",
+                    "Luôn thể hiện sự thương hại và làm hộ bạn ấy mọi việc."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 19, teamIdx: 2,
+                question: "Bạn phát hiện mình không hề có hứng thú với khối thi mà mình đã theo học suốt 2 năm qua. Hiện tại đã là giữa học kỳ I lớp 12. Bạn cân nhắc điều gì?",
+                options: [
+                    "Đánh liều chuyển khối ngay lập tức không cần suy nghĩ gì thêm.",
+                    "Đánh giá lại năng lực bản thân, tham khảo ý kiến giáo viên/chuyên gia trước khi quyết định.",
+                    "Bỏ học vì đằng nào cũng muộn rồi.",
+                    "Cứ học tiếp nhưng trong trạng thái chán nản, thi đỗ gì học nấy."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 20, teamIdx: 3,
+                question: "Kỹ năng 'Tự nhận thức bản thân' trong HĐTN giúp ích gì cho quá trình hướng nghiệp?",
+                options: [
+                    "Giúp bạn biết cách ăn mặc đẹp hơn khi đi phỏng vấn.",
+                    "Giúp bạn hiểu rõ điểm mạnh, điểm yếu, giá trị và sở thích để chọn nghề phù hợp.",
+                    "Giúp bạn biết cách làm hài lòng tất cả mọi người.",
+                    "Giúp bạn đoán được tương lai mình sẽ giàu hay nghèo."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 21, teamIdx: 0,
+                question: "Khi đối mặt với nhiều luồng thông tin nghề nghiệp trên mạng xã hội, kỹ năng quan trọng nhất để không bị 'nhiễu' là:",
+                options: [
+                    "Tin tưởng tuyệt đối vào các KOLs hoặc Influencers trên Tiktok.",
+                    "Tư duy phản biện: Kiểm chứng nguồn thông tin, đối chiếu với thực tế và năng lực bản thân.",
+                    "Chặn tất cả thông tin để khỏi phải suy nghĩ.",
+                    "Chạy theo xu hướng (trend), ngành nào đang 'hot' thì chọn ngay."
+                ],
+                answer: 1 // B
+
+            // --- MỨC 4 (Câu 22-28) ---
+            },
+            {
+                id: 22, teamIdx: 1,
+                question: "Bạn dự định thi vào trường Sư phạm, nhưng có ý kiến cho rằng nghề này vất vả mà lương không cao. Bạn đánh giá vấn đề này thế nào?",
+                options: [
+                    "Bỏ ngay ý định thi Sư phạm vì tiền bạc là quan trọng nhất.",
+                    "Tranh cãi gay gắt với người đó để bảo vệ nghề giáo.",
+                    "Nhận thức giá trị của nghề, chuẩn bị tâm lý đối mặt khó khăn và kiên định với đam mê nếu thực sự yêu thích.",
+                    "Chờ xem có ai đi học Sư phạm không rồi mới quyết định theo."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 23, teamIdx: 2,
+                question: "Chuẩn bị tâm thế sau tốt nghiệp THPT không chỉ là việc chọn trường đại học, mà còn là:",
+                options: [
+                    "Chuẩn bị tiền để đi du lịch thật nhiều.",
+                    "Sẵn sàng tâm lý tự lập, chịu trách nhiệm với quyết định và đối mặt với môi trường mới.",
+                    "Mua sắm quần áo, điện thoại mới để lên thành phố.",
+                    "Xóa hết liên lạc với bạn bè cũ để bắt đầu cuộc sống mới."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 24, teamIdx: 3,
+                question: "Trong quá trình làm dự án HĐTN cuối năm, nhóm trưởng phân công việc không công bằng, ưu ái bạn thân. Bạn xử lý sao?",
+                options: [
+                    "Rút khỏi nhóm ngay lập tức, báo cáo giáo viên đòi đổi nhóm.",
+                    "Góp ý riêng với nhóm trưởng một cách xây dựng, nếu không thay đổi mới báo cáo giáo viên.",
+                    "Tổ chức các thành viên khác để tẩy chay nhóm trưởng.",
+                    "Chấp nhận làm nhiều việc hơn để yên chuyện."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 25, teamIdx: 0,
+                question: "Đại dịch hoặc các biến cố bất ngờ có thể làm thay đổi hoàn toàn kế hoạch nghề nghiệp. Kỹ năng nào quan trọng nhất lúc này?",
+                options: [
+                    "Kỹ năng lập trình máy tính.",
+                    "Sự cứng nhắc, kiên quyết bám lấy kế hoạch cũ bằng mọi giá.",
+                    "Kỹ năng thích ứng, linh hoạt chuyển đổi và học hỏi cái mới.",
+                    "Kỹ năng đổ lỗi cho hoàn cảnh."
+                ],
+                answer: 2 // C
+            },
+            {
+                id: 26, teamIdx: 1,
+                question: "Một học sinh quyết định đi học nghề thay vì thi Đại học như các bạn khác, nhưng lại bị bàn tán. Cách nhìn nhận đúng đắn là:",
+                options: [
+                    "Đại học là con đường duy nhất để thành công, bạn đó đã sai.",
+                    "Mỗi con đường đều có giá trị riêng, học nghề nếu phù hợp năng lực vẫn dẫn đến thành công.",
+                    "Học nghề chỉ dành cho những người học dốt.",
+                    "Bạn đó nên nghỉ học luôn thay vì đi học nghề."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 27, teamIdx: 2,
+                question: "Để vượt qua nỗi sợ 'chọn sai ngành', học sinh lớp 12 cần hiểu rằng:",
+                options: [
+                    "Chọn sai là chấm hết, cuộc đời sẽ thất bại hoàn toàn.",
+                    "Sự nghiệp là một quá trình liên tục phát triển, chúng ta luôn có thể học lại hoặc rẽ nhánh nếu cần thiết.",
+                    "Bố mẹ chọn giúp thì chắc chắn không bao giờ sai.",
+                    "Chọn bừa một ngành, sau này tính sau."
+                ],
+                answer: 1 // B
+            },
+            {
+                id: 28, teamIdx: 3,
+                question: "Hành trang lớn nhất mà bạn mang theo sau khi rời khỏi ghế nhà trường phổ thông là gì?",
+                options: [
+                    "Chỉ là điểm số trên học bạ và bằng tốt nghiệp.",
+                    "Kiến thức, kỹ năng sống, thái độ sống tích cực và những kỷ niệm đẹp cùng bạn bè, thầy cô.",
+                    "Những cuốn sách giáo khoa để sau này ôn lại.",
+                    "Không có gì cả vì học đại học sẽ khác hoàn toàn."
+                ],
+                answer: 1 // B
+            }
+        ];
+
+        // Hàm xáo trộn vị trí đáp án để A/B/C/D không cố định
+        function shuffleOptions(questionObj) {
+            let options = [...questionObj.options];
+            let correctText = options[questionObj.answer];
+            
+            // Xáo trộn mảng options
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+            
+            // Tìm lại index của đáp án đúng
+            let newAnswerIndex = options.indexOf(correctText);
+            
+            return {
+                ...questionObj,
+                options: options,
+                answer: newAnswerIndex
+            };
+        }
+
+        // Tạo mảng câu hỏi đã xáo trộn đáp án
+        let processedQuestions = questionsData.map(q => shuffleOptions(q));
+
+        // === QUẢN LÝ ÂM THANH (Web Audio API) ===
+        class SoundManager {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.initAttempted = false;
+            }
+
+            init() {
+                if (this.initAttempted) return;
+                try {
+                    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                    this.initAttempted = true;
+                } catch (e) {
+                    console.log("Web Audio API không được hỗ trợ.");
+                }
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                return this.enabled;
+            }
+
+            playTone(freq, type, duration, vol = 0.1) {
+                if (!this.enabled || !this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+
+            playStart() { 
+                if(!this.enabled) return;
+                this.playTone(440, 'sine', 0.1, 0.2);
+                setTimeout(() => this.playTone(554, 'sine', 0.1, 0.2), 100);
+                setTimeout(() => this.playTone(659, 'sine', 0.3, 0.2), 200);
+            }
+            playClick() { this.playTone(800, 'sine', 0.05, 0.05); }
+            playTick() { this.playTone(1000, 'triangle', 0.05, 0.02); }
+            playWarning() { this.playTone(400, 'square', 0.1, 0.05); }
+            
+            playCorrect() {
+                if(!this.enabled) return;
+                this.playTone(523.25, 'sine', 0.1, 0.2); // C5
+                setTimeout(() => this.playTone(659.25, 'sine', 0.1, 0.2), 100); // E5
+                setTimeout(() => this.playTone(783.99, 'sine', 0.3, 0.2), 200); // G5
+            }
+            
+            playWrong() {
+                if(!this.enabled) return;
+                this.playTone(300, 'sawtooth', 0.3, 0.2);
+                setTimeout(() => this.playTone(250, 'sawtooth', 0.4, 0.2), 250);
+            }
+
+            playTimeout() {
+                if(!this.enabled) return;
+                this.playTone(200, 'sawtooth', 0.5, 0.3);
+            }
+
+            playVictory() {
+                if(!this.enabled) return;
+                const notes = [523, 659, 783, 1046, 783, 1046];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => this.playTone(freq, 'sine', 0.2, 0.2), i * 150);
+                });
+            }
+        }
+
+        const sounds = new SoundManager();
+
+        // === HIỆU ỨNG PHÁO HOA (Canvas) ===
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let confettiActive = false;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function createConfetti() {
+            const colors = ['#fce18a', '#ff726d', '#b48def', '#f4306d', '#3b82f6', '#10b981'];
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 + 100,
+                    r: Math.random() * 6 + 4,
+                    dx: Math.random() * 20 - 10,
+                    dy: Math.random() * -20 - 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.floor(Math.random() * 10) - 10,
+                    tiltAngleInc: (Math.random() * 0.07) + 0.05,
+                    tiltAngle: 0
+                });
+            }
+        }
+
+        function animateConfetti() {
+            if (!confettiActive) return;
+            requestAnimationFrame(animateConfetti);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach((p, index) => {
+                p.tiltAngle += p.tiltAngleInc;
+                p.y += (Math.cos(p.tiltAngle) + 1 + p.r / 2) / 2;
+                p.x += Math.sin(p.tiltAngle) * 2;
+                p.dy += 0.05; // gravity
+                p.y += p.dy;
+                p.x += p.dx;
+
+                ctx.beginPath();
+                ctx.lineWidth = p.r;
+                ctx.strokeStyle = p.color;
+                ctx.moveTo(p.x + p.tilt + p.r, p.y);
+                ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r);
+                ctx.stroke();
+
+                if (p.y > canvas.height) particles.splice(index, 1);
+            });
+            
+            if(particles.length === 0 && confettiActive) {
+               // Ngừng vẽ khi hết hạt
+            }
+        }
+
+        function startConfetti() {
+            canvas.classList.remove('hidden');
+            confettiActive = true;
+            createConfetti();
+            animateConfetti();
+            // Bắn thêm vài đợt
+            setTimeout(createConfetti, 1000);
+            setTimeout(createConfetti, 2000);
+        }
+        function stopConfetti() {
+            canvas.classList.add('hidden');
+            confettiActive = false;
+            particles = [];
+        }
+
+        // === LOGIC TRÒ CHƠI ===
+        const GameState = {
+            teams: [
+                { id: 0, name: "Đội 1", score: 0, correct: 0, color: 'brand-primary', hex: '#3b82f6', bg: 'bg-blue-600' },
+                { id: 1, name: "Đội 2", score: 0, correct: 0, color: 'green-500', hex: '#10b981', bg: 'bg-green-600' },
+                { id: 2, name: "Đội 3", score: 0, correct: 0, color: 'orange-500', hex: '#f97316', bg: 'bg-orange-600' },
+                { id: 3, name: "Đội 4", score: 0, correct: 0, color: 'purple-500', hex: '#a855f7', bg: 'bg-purple-600' }
+            ],
+            currentQIndex: 0,
+            timePerQuestion: 25,
+            timeRemaining: 25,
+            timerInterval: null,
+            isPaused: false,
+            isAnswered: false
+        };
+
+        // DOM Elements
+        const screens = {
+            intro: document.getElementById('intro-screen'),
+            game: document.getElementById('game-screen'),
+            end: document.getElementById('end-screen')
+        };
+        const els = {
+            scoreboard: document.getElementById('scoreboard'),
+            teamName: document.getElementById('current-team-name'),
+            qNum: document.getElementById('current-question-num'),
+            timerBar: document.getElementById('timer-bar'),
+            timerText: document.getElementById('timer-text'),
+            qText: document.getElementById('question-text'),
+            options: document.getElementById('options-container'),
+            resOverlay: document.getElementById('result-overlay'),
+            resTitle: document.getElementById('result-title'),
+            resScore: document.getElementById('result-score'),
+            resIcon: document.getElementById('result-icon'),
+            resCard: document.getElementById('result-card'),
+            pauseOverlay: document.getElementById('pause-overlay')
+        };
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('flex');
+            });
+            screens[screenName].classList.remove('hidden');
+            if(screenName === 'game' || screenName === 'end') screens[screenName].classList.add('flex');
+        }
+
+        // Cập nhật bảng điểm
+        function renderScoreboard() {
+            els.scoreboard.innerHTML = '';
+            const activeTeamId = processedQuestions[GameState.currentQIndex]?.teamIdx ?? 0;
+            
+            GameState.teams.forEach(t => {
+                const isActive = (t.id === activeTeamId && screens.game.classList.contains('flex') && !screens.end.classList.contains('flex'));
+                const html = `
+                    <div class="glass-panel p-2 md:p-4 text-center transition-all ${isActive ? 'active-team' : 'opacity-80'}">
+                        <div class="w-3 h-3 md:w-4 md:h-4 rounded-full mx-auto mb-1 ${t.bg}"></div>
+                        <h3 class="text-xs md:text-sm font-bold text-gray-300 truncate" title="${t.name}">${t.name}</h3>
+                        <p class="text-xl md:text-3xl font-black text-white">${t.score}</p>
+                        <p class="text-[10px] md:text-xs text-gray-400 mt-1">${t.correct}/7 câu</p>
+                    </div>
+                `;
+                els.scoreboard.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Bắt đầu trò chơi
+        function startGame() {
+            sounds.init();
+            sounds.playStart();
+            
+            // Lấy tên đội & cài đặt
+            for(let i=0; i<4; i++) {
+                const nameInput = document.getElementById(`team${i+1}-name`).value.trim();
+                GameState.teams[i].name = nameInput || `Đội ${i+1}`;
+                GameState.teams[i].score = 0;
+                GameState.teams[i].correct = 0;
+            }
+            GameState.timePerQuestion = parseInt(document.getElementById('setting-time').value) || 25;
+            GameState.currentQIndex = 0;
+            
+            // Xáo trộn lại đáp án mỗi lần chơi mới
+            processedQuestions = questionsData.map(q => shuffleOptions(q));
+            
+            showScreen('game');
+            loadQuestion();
+        }
+
+        // Tải câu hỏi hiện tại
+        function loadQuestion() {
+            if (GameState.currentQIndex >= processedQuestions.length) {
+                endGame();
+                return;
+            }
+
+            GameState.isAnswered = false;
+            GameState.isPaused = false;
+            els.resOverlay.classList.add('hidden');
+            
+            const q = processedQuestions[GameState.currentQIndex];
+            const team = GameState.teams[q.teamIdx];
+            
+            els.teamName.textContent = team.name;
+            els.teamName.style.color = team.hex;
+            els.qNum.textContent = GameState.currentQIndex + 1;
+            els.qText.textContent = q.question;
+            
+            renderScoreboard();
+
+            // Render options
+            els.options.innerHTML = '';
+            const labels = ['A', 'B', 'C', 'D'];
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `btn-option w-full bg-white/10 border-2 border-white/20 rounded-xl p-4 md:p-6 text-left flex items-start gap-4 shadow-lg text-lg md:text-xl font-medium`;
+                btn.innerHTML = `<span class="font-black text-yellow-400 text-xl md:text-2xl min-w-[30px]">${labels[idx]}.</span> <span>${opt}</span>`;
+                btn.onclick = () => handleAnswer(idx);
+                els.options.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        // Xử lý Timer
+        function startTimer() {
+            clearInterval(GameState.timerInterval);
+            GameState.timeRemaining = GameState.timePerQuestion;
+            updateTimerUI();
+            
+            let lastTick = Math.floor(GameState.timeRemaining);
+
+            GameState.timerInterval = setInterval(() => {
+                if (GameState.isPaused || GameState.isAnswered) return;
+
+                GameState.timeRemaining -= 0.1; // Update mỗi 100ms cho mượt
+                updateTimerUI();
+
+                const currentSec = Math.ceil(GameState.timeRemaining);
+                
+                // Phát âm thanh tick khi còn dưới 10s
+                if (currentSec <= 10 && currentSec > 0 && currentSec !== lastTick) {
+                    sounds.playTick();
+                    lastTick = currentSec;
+                }
+
+                if (GameState.timeRemaining <= 0) {
+                    clearInterval(GameState.timerInterval);
+                    handleTimeout();
+                }
+            }, 100);
+        }
+
+        function updateTimerUI() {
+            const percent = (GameState.timeRemaining / GameState.timePerQuestion) * 100;
+            els.timerBar.style.width = `${Math.max(0, percent)}%`;
+            els.timerText.textContent = `${Math.ceil(Math.max(0, GameState.timeRemaining))}s`;
+
+            // Đổi màu thanh timer
+            els.timerBar.className = 'h-full transition-all duration-100 ease-linear w-full ';
+            if (GameState.timeRemaining > 10) els.timerBar.classList.add('bg-blue-500');
+            else if (GameState.timeRemaining > 5) els.timerBar.classList.add('timer-warning');
+            else els.timerBar.classList.add('timer-critical');
+        }
+
+        // Xử lý khi chọn đáp án
+        function handleAnswer(selectedIndex) {
+            if (GameState.isAnswered || GameState.isPaused) return;
+            GameState.isAnswered = true;
+            clearInterval(GameState.timerInterval);
+
+            sounds.playClick();
+            
+            const q = processedQuestions[GameState.currentQIndex];
+            const team = GameState.teams[q.teamIdx];
+            const isCorrect = selectedIndex === q.answer;
+            const buttons = els.options.querySelectorAll('button');
+
+            // Khóa tất cả nút, làm mờ
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled-option');
+                btn.classList.remove('hover:scale-105');
+            });
+
+            // Highlight đáp án
+            if (isCorrect) {
+                buttons[selectedIndex].classList.remove('disabled-option');
+                buttons[selectedIndex].classList.add('correct-answer');
+                team.score += 100;
+                team.correct += 1;
+                sounds.playCorrect();
+                showResultOverlay(true);
+            } else {
+                buttons[selectedIndex].classList.remove('disabled-option');
+                buttons[selectedIndex].classList.add('wrong-answer', 'shake');
+                // Hiển thị đáp án đúng
+                buttons[q.answer].classList.remove('disabled-option');
+                buttons[q.answer].classList.add('correct-answer');
+                sounds.playWrong();
+                showResultOverlay(false);
+            }
+            
+            renderScoreboard();
+        }
+
+        function handleTimeout() {
+            GameState.isAnswered = true;
+            const q = processedQuestions[GameState.currentQIndex];
+            const buttons = els.options.querySelectorAll('button');
+            
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled-option');
+            });
+            // Show correct
+            buttons[q.answer].classList.remove('disabled-option');
+            buttons[q.answer].classList.add('correct-answer');
+            
+            sounds.playTimeout();
+            showResultOverlay(null); // null = timeout
+        }
+
+        function showResultOverlay(isCorrect) {
+            setTimeout(() => {
+                els.resOverlay.classList.remove('hidden');
+                
+                if (isCorrect === true) {
+                    els.resIcon.textContent = '🎉';
+                    els.resTitle.textContent = 'CHÍNH XÁC!';
+                    els.resTitle.className = 'text-4xl font-black mb-2 text-green-400';
+                    els.resScore.textContent = '+100 ĐIỂM';
+                    els.resCard.className = 'text-center p-8 bg-gray-900 rounded-2xl border-2 border-green-500 shadow-[0_0_30px_rgba(16,185,129,0.5)] transform scale-100 transition-transform';
+                } else if (isCorrect === false) {
+                    els.resIcon.textContent = '❌';
+                    els.resTitle.textContent = 'CHƯA CHÍNH XÁC';
+                    els.resTitle.className = 'text-4xl font-black mb-2 text-red-400';
+                    els.resScore.textContent = '0 ĐIỂM';
+                    els.resCard.className = 'text-center p-8 bg-gray-900 rounded-2xl border-2 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.5)] transform scale-100 transition-transform';
+                } else {
+                    els.resIcon.textContent = '⏱';
+                    els.resTitle.textContent = 'HẾT GIỜ!';
+                    els.resTitle.className = 'text-4xl font-black mb-2 text-yellow-400';
+                    els.resScore.textContent = '0 ĐIỂM';
+                    els.resCard.className = 'text-center p-8 bg-gray-900 rounded-2xl border-2 border-yellow-500 shadow-[0_0_30px_rgba(245,158,11,0.5)] transform scale-100 transition-transform';
+                }
+            }, 1000); // Đợi 1s nhìn đáp án trước khi hiện overlay
+        }
+
+        // Chuyển câu tiếp theo
+        document.getElementById('btn-next').addEventListener('click', () => {
+            GameState.currentQIndex++;
+            sounds.playClick();
+            loadQuestion();
+        });
+
+        // Kết thúc trò chơi
+        function endGame() {
+            showScreen('end');
+            sounds.playVictory();
+            startConfetti();
+            
+            // Sắp xếp đội theo điểm (giữ nguyên id để lấy màu)
+            const sortedTeams = [...GameState.teams].sort((a, b) => b.score - a.score);
+            const tbody = document.getElementById('final-results-table');
+            tbody.innerHTML = '';
+            
+            sortedTeams.forEach((t, index) => {
+                const isWinner = index === 0 && t.score > 0;
+                const html = `
+                    <tr class="${isWinner ? 'bg-yellow-500/20 text-yellow-300 font-bold' : 'text-white border-b border-white/10'}">
+                        <td class="py-4 px-4 flex items-center gap-3">
+                            <span class="text-2xl">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👏'}</span>
+                            <span class="text-xl">${t.name}</span>
+                        </td>
+                        <td class="py-4 px-4 text-center text-xl">${t.correct}/7</td>
+                        <td class="py-4 px-4 text-right text-2xl">${t.score}</td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // === SỰ KIỆN NÚT ĐIỀU KHIỂN ===
+        document.getElementById('btn-start').addEventListener('click', startGame);
+        
+        document.getElementById('btn-home').addEventListener('click', () => {
+            stopConfetti();
+            sounds.playClick();
+            showScreen('intro');
+        });
+
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            if(confirm("Bạn có chắc chắn muốn chơi lại từ đầu? Mọi điểm số sẽ bị xóa.")) {
+                stopConfetti();
+                startGame();
+            }
+        });
+
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            if (GameState.isAnswered) return;
+            sounds.playClick();
+            GameState.isPaused = true;
+            els.pauseOverlay.classList.remove('hidden');
+        });
+
+        document.getElementById('btn-resume').addEventListener('click', () => {
+            sounds.playClick();
+            GameState.isPaused = false;
+            els.pauseOverlay.classList.add('hidden');
+        });
+
+        // Nút âm thanh
+        const btnSoundIntro = document.getElementById('btn-toggle-sound-intro');
+        const btnSoundGame = document.getElementById('btn-sound');
+        
+        function updateSoundButtons() {
+            const txt = sounds.enabled ? '🔊 BẬT' : '🔇 TẮT';
+            btnSoundIntro.innerHTML = `${sounds.enabled ? '🔊' : '🔇'} Âm Thanh: ${sounds.enabled ? 'BẬT' : 'TẮT'}`;
+            btnSoundGame.textContent = txt;
+            
+            if(!sounds.enabled) {
+                btnSoundGame.classList.replace('bg-gray-700', 'bg-red-900');
+                btnSoundGame.classList.replace('hover:bg-gray-600', 'hover:bg-red-800');
+            } else {
+                btnSoundGame.classList.replace('bg-red-900', 'bg-gray-700');
+                btnSoundGame.classList.replace('hover:bg-red-800', 'hover:bg-gray-600');
+            }
+        }
+
+        btnSoundIntro.addEventListener('click', () => {
+            sounds.init();
+            sounds.toggle();
+            updateSoundButtons();
+        });
+
+        btnSoundGame.addEventListener('click', () => {
+            sounds.toggle();
+            updateSoundButtons();
+        });
+        
+        // Init
+        updateSoundButtons();
+
+    </script>
+</body>
+</html>

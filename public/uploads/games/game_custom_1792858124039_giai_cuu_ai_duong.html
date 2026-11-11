@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Giải Cứu Đại Dương</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #0f172a;
+            color: white;
+            overflow: hidden; /* Ngăn cuộn trang */
+            touch-action: none; /* Ngăn chặn các thao tác vuốt mặc định trên thiết bị cảm ứng */
+        }
+        h1, .game-font {
+            font-family: 'Fredoka One', cursive;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: block;
+            box-shadow: 0 0 20px rgba(0, 150, 255, 0.3);
+            background: linear-gradient(180deg, #0077be 0%, #003366 100%);
+        }
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 10, 30, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+        .hidden { display: none !important; }
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .hud > * {
+            pointer-events: auto; /* Cho phép tương tác với nút bên trong HUD */
+        }
+        .hud-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .hud-btn {
+            font-size: 1.5rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 5px 25px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .hud-btn:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.1);
+        }
+        .btn-play {
+            background: linear-gradient(45deg, #06b6d4, #3b82f6);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-play:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+        }
+        .heart { color: #ff4757; }
+        
+        /* CSS cho màn hình tác giả */
+        .text-glow {
+            text-shadow: 0 0 15px rgba(253, 224, 71, 0.6), 0 0 30px rgba(253, 224, 71, 0.4);
+        }
+        .bg-author-box {
+            background-color: #172136;
+            border: 1px solid #2a3b5c;
+        }
+        .btn-continue {
+            background-color: #4ade80; /* Màu xanh lá nhạt */
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-continue:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(74, 222, 128, 0.7);
+            background-color: #22c55e;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- HUD (Heads Up Display) -->
+        <div class="hud hidden" id="hud">
+            <div class="hud-text text-yellow-300">Điểm: <span id="scoreDisplay">0</span></div>
+            <button id="pauseBtn" class="hud-btn" title="Tạm dừng/Tiếp tục">⏸️</button>
+            <div class="hud-text heart">Mạng: <span id="livesDisplay">❤️❤️❤️</span></div>
+        </div>
+
+        <!-- Canvas Game -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Author Screen -->
+        <div id="authorScreen" class="overlay z-50" style="background-color: #101828;">
+            <div class="text-center py-16 px-8 bg-author-box rounded-2xl shadow-2xl max-w-3xl w-[90%]">
+                <p class="text-[#94a3b8] text-lg md:text-xl uppercase tracking-[0.2em] mb-6 font-semibold">
+                    SẢN PHẨM GAME ĐƯỢC SÁNG TẠO BỞI
+                </p>
+                <h2 class="text-5xl md:text-6xl text-yellow-400 mb-4 text-glow game-font">
+                    Thầy giáo
+                </h2>
+                <h1 class="text-5xl md:text-7xl text-yellow-400 uppercase mb-10 text-glow game-font">
+                    Bùi Ngọc Thắng
+                </h1>
+                <p class="text-gray-200 text-xl md:text-2xl mb-12 font-semibold">
+                    Đơn vị công tác: Trường THPT Đan Phượng
+                </p>
+                <button id="continueBtn" class="btn-continue text-white px-10 py-3 rounded-full text-2xl font-bold flex items-center justify-center mx-auto gap-3">
+                    Tiếp tục <span>➡</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="overlay hidden">
+            <div class="text-center p-8 bg-white/10 border border-white/20 rounded-3xl shadow-2xl max-w-2xl w-[90%]">
+                <h1 class="text-5xl md:text-7xl text-cyan-300 mb-6 drop-shadow-lg">Giải Cứu<br>Đại Dương</h1>
+                <p class="text-2xl md:text-3xl text-blue-100 mb-8 leading-relaxed">
+                    Điều khiển rùa biển 🐢 để giải cứu các chú cá 🐠.<br>
+                    Tránh xa rác thải 🥤🛍️ và chất độc 🛢️!
+                </p>
+                <div class="mb-8 flex justify-center gap-6 text-4xl md:text-5xl">
+                    <span title="Người chơi">🐢</span>
+                    <span title="Giải cứu">➡ 🐠 🐡</span>
+                    <span title="Tránh xa">❌ 🥤 🛢️</span>
+                </div>
+                <p class="text-lg md:text-xl text-gray-300 mb-8">Dùng chuột hoặc chạm để di chuyển</p>
+                <button id="startBtn" class="game-font btn-play text-white px-10 py-4 rounded-full text-3xl uppercase tracking-wider">
+                    Chơi Ngay
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="overlay hidden">
+            <div class="text-center p-8 bg-red-900/80 border border-red-500/50 rounded-3xl shadow-2xl max-w-md w-[90%]">
+                <h1 class="text-5xl text-red-400 mb-2 drop-shadow-lg game-font">Game Over</h1>
+                <p class="text-xl text-white mb-6">Đại dương cần bạn cố gắng hơn!</p>
+                <div class="text-3xl text-yellow-300 mb-8 game-font">
+                    Điểm của bạn: <span id="finalScore">0</span>
+                </div>
+                <button id="restartBtn" class="game-font btn-play text-white px-8 py-3 rounded-full text-xl uppercase tracking-wider">
+                    Chơi Lại
+                </button>
+            </div>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pauseOverlay" class="overlay hidden" style="background: rgba(0, 10, 30, 0.7); cursor: pointer;">
+            <div class="text-center p-8 bg-white/10 border border-white/20 rounded-3xl shadow-2xl max-w-lg w-[90%] backdrop-blur-md pointer-events-none">
+                <h1 class="text-5xl md:text-7xl text-white mb-4 drop-shadow-lg game-font tracking-widest">TẠM DỪNG</h1>
+                <p class="text-xl md:text-2xl text-cyan-200">Nhấn nút ▶️ hoặc phím Space để tiếp tục</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // UI Elements
+        const authorScreen = document.getElementById('authorScreen');
+        const continueBtn = document.getElementById('continueBtn');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const hud = document.getElementById('hud');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
+        const finalScore = document.getElementById('finalScore');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const pauseOverlay = document.getElementById('pauseOverlay');
+
+        // Game Configuration
+        let GAME_WIDTH = window.innerWidth;
+        let GAME_HEIGHT = window.innerHeight;
+        canvas.width = GAME_WIDTH;
+        canvas.height = GAME_HEIGHT;
+
+        // Xử lý resize
+        window.addEventListener('resize', () => {
+            GAME_WIDTH = window.innerWidth;
+            GAME_HEIGHT = window.innerHeight;
+            canvas.width = GAME_WIDTH;
+            canvas.height = GAME_HEIGHT;
+        });
+
+        // Game State Variables
+        let isPlaying = false;
+        let isPaused = false;
+        let score = 0;
+        let lives = 3;
+        let frameCount = 0;
+        let animationId;
+        
+        // Entities arrays
+        let player;
+        let trashes = [];
+        let fishes = [];
+        let bubbles = [];
+
+        // Tiện ích lấy số ngẫu nhiên
+        function randomRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        class Player {
+            constructor() {
+                this.size = 130; // Kích thước hiển thị lớn hơn nhiều
+                this.x = GAME_WIDTH / 4;
+                this.y = GAME_HEIGHT / 2;
+                this.targetX = this.x;
+                this.targetY = this.y;
+                this.speed = 0.1; // Hệ số nội suy (lerp) cho chuyển động mượt mà
+                this.emoji = '🐢';
+                this.radius = 55; // Bán kính va chạm tăng tương ứng
+                this.isHit = false;
+                this.hitTimer = 0;
+            }
+
+            update() {
+                // Di chuyển mượt mà về phía mục tiêu (chuột/ngón tay)
+                this.x += (this.targetX - this.x) * this.speed;
+                this.y += (this.targetY - this.y) * this.speed;
+
+                // Giới hạn trong màn hình
+                if (this.x < this.size/2) this.x = this.size/2;
+                if (this.x > GAME_WIDTH - this.size/2) this.x = GAME_WIDTH - this.size/2;
+                if (this.y < this.size/2) this.y = this.size/2;
+                if (this.y > GAME_HEIGHT - this.size/2) this.y = GAME_HEIGHT - this.size/2;
+
+                // Xử lý hiệu ứng chớp nháy khi bị thương
+                if (this.isHit) {
+                    this.hitTimer--;
+                    if (this.hitTimer <= 0) this.isHit = false;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Hiệu ứng chớp đỏ khi bị thương
+                if (this.isHit && Math.floor(this.hitTimer / 5) % 2 === 0) {
+                    ctx.globalAlpha = 0.5;
+                }
+
+                // Vẽ Rùa
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // Lật rùa nếu bơi sang trái
+                if (this.targetX < this.x - 5) {
+                    ctx.scale(-1, 1);
+                }
+                ctx.fillText(this.emoji, 0, 0);
+
+                ctx.restore();
+                
+                // Debug collision:
+                // ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2); ctx.stroke();
+            }
+
+            hit() {
+                if (!this.isHit) {
+                    this.isHit = true;
+                    this.hitTimer = 60; // 60 frames miễn nhiễm
+                    lives--;
+                    updateHUD();
+                    createPopEffect(this.x, this.y, '❌');
+                    if (lives <= 0) {
+                        gameOver();
+                    }
+                }
+            }
+        }
+
+        class GameObject {
+            constructor(type, emojis, baseSpeed, isHarmful) {
+                this.size = randomRange(90, 130); // Kích thước cơ bản cho vật thể lớn hơn
+                this.x = GAME_WIDTH + this.size;
+                this.y = randomRange(this.size, GAME_HEIGHT - this.size);
+                
+                // Tốc độ tăng dần theo điểm số
+                let speedMultiplier = 1 + (score / 100);
+                this.speed = baseSpeed * speedMultiplier * randomRange(0.8, 1.2);
+                
+                // Đung đưa lên xuống nhẹ
+                this.waveOffset = randomRange(0, Math.PI * 2);
+                this.waveSpeed = randomRange(0.02, 0.05);
+                this.waveAmplitude = randomRange(0.5, 2);
+
+                this.emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                this.radius = this.size * 0.4; // Bán kính va chạm
+                this.isHarmful = isHarmful;
+                this.markedForDeletion = false;
+            }
+
+            update() {
+                this.x -= this.speed;
+                this.y += Math.sin(frameCount * this.waveSpeed + this.waveOffset) * this.waveAmplitude;
+
+                if (this.x + this.size < 0) {
+                    this.markedForDeletion = true;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Xoay nhẹ vật thể rác
+                if (this.isHarmful) {
+                    ctx.rotate((frameCount * 0.02) % (Math.PI * 2));
+                }
+
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.emoji, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        class Trash extends GameObject {
+            constructor() {
+                super('trash', ['🥤', '🛍️', '🛢️', '🥫', '🧴'], randomRange(3, 6), true);
+                if (this.emoji === '🛢️') {
+                    this.size *= 1.3; // Thùng phi to hơn
+                    this.radius *= 1.2;
+                }
+            }
+        }
+
+        class Fish extends GameObject {
+            constructor() {
+                super('fish', ['🐠', '🐡', '🐟'], randomRange(2, 4), false);
+                // Cá bơi nhanh nhạy hơn
+                this.waveSpeed = randomRange(0.05, 0.1);
+                this.waveAmplitude = randomRange(1, 3);
+                
+                // Các công thức Toán học THPT ngắn gọn
+                const mathFormulas = [
+                    "sin²x + cos²x = 1",
+                    "S = πR²",
+                    "(a+b)² = a² + 2ab + b²",
+                    "logₐ(bc) = logₐb + logₐc",
+                    "(xⁿ)' = n.xⁿ⁻¹",
+                    "∫cos(x)dx = sin(x) + C",
+                    "V = ⅓Bh",
+                    "a² = b² + c² - 2bc.cosA"
+                ];
+                this.formula = mathFormulas[Math.floor(Math.random() * mathFormulas.length)];
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Vẽ emoji cá (lật để hướng về bên trái)
+                ctx.save();
+                ctx.scale(-1, 1);
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.emoji, 0, 0);
+                ctx.restore();
+                
+                // Vẽ công thức Toán học đính kèm
+                ctx.font = 'bold 22px "Nunito", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                
+                // Vẽ viền đen cho chữ để dễ đọc trên nền nước
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#000000';
+                ctx.strokeText(this.formula, 0, this.size / 2.5);
+                
+                // Vẽ chữ màu vàng nổi bật
+                ctx.fillStyle = '#fde047'; // Màu vàng (tương đương text-yellow-300 của Tailwind)
+                ctx.fillText(this.formula, 0, this.size / 2.5);
+
+                ctx.restore();
+            }
+        }
+
+        class Bubble {
+            constructor() {
+                this.x = randomRange(0, GAME_WIDTH);
+                this.y = GAME_HEIGHT + 10;
+                this.size = randomRange(2, 8);
+                this.speed = randomRange(1, 3);
+                this.wobble = randomRange(0, Math.PI * 2);
+            }
+
+            update() {
+                this.y -= this.speed;
+                this.x += Math.sin(this.wobble) * 0.5;
+                this.wobble += 0.05;
+                if (this.y < -10) {
+                    this.y = GAME_HEIGHT + 10;
+                    this.x = randomRange(0, GAME_WIDTH);
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.stroke();
+            }
+        }
+
+        // Particle System cho hiệu ứng ăn điểm/mất máu
+        let popEffects = [];
+        function createPopEffect(x, y, text) {
+            popEffects.push({
+                x: x, y: y,
+                text: text,
+                life: 30,
+                maxLife: 30,
+                vy: -2
+            });
+        }
+
+        // Event Listeners cho di chuyển
+        function setPlayerTarget(e) {
+            if (!isPlaying || !player) return;
+            // Xử lý cảm ứng hoặc chuột
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            player.targetX = clientX;
+            player.targetY = clientY;
+        }
+
+        window.addEventListener('mousemove', setPlayerTarget);
+        window.addEventListener('touchmove', setPlayerTarget, {passive: false});
+        window.addEventListener('touchstart', setPlayerTarget, {passive: false});
+
+        function checkCollision(circle1, circle2) {
+            const dx = circle1.x - circle2.x;
+            const dy = circle1.y - circle2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < (circle1.radius + circle2.radius);
+        }
+
+        function togglePause() {
+            if (!isPlaying) return; // Không thể pause nếu chưa chơi hoặc game over
+            isPaused = !isPaused;
+            
+            if (isPaused) {
+                pauseBtn.textContent = '▶️';
+                pauseOverlay.classList.remove('hidden');
+                // Vòng lặp animate sẽ tự động dừng vì check isPaused trong hàm animate()
+            } else {
+                pauseBtn.textContent = '⏸️';
+                pauseOverlay.classList.add('hidden');
+                // Gọi lại animate để tiếp tục trò chơi
+                if (animationId) cancelAnimationFrame(animationId);
+                animate();
+            }
+        }
+
+        // Tạm dừng/Tiếp tục bằng phím Space
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                togglePause();
+                e.preventDefault(); // Ngăn cuộn trang nếu nhấn space
+            }
+        });
+
+        function updateHUD() {
+            scoreDisplay.textContent = score;
+            let hearts = '';
+            for(let i=0; i<lives; i++) hearts += '❤️';
+            livesDisplay.textContent = hearts;
+        }
+
+        function spawnEntities() {
+            // Tần suất xuất hiện tăng lên khi điểm cao
+            let trashSpawnRate = Math.max(20, 60 - Math.floor(score / 5)); 
+            let fishSpawnRate = 80;
+
+            if (frameCount % trashSpawnRate === 0) {
+                trashes.push(new Trash());
+            }
+            if (frameCount % fishSpawnRate === 0) {
+                fishes.push(new Fish());
+            }
+        }
+
+        function animate() {
+            if (!isPlaying || isPaused) return;
+
+            // Xóa canvas với màu nền trong suốt một chút để tạo vệt mờ dưới nước (motion blur nhẹ)
+            ctx.fillStyle = 'rgba(0, 50, 100, 0.4)'; 
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            frameCount++;
+
+            // Background Bubbles
+            bubbles.forEach(bubble => {
+                bubble.update();
+                bubble.draw();
+            });
+
+            spawnEntities();
+
+            // Cập nhật và vẽ Player
+            player.update();
+            player.draw();
+
+            // Cập nhật rác (Enemies)
+            for (let i = trashes.length - 1; i >= 0; i--) {
+                let trash = trashes[i];
+                trash.update();
+                trash.draw();
+
+                // Va chạm với rùa
+                if (!player.isHit && checkCollision(player, trash)) {
+                    player.hit();
+                    trash.markedForDeletion = true; // Xóa rác sau khi đụng trúng
+                }
+
+                if (trash.markedForDeletion) {
+                    trashes.splice(i, 1);
+                }
+            }
+
+            // Cập nhật cá (Collectibles)
+            for (let i = fishes.length - 1; i >= 0; i--) {
+                let fish = fishes[i];
+                fish.update();
+                fish.draw();
+
+                // Giải cứu cá
+                if (checkCollision(player, fish)) {
+                    score += 10;
+                    updateHUD();
+                    createPopEffect(fish.x, fish.y, '+10');
+                    fish.markedForDeletion = true;
+                    // Hồi máu mỗi 150 điểm
+                    if (score > 0 && score % 150 === 0 && lives < 5) {
+                        lives++;
+                        updateHUD();
+                        createPopEffect(player.x, player.y, '❤️ Hồi phục!');
+                    }
+                }
+
+                if (fish.markedForDeletion) {
+                    fishes.splice(i, 1);
+                }
+            }
+
+            // Hiệu ứng Pop (chữ nổi lên)
+            for (let i = popEffects.length - 1; i >= 0; i--) {
+                let p = popEffects[i];
+                p.y += p.vy;
+                p.life--;
+                
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.font = 'bold 24px Arial';
+                ctx.fillStyle = p.text.includes('+') ? '#4ade80' : (p.text.includes('❤️') ? '#f87171' : '#ffffff');
+                ctx.textAlign = 'center';
+                ctx.fillText(p.text, p.x, p.y);
+                ctx.globalAlpha = 1.0;
+
+                if (p.life <= 0) popEffects.splice(i, 1);
+            }
+
+            if (isPlaying && !isPaused) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        function initGame() {
+            player = new Player();
+            trashes = [];
+            fishes = [];
+            popEffects = [];
+            score = 0;
+            lives = 3;
+            frameCount = 0;
+            updateHUD();
+
+            // Khởi tạo bong bóng nền
+            bubbles = [];
+            for(let i=0; i<30; i++) {
+                let b = new Bubble();
+                b.y = randomRange(0, GAME_HEIGHT); // Phân bổ đều ban đầu
+                bubbles.push(b);
+            }
+        }
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            pauseOverlay.classList.add('hidden');
+            hud.classList.remove('hidden');
+            
+            initGame();
+            isPlaying = true;
+            isPaused = false;
+            pauseBtn.textContent = '⏸️';
+            
+            // Xóa animation cũ nếu có
+            if(animationId) cancelAnimationFrame(animationId);
+            animate();
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            isPaused = false;
+            hud.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
+            finalScore.textContent = score;
+        }
+
+        // Chuyển từ màn hình Tác giả sang màn hình Start
+        continueBtn.addEventListener('click', () => {
+            authorScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
+        // Gắn sự kiện cho các nút
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', togglePause);
+        pauseOverlay.addEventListener('click', togglePause); // Bấm vào màn hình Tạm dừng cũng sẽ tiếp tục
+
+        // Khởi tạo nền động ở màn hình Start
+        function drawBackgroundOnly() {
+            if(isPlaying) return;
+            // Gradient tĩnh
+            let bgGrad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+            bgGrad.addColorStop(0, '#0077be');
+            bgGrad.addColorStop(1, '#003366');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            
+            // Bong bóng nhẹ
+            if(bubbles.length === 0) {
+                 for(let i=0; i<20; i++) bubbles.push(new Bubble());
+            }
+            bubbles.forEach(bubble => {
+                bubble.update();
+                bubble.draw();
+            });
+            requestAnimationFrame(drawBackgroundOnly);
+        }
+
+        // Bắt đầu vẽ màn hình nền khi vừa load xong
+        window.onload = () => {
+            drawBackgroundOnly();
+        };
+
+    </script>
+</body>
+</html>

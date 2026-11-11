@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI LÀ TRIỆU PHÚ - CHINH PHỤC HÀM SỐ</title>
+  
+  <!-- Sử dụng Tailwind CSS qua CDN để thiết kế giao diện nhanh và responsive -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font chữ Inter hiện đại -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Tuỳ chỉnh CSS cho phong cách gameshow */
+    body {
+      font-family: 'Inter', sans-serif;
+      /* Nền tối sang trọng đặc trưng của gameshow */
+      background: radial-gradient(circle at center, #1e3a8a 0%, #020617 100%);
+      color: white;
+      min-height: 100vh;
+      overflow-x: hidden;
+      margin: 0;
+    }
+
+    .gameshow-shadow {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+    
+    .gameshow-text-glow {
+      text-shadow: 0 0 15px rgba(250, 204, 21, 0.9);
+    }
+
+    /* Hiệu ứng nhấp nháy hồi hộp khi chốt đáp án */
+    .pulse-bg {
+      animation: pulseBg 1.5s infinite;
+    }
+    @keyframes pulseBg {
+      0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.8); }
+      70% { box-shadow: 0 0 0 15px rgba(217, 119, 6, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+    }
+
+    /* Đảm bảo nội dung toán học không bị tràn */
+    .math-content {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .math-content::-webkit-scrollbar {
+      height: 4px;
+    }
+    .math-content::-webkit-scrollbar-thumb {
+      background-color: #3b82f6;
+      border-radius: 4px;
+    }
+
+    /* Biểu đồ khán giả */
+    .bar-container { height: 160px; display: flex; align-items: flex-end; justify-content: space-around; gap: 10px; margin-top: 20px;}
+    .bar { width: 45px; background: linear-gradient(to top, #2563eb, #60a5fa); border-radius: 6px 6px 0 0; transition: height 1s ease-out; position: relative;}
+  </style>
+
+  <script>
+    window.MathJax = {
+      tex: { 
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' },
+      startup: { 
+        typeset: false // Tắt tự động render, ta sẽ gọi thủ công sau khi update DOM
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body class="antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- SVG Icons để sử dụng nhiều lần không cần load external library -->
+  <svg style="display: none;">
+    <symbol id="icon-audience" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </symbol>
+    <symbol id="icon-expert" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+    </symbol>
+    <symbol id="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10.5a1.5 1.5 0 00-1.5 1.5v4A1.5 1.5 0 005 17.5h3.5l4.5 4.5V2.5L8.5 7h-3.5z" />
+    </symbol>
+    <symbol id="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h2.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+    </symbol>
+  </svg>
+
+  <!-- MÀN HÌNH KHỞI ĐẦU -->
+  <div id="screen-start" class="flex flex-col items-center justify-center min-h-screen p-4 z-10 relative">
+    <div class="text-center bg-slate-900 bg-opacity-70 p-10 rounded-3xl border-2 border-blue-500 gameshow-shadow max-w-4xl w-full">
+      <h2 class="text-2xl font-bold text-blue-400 mb-2 tracking-widest uppercase">Toán 12 - Ôn tập nhanh</h2>
+      <h1 class="text-5xl md:text-6xl font-extrabold text-yellow-400 mb-6 gameshow-text-glow leading-tight">
+        AI LÀ TRIỆU PHÚ<br>
+        <span class="text-white text-4xl md:text-5xl block mt-4">CHINH PHỤC HÀM SỐ</span>
+      </h1>
+      <p class="text-lg text-slate-300 mb-10">Chủ đề: Tính đơn điệu, cực trị, GTLN - GTNN và tiệm cận</p>
+      
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <button onclick="startGame()" class="bg-blue-600 hover:bg-blue-500 text-white border-2 border-yellow-400 px-10 py-4 rounded-full font-bold text-2xl transition-transform hover:scale-105 gameshow-shadow w-full sm:w-auto">
+          BẮT ĐẦU NGAY
+        </button>
+        <button onclick="showInstructions()" class="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-full font-bold text-xl transition-all w-full sm:w-auto">
+          HƯỚNG DẪN
+        </button>
+      </div>
+      
+      <div class="mt-10">
+        <button id="sound-toggle-btn-start" onclick="toggleSound()" class="text-yellow-400 font-semibold flex items-center justify-center gap-2 mx-auto hover:text-yellow-300">
+          <svg class="w-6 h-6"><use href="#icon-sound-on"></use></svg> ÂM THANH: BẬT
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÀN HÌNH CHƠI GAME -->
+  <div id="screen-game" class="hidden flex-col min-h-screen p-4 md:p-8 max-w-7xl mx-auto w-full z-10 relative">
+    <!-- Header: Quyền trợ giúp & Nút chức năng -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <div id="lifelines-container" class="flex gap-4">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="flex gap-4">
+        <button id="sound-toggle-btn-game" onclick="toggleSound()" class="text-yellow-400 font-semibold flex items-center justify-center gap-2 hover:text-yellow-300">
+          <svg class="w-6 h-6"><use href="#icon-sound-on"></use></svg>
+        </button>
+        <button onclick="resetToStart()" class="text-slate-400 hover:text-white font-semibold">
+          Thoát
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Game Area -->
+    <div class="flex flex-col lg:flex-row gap-8 w-full">
+      
+      <!-- Cột trái: Câu hỏi và Đáp án -->
+      <div class="w-full lg:w-3/4 flex flex-col items-center">
+        <!-- Thông tin câu hỏi -->
+        <div class="w-full flex justify-between items-end mb-4 px-2">
+          <div id="question-number" class="text-2xl font-bold text-yellow-400 gameshow-text-glow">CÂU HỎI 1/10</div>
+          <div class="text-right">
+            <div id="question-topic" class="text-sm text-blue-300 uppercase tracking-wider">Chủ đề: ...</div>
+            <div id="question-reward" class="text-xl font-bold text-green-400">100 ĐIỂM</div>
+          </div>
+        </div>
+        
+        <!-- Khung câu hỏi -->
+        <div class="w-full bg-blue-900 bg-opacity-90 border-2 border-blue-400 rounded-2xl p-6 md:p-10 mb-8 gameshow-shadow min-h-[160px] flex items-center justify-center text-center">
+          <div id="question-text" class="text-xl md:text-2xl font-semibold leading-relaxed math-content w-full">
+            <!-- Question content injected by JS -->
+          </div>
+        </div>
+
+        <!-- Khung 4 đáp án -->
+        <div id="options-grid" class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+          <!-- Options injected by JS -->
+        </div>
+
+        <!-- Khu vực nút hành động (Chốt, Tiếp theo, Xem giải thích) -->
+        <div id="action-area" class="h-20 flex flex-col items-center justify-center w-full">
+          <!-- Action buttons injected by JS -->
+        </div>
+      </div>
+
+      <!-- Cột phải: Bảng tiền thưởng -->
+      <div class="w-full lg:w-1/4">
+        <div class="bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 gameshow-shadow sticky top-8">
+          <h3 class="text-xl font-bold text-center mb-4 text-yellow-400 tracking-wider">THANG ĐIỂM</h3>
+          <div id="money-tree" class="flex flex-col gap-2 font-semibold text-lg">
+            <!-- Tree injected by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÀN HÌNH CHIẾN THẮNG -->
+  <div id="screen-win" class="hidden flex-col items-center justify-center min-h-screen p-4 z-10 relative">
+    <div class="text-center bg-slate-900 bg-opacity-90 border-2 border-green-500 rounded-3xl p-10 gameshow-shadow max-w-2xl w-full">
+      <div class="text-6xl mb-6 pulse-bg rounded-full w-24 h-24 mx-auto flex items-center justify-center bg-yellow-500 bg-opacity-20">🏆</div>
+      <h1 class="text-4xl md:text-5xl font-bold text-yellow-400 mb-4 gameshow-text-glow">XIN CHÚC MỪNG!</h1>
+      <p class="text-xl md:text-2xl text-white mb-2">Bạn đã xuất sắc chinh phục 10 câu hỏi!</p>
+      <p class="text-5xl md:text-6xl font-extrabold text-green-400 mb-10 gameshow-text-glow mt-6">100.000 ĐIỂM</p>
+      <button onclick="resetGame()" class="bg-amber-600 hover:bg-amber-500 text-white border-2 border-white px-10 py-4 rounded-full font-bold text-2xl transition-transform hover:scale-105 gameshow-shadow">
+        CHƠI LẠI TỪ ĐẦU
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL OVERLAY (Giải thích, Hướng dẫn, Trợ giúp) -->
+  <div id="modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div id="modal-content" class="bg-slate-800 border-2 border-blue-500 rounded-2xl p-6 md:p-8 max-w-2xl w-full gameshow-shadow relative">
+      <!-- Content injected by JS -->
+    </div>
+  </div>
+
+  <script>
+    /* DỮ LIỆU CÂU HỎI TRẮC NGHIỆM - Giáo viên có thể chỉnh sửa tại đây */
+    const questions = [
+      {
+        id: 1,
+        question: "Cho hàm số \\(f(x)=x^3-3x^2+2\\). Hàm số nghịch biến trên khoảng nào sau đây?",
+        options: {
+          A: "\\((-\\infty;0)\\)",
+          B: "\\((0;2)\\)",
+          C: "\\((2;+\\infty)\\)",
+          D: "\\((-\\infty;0)\\) và \\((2;+\\infty)\\)"
+        },
+        answer: "B",
+        explanation: "\\(f'(x)=3x^2-6x=3x(x-2)\\).<br>Ta thấy \\(f'(x) < 0\\) khi \\(0 < x < 2\\).<br>Nên hàm số nghịch biến trên khoảng \\((0;2)\\).",
+        topic: "Tính đơn điệu",
+        hint: "Hãy tính đạo hàm f'(x) và giải bất phương trình f'(x) < 0 nhé."
+      },
+      {
+        id: 2,
+        question: "Cho hàm số \\(f(x)=x^3-3x+1\\). Số điểm cực trị của hàm số là:",
+        options: { A: "0", B: "1", C: "2", D: "3" },
+        answer: "C",
+        explanation: "\\(f'(x)=3x^2-3 = 3(x-1)(x+1)\\).<br>Phương trình \\(f'(x)=0\\) có hai nghiệm phân biệt \\(x=-1\\) và \\(x=1\\).<br>Đạo hàm đổi dấu khi qua 2 nghiệm này nên hàm số có 2 điểm cực trị.",
+        topic: "Cực trị",
+        hint: "Tìm số nghiệm phân biệt của phương trình f'(x) = 0 mà qua đó đạo hàm đổi dấu."
+      },
+      {
+        id: 3,
+        question: "Cho hàm số \\(f(x)=x^3-3x^2+2\\). Giá trị cực đại của hàm số bằng:",
+        options: { A: "-2", B: "0", C: "2", D: "4" },
+        answer: "C",
+        explanation: "\\(f'(x)=3x^2-6x=3x(x-2)\\). Cho \\(f'(x)=0 \\Leftrightarrow x=0\\) hoặc \\(x=2\\).<br>Tại \\(x=0\\), đạo hàm đổi dấu từ dương sang âm nên hàm số đạt cực đại tại \\(x=0\\).<br>Giá trị cực đại là \\(f(0)=2\\).",
+        topic: "Cực trị",
+        hint: "Tìm điểm x cực đại, sau đó nhớ thay x vào hàm số f(x) ban đầu để tính giá trị cực đại."
+      },
+      {
+        id: 4,
+        question: "Cho hàm số \\(f(x)=x^2-4x+1\\) trên đoạn \\([0;5]\\). Giá trị nhỏ nhất của hàm số bằng:",
+        options: { A: "-3", B: "-2", C: "0", D: "1" },
+        answer: "A",
+        explanation: "Ta có đạo hàm \\(f'(x)=2x-4=0 \\Rightarrow x=2 \\in [0;5]\\).<br>Tính các giá trị: \\(f(0)=1\\), \\(f(2)=-3\\), \\(f(5)=6\\).<br>Vậy giá trị nhỏ nhất trên đoạn \\([0;5]\\) là -3.",
+        topic: "GTLN - GTNN",
+        hint: "Đừng quên tính giá trị của hàm số tại các điểm biên của đoạn [0;5] và tại nghiệm của đạo hàm."
+      },
+      {
+        id: 5,
+        question: "Cho hàm số \\(f(x)=-x^2+4x+1\\) trên đoạn \\([0;4]\\). Giá trị lớn nhất của hàm số bằng:",
+        options: { A: "4", B: "5", C: "6", D: "7" },
+        answer: "B",
+        explanation: "Ta có \\(f'(x)=-2x+4=0 \\Rightarrow x=2 \\in [0;4]\\).<br>Tính các giá trị: \\(f(0)=1\\), \\(f(2)=5\\), \\(f(4)=1\\).<br>Vậy giá trị lớn nhất trên đoạn \\([0;4]\\) là 5.",
+        topic: "GTLN - GTNN",
+        hint: "Đây là một parabol quay bề lõm xuống dưới. Đỉnh parabol chính là nơi đạt GTLN!"
+      },
+      {
+        id: 6,
+        question: "Đồ thị hàm số \\(y=\\frac{2x+1}{x-3}\\) có tiệm cận đứng là đường thẳng:",
+        options: { A: "\\(x=-3\\)", B: "\\(x=0\\)", C: "\\(x=2\\)", D: "\\(x=3\\)" },
+        answer: "D",
+        explanation: "Nghiệm của mẫu số là \\(x-3=0 \\Rightarrow x=3\\).<br>Thay \\(x=3\\) lên tử số ta được \\(2(3)+1 = 7 \\neq 0\\).<br>Do đó đường thẳng \\(x=3\\) là tiệm cận đứng.",
+        topic: "Tiệm cận",
+        hint: "Tiệm cận đứng của hàm phân thức hữu tỉ thường liên quan đến nghiệm của mẫu số."
+      },
+      {
+        id: 7,
+        question: "Đồ thị hàm số \\(y=\\frac{2x+1}{x-3}\\) có tiệm cận ngang là đường thẳng:",
+        options: { A: "\\(y=-3\\)", B: "\\(y=0\\)", C: "\\(y=1\\)", D: "\\(y=2\\)" },
+        answer: "D",
+        explanation: "Khi \\(x \\to \\pm\\infty\\), giới hạn của hàm số được xác định bởi tỉ số hệ số của các hạng tử bậc cao nhất:<br> \\(\\lim_{x \\to \\pm\\infty} \\frac{2x+1}{x-3} = \\frac{2}{1} = 2\\).<br>Do đó đường thẳng \\(y=2\\) là tiệm cận ngang.",
+        topic: "Tiệm cận",
+        hint: "Hãy tính giới hạn của hàm số khi x tiến tới vô cực để tìm phương trình tiệm cận ngang."
+      },
+      {
+        id: 8,
+        question: "Đồ thị hàm số \\(y=\\frac{x^2+1}{x-1}\\) có tiệm cận xiên là đường thẳng:",
+        options: { A: "\\(y=x-1\\)", B: "\\(y=x+1\\)", C: "\\(y=x+2\\)", D: "\\(y=2x+1\\)" },
+        answer: "B",
+        explanation: "Thực hiện phép chia đa thức tử cho mẫu, ta được: \\(\\frac{x^2+1}{x-1} = x + 1 + \\frac{2}{x-1}\\).<br>Khi \\(x \\to \\pm\\infty\\), phần dư \\(\\frac{2}{x-1} \\to 0\\).<br>Vì vậy tiệm cận xiên là đường thẳng \\(y=x+1\\).",
+        topic: "Tiệm cận",
+        hint: "Thực hiện phép chia đa thức để biểu diễn hàm số dưới dạng y = ax + b + c/(x-1)."
+      },
+      {
+        id: 9,
+        question: "Cho hàm số \\(f(x)=\\frac{x-1}{x+2}\\). Hàm số có tính chất nào sau đây?",
+        options: {
+          A: "Đồng biến trên từng khoảng xác định.",
+          B: "Nghịch biến trên từng khoảng xác định.",
+          C: "Đồng biến trên \\(\\mathbb{R}\\).",
+          D: "Nghịch biến trên \\(\\mathbb{R}\\)."
+        },
+        answer: "A",
+        explanation: "Tập xác định \\(D = \\mathbb{R} \\setminus \\{-2\\}\\).<br>Đạo hàm \\(f'(x)=\\frac{1 \\cdot 2 - (-1)\\cdot 1}{(x+2)^2} = \\frac{3}{(x+2)^2} > 0\\) với mọi \\(x \\neq -2\\).<br>Do đó hàm số đồng biến trên từng khoảng \\((-\\infty;-2)\\) và \\((-2;+\\infty)\\).",
+        topic: "Tính đơn điệu",
+        hint: "Sử dụng công thức tính đạo hàm nhanh (ad-bc)/(cx+d)^2 cho hàm phân thức bậc nhất / bậc nhất."
+      },
+      {
+        id: 10,
+        question: "Cho hàm số \\(f(x)=x^4-2x^2\\). Hàm số có bao nhiêu điểm cực trị?",
+        options: { A: "1", B: "2", C: "3", D: "4" },
+        answer: "C",
+        explanation: "Đạo hàm \\(f'(x)=4x^3-4x = 4x(x^2-1) = 4x(x-1)(x+1)\\).<br>Giải \\(f'(x)=0\\) ta được 3 nghiệm phân biệt là \\(x=-1\\), \\(x=0\\), \\(x=1\\).<br>Đạo hàm đổi dấu qua cả ba nghiệm này nên hàm số có đúng 3 điểm cực trị.",
+        topic: "Cực trị",
+        hint: "Giải phương trình đạo hàm f'(x)=0. Hãy cẩn thận phân tích thành nhân tử nhé!"
+      }
+    ];
+
+    const rewards = [
+      "100", "200", "500", "1.000", "2.000",
+      "5.000", "10.000", "20.000", "50.000", "100.000"
+    ];
+    
+    /* TRẠNG THÁI TRÒ CHƠI */
+    let currentQIndex = 0;
+    let selectedOption = null;
+    let isLocked = false;
+    let lifelines = { fifty: true, audience: true, expert: true };
+    let eliminatedOptions = [];
+    
+    /* HỆ THỐNG ÂM THANH TỔNG HỢP (Web Audio API) */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      } catch (e) {
+        console.warn("Audio Context không được hỗ trợ trên trình duyệt này.");
+      }
+    }
+
+    function playTone(freq, type, duration, vol=0.1) {
+      if (!soundEnabled || !audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    const sounds = {
+      hover: () => playTone(800, 'sine', 0.05, 0.02),
+      click: () => playTone(400, 'triangle', 0.1, 0.05),
+      lock: () => {
+        if (!soundEnabled || !audioCtx) return;
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+          osc.frequency.linearRampToValueAtTime(120, audioCtx.currentTime + 1.5);
+          gain.gain.setValueAtTime(0, audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.1);
+          gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 1.4);
+          gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 1.5);
+        } catch(e) {}
+      },
+      correct: () => {
+        playTone(523.25, 'sine', 0.4, 0.1); // C5
+        setTimeout(() => playTone(659.25, 'sine', 0.4, 0.1), 100); // E5
+        setTimeout(() => playTone(783.99, 'sine', 0.4, 0.1), 200); // G5
+        setTimeout(() => playTone(1046.50, 'sine', 0.8, 0.1), 300); // C6
+      },
+      wrong: () => {
+        playTone(300, 'sawtooth', 0.5, 0.1);
+        setTimeout(() => playTone(280, 'sawtooth', 0.5, 0.1), 150);
+        setTimeout(() => playTone(250, 'sawtooth', 0.8, 0.1), 300);
+      },
+      win: () => {
+        const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51];
+        notes.forEach((freq, i) => {
+          setTimeout(() => playTone(freq, 'square', 0.5, 0.05), i * 150);
+        });
+      }
+    };
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      
+      const renderBtn = (id) => {
+        const btn = document.getElementById(id);
+        if(!btn) return;
+        if (soundEnabled) {
+          btn.innerHTML = `<svg class="w-6 h-6"><use href="#icon-sound-on"></use></svg> ${id === 'sound-toggle-btn-start' ? 'ÂM THANH: BẬT' : ''}`;
+          btn.className = btn.className.replace('text-slate-400', 'text-yellow-400');
+          initAudio();
+        } else {
+          btn.innerHTML = `<svg class="w-6 h-6"><use href="#icon-sound-off"></use></svg> ${id === 'sound-toggle-btn-start' ? 'ÂM THANH: TẮT' : ''}`;
+          btn.className = btn.className.replace('text-yellow-400', 'text-slate-400');
+        }
+      }
+      renderBtn('sound-toggle-btn-start');
+      renderBtn('sound-toggle-btn-game');
+    }
+
+    /* HÀM QUẢN LÝ GIAO DIỆN VÀ LOGIC */
+    
+    // Quản lý hàng đợi render MathJax an toàn
+    let mathJaxPromise = Promise.resolve();
+    function updateMath() {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        mathJaxPromise = mathJaxPromise.then(() => {
+          return MathJax.typesetPromise().catch(err => console.log('MathJax err', err));
+        });
+      }
+    }
+
+    function renderMoneyTree() {
+      // Đảo ngược mảng để in từ câu 10 xuống câu 1
+      const treeHtml = rewards.map((reward, idx) => {
+        const qNum = idx + 1;
+        const isCurrent = idx === currentQIndex;
+        const isPassed = idx < currentQIndex;
+        const isMilestone = idx === 4 || idx === 9; // Câu 5 và 10
+        
+        let textCol = 'text-slate-400';
+        let bgCol = 'border border-transparent';
+        
+        if (isCurrent) {
+          textCol = 'text-yellow-400 font-bold';
+          bgCol = 'bg-blue-800 border-yellow-500 rounded-lg scale-105';
+        } else if (isPassed) {
+          textCol = 'text-green-400';
+        } else if (isMilestone) {
+          textCol = 'text-white font-bold';
+        }
+        
+        return `<div class="flex justify-between items-center px-4 py-2 transition-all ${bgCol} ${textCol}">
+          <span class="w-8">${qNum}</span>
+          <span class="flex-1 text-right">♦ ${reward}</span>
+        </div>`;
+      }).reverse().join('');
+      
+      document.getElementById('money-tree').innerHTML = treeHtml;
+    }
+
+    function renderLifelines() {
+      const container = document.getElementById('lifelines-container');
+      container.innerHTML = '';
+      
+      const list = [
+        { id: 'fifty', label: 'Trợ giúp 50:50', icon: '<span class="font-bold text-lg">50:50</span>' },
+        { id: 'audience', label: 'Hỏi ý kiến khán giả', icon: '<svg class="w-7 h-7"><use href="#icon-audience"></use></svg>' },
+        { id: 'expert', label: 'Gọi điện chuyên gia', icon: '<svg class="w-7 h-7"><use href="#icon-expert"></use></svg>' }
+      ];
+      
+      list.forEach(ll => {
+        const isUsed = !lifelines[ll.id];
+        let classNames = "flex items-center justify-center w-14 h-14 rounded-full border-2 transition-all focus:outline-none ";
+        if (isUsed) {
+           classNames += "bg-slate-700 border-slate-500 text-slate-500 cursor-not-allowed relative overflow-hidden";
+        } else {
+           classNames += "bg-blue-800 border-yellow-400 text-yellow-300 hover:bg-blue-600 hover:text-white hover:scale-110 cursor-pointer gameshow-shadow";
+        }
+        
+        let cross = isUsed ? `<div class="absolute w-full h-[3px] bg-red-600 rotate-45 shadow-sm"></div><div class="absolute w-full h-[3px] bg-red-600 -rotate-45 shadow-sm"></div>` : '';
+        
+        container.innerHTML += `
+          <button onclick="useLifeline('${ll.id}')" class="${classNames}" title="${ll.label}" ${isUsed ? 'disabled' : ''}>
+            ${ll.icon}
+            ${cross}
+          </button>
+        `;
+      });
+    }
+
+    function renderQuestion() {
+      const q = questions[currentQIndex];
+      document.getElementById('question-number').innerText = `CÂU HỎI ${currentQIndex + 1}/10`;
+      document.getElementById('question-reward').innerText = `${rewards[currentQIndex]} ĐIỂM`;
+      document.getElementById('question-topic').innerText = `Chủ đề: ${q.topic}`;
+      
+      document.getElementById('question-text').innerHTML = q.question;
+      
+      const optionsDiv = document.getElementById('options-grid');
+      optionsDiv.innerHTML = '';
+      
+      ['A','B','C','D'].forEach(opt => {
+        optionsDiv.innerHTML += `
+          <div id="opt-${opt}" onclick="handleOptionClick('${opt}')" onmouseenter="sounds.hover()"
+               class="flex items-center p-4 md:p-6 rounded-2xl border-2 border-yellow-500 bg-blue-900 cursor-pointer transition-all duration-200 hover:bg-blue-700 hover:border-yellow-300 group">
+            <span class="text-yellow-400 font-bold text-2xl mr-4 w-8 group-hover:text-white transition-colors">${opt}:</span> 
+            <span class="text-lg md:text-xl font-medium math-content flex-1">${q.options[opt]}</span>
+          </div>
+        `;
+      });
+      
+      document.getElementById('action-area').innerHTML = `
+        <button id="btn-chot" onclick="lockAnswer()" class="hidden bg-amber-600 hover:bg-amber-500 text-white border-2 border-white px-10 py-3 rounded-full font-bold text-xl gameshow-shadow transition-transform hover:scale-105">CHỐT ĐÁP ÁN</button>
+      `;
+      
+      renderMoneyTree();
+      updateMath();
+    }
+
+    function handleOptionClick(opt) {
+      if (isLocked || eliminatedOptions.includes(opt)) return;
+      sounds.click();
+      selectedOption = opt;
+      
+      // Reset tất cả (trừ bị loại)
+      ['A','B','C','D'].forEach(o => {
+        if (eliminatedOptions.includes(o)) return;
+        const el = document.getElementById(`opt-${o}`);
+        el.className = "flex items-center p-4 md:p-6 rounded-2xl border-2 border-yellow-500 bg-blue-900 cursor-pointer transition-all duration-200 hover:bg-blue-700 hover:border-yellow-300 group";
+      });
+      
+      // Highlight ô được chọn
+      const selEl = document.getElementById(`opt-${opt}`);
+      selEl.className = "flex items-center p-4 md:p-6 rounded-2xl border-2 border-white bg-amber-600 cursor-pointer transition-all duration-200 scale-[1.02] shadow-[0_0_20px_rgba(217,119,6,0.9)] group";
+      
+      document.getElementById('btn-chot').classList.remove('hidden');
+    }
+
+    function lockAnswer() {
+      if (!selectedOption || isLocked) return;
+      isLocked = true;
+      document.getElementById('btn-chot').classList.add('hidden');
+      
+      // Vô hiệu hoá click & hover
+      ['A','B','C','D'].forEach(o => {
+        const el = document.getElementById(`opt-${o}`);
+        el.classList.add('pointer-events-none');
+        if (!eliminatedOptions.includes(o) && o !== selectedOption) {
+          el.classList.remove('hover:bg-blue-700', 'hover:border-yellow-300');
+          el.classList.add('opacity-80');
+        }
+      });
+
+      const selectedEl = document.getElementById(`opt-${selectedOption}`);
+      selectedEl.classList.add('pulse-bg');
+      selectedEl.classList.remove('opacity-80');
+      
+      sounds.lock();
+      
+      // Hiệu ứng chờ 1.5s
+      setTimeout(() => {
+        checkAnswer();
+      }, 1500);
+    }
+
+    function checkAnswer() {
+      const q = questions[currentQIndex];
+      const isCorrect = selectedOption === q.answer;
+      const selectedEl = document.getElementById(`opt-${selectedOption}`);
+      
+      selectedEl.classList.remove('pulse-bg');
+      
+      if (isCorrect) {
+        sounds.correct();
+        selectedEl.classList.remove('bg-amber-600');
+        selectedEl.classList.add('bg-green-600');
+        
+        document.getElementById('action-area').innerHTML = `
+          <div class="text-green-400 font-bold text-2xl mb-4 gameshow-text-glow uppercase tracking-wider">Chính xác!</div>
+          <button onclick="nextQuestion()" class="bg-green-600 hover:bg-green-500 text-white border-2 border-white px-10 py-3 rounded-full font-bold text-xl gameshow-shadow transition-transform hover:scale-105">CÂU TIẾP THEO</button>
+        `;
+      } else {
+        sounds.wrong();
+        // Ô chọn sai thành màu đỏ
+        selectedEl.classList.remove('bg-amber-600');
+        selectedEl.classList.add('bg-red-700');
+        
+        // Hiện đáp án đúng màu xanh
+        const correctEl = document.getElementById(`opt-${q.answer}`);
+        correctEl.classList.remove('bg-blue-900', 'border-yellow-500', 'opacity-80');
+        correctEl.classList.add('bg-green-600', 'border-white', 'gameshow-shadow', 'opacity-100');
+        
+        document.getElementById('action-area').innerHTML = `
+          <div class="text-red-400 font-bold text-2xl mb-4 uppercase tracking-wider">Rất tiếc!</div>
+          <div class="flex flex-wrap gap-4 justify-center">
+            <button onclick="showExplanation()" class="bg-blue-700 hover:bg-blue-600 text-white px-6 py-3 border border-blue-400 rounded-full font-bold shadow-md transition-transform hover:scale-105">XEM GIẢI THÍCH</button>
+            <button onclick="resetGame()" class="bg-slate-700 hover:bg-slate-600 text-white px-8 py-3 border border-slate-500 rounded-full font-bold shadow-md transition-transform hover:scale-105">CHƠI LẠI</button>
+          </div>
+        `;
+      }
+    }
+
+    function nextQuestion() {
+      currentQIndex++;
+      if (currentQIndex >= questions.length) {
+        showWinScreen();
+      } else {
+        selectedOption = null;
+        isLocked = false;
+        eliminatedOptions = [];
+        renderQuestion();
+      }
+    }
+
+    function showModal(contentHtml) {
+      document.getElementById('modal-content').innerHTML = contentHtml;
+      document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.add('hidden');
+    }
+
+    function useLifeline(type) {
+      if (isLocked || !lifelines[type]) return;
+      sounds.click();
+      lifelines[type] = false;
+      renderLifelines();
+      
+      const q = questions[currentQIndex];
+      
+      if (type === 'fifty') {
+        const wrongOpts = ['A','B','C','D'].filter(opt => opt !== q.answer);
+        wrongOpts.sort(() => Math.random() - 0.5);
+        eliminatedOptions = [wrongOpts[0], wrongOpts[1]];
+        
+        eliminatedOptions.forEach(opt => {
+          const el = document.getElementById(`opt-${opt}`);
+          el.className = "flex items-center p-4 md:p-6 rounded-2xl border-2 border-transparent bg-transparent opacity-0 pointer-events-none transition-all duration-500";
+        });
+        
+        if (selectedOption && eliminatedOptions.includes(selectedOption)) {
+           selectedOption = null;
+           document.getElementById('btn-chot').classList.add('hidden');
+        }
+      } 
+      else if (type === 'audience') {
+        let stats = { A:0, B:0, C:0, D:0 };
+        let correctP = Math.floor(Math.random() * 31) + 40; // 40-70%
+        stats[q.answer] = correctP;
+        let remaining = 100 - correctP;
+        
+        let activeOpts = ['A','B','C','D'].filter(opt => opt !== q.answer && !eliminatedOptions.includes(opt));
+        
+        activeOpts.forEach((opt, idx) => {
+          if (idx === activeOpts.length - 1) {
+            stats[opt] = remaining;
+          } else {
+            let p = Math.floor(Math.random() * remaining);
+            stats[opt] = p;
+            remaining -= p;
+          }
+        });
+        
+        let chartHtml = `<h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center">Ý KIẾN KHÁN GIẢ</h2>
+                         <div class="bar-container mb-8">`;
+        ['A','B','C','D'].forEach(opt => {
+          if (!eliminatedOptions.includes(opt)) {
+             chartHtml += `
+               <div class="flex flex-col items-center w-1/4">
+                 <div class="text-lg font-bold mb-2">${stats[opt]}%</div>
+                 <div class="bar bg-blue-500 shadow-lg w-full max-w-[50px]" style="height: ${stats[opt] * 1.5}px"></div>
+                 <div class="font-bold text-xl mt-3 text-yellow-400">${opt}</div>
+               </div>
+             `;
+          }
+        });
+        chartHtml += `</div>
+                      <div class="text-center"><button onclick="closeModal()" class="bg-blue-700 hover:bg-blue-600 text-white border border-blue-400 px-8 py-3 rounded-full font-bold">Đóng</button></div>`;
+        showModal(chartHtml);
+      }
+      else if (type === 'expert') {
+        let html = `
+          <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center uppercase tracking-wide">Chuyên gia gợi ý</h2>
+          <div class="bg-blue-900 border border-blue-400 p-6 rounded-xl mb-8 relative">
+             <div class="absolute -top-4 -left-4 text-4xl">💡</div>
+             <p class="text-xl text-center font-medium leading-relaxed italic">"${q.hint}"</p>
+          </div>
+          <div class="text-center">
+             <button onclick="closeModal()" class="bg-green-700 hover:bg-green-600 text-white border border-green-500 px-8 py-3 rounded-full font-bold">Cảm ơn chuyên gia</button>
+          </div>
+        `;
+        showModal(html);
+      }
+    }
+
+    function showExplanation() {
+      const q = questions[currentQIndex];
+      let html = `
+        <h2 class="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wide">GIẢI THÍCH CHI TIẾT</h2>
+        <div class="bg-slate-900 border border-slate-600 p-6 rounded-xl mb-6 text-lg text-left leading-relaxed math-content shadow-inner">
+          ${q.explanation}
+        </div>
+        <div class="text-center">
+          <button onclick="closeModal()" class="bg-slate-700 hover:bg-slate-600 px-8 py-3 rounded-full font-bold border border-slate-500">Đóng</button>
+        </div>
+      `;
+      showModal(html);
+      updateMath();
+    }
+
+    function showInstructions() {
+      let html = `
+        <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center uppercase tracking-widest">LUẬT CHƠI</h2>
+        <ul class="list-none text-lg space-y-4 mb-8 text-slate-200 text-left">
+          <li class="flex items-start gap-3"><span class="text-blue-400 font-bold">1.</span> Lần lượt trả lời 10 câu hỏi trắc nghiệm Toán 12 (Đơn điệu, cực trị, GTLN-GTNN, Tiệm cận).</li>
+          <li class="flex items-start gap-3"><span class="text-blue-400 font-bold">2.</span> Chọn phương án đúng và bấm <b>CHỐT ĐÁP ÁN</b>. Bạn không thể thay đổi sau khi đã chốt.</li>
+          <li class="flex items-start gap-3"><span class="text-blue-400 font-bold">3.</span> Trả lời sai, trò chơi kết thúc. Trả lời đúng 10 câu, bạn sẽ là TRIỆU PHÚ Toán Học!</li>
+          <li class="flex items-start gap-3"><span class="text-blue-400 font-bold">4.</span> Có 3 quyền trợ giúp: <span class="text-yellow-400 font-semibold">50:50</span>, <span class="text-yellow-400 font-semibold">Hỏi khán giả</span> và <span class="text-yellow-400 font-semibold">Chuyên gia</span>. Mỗi quyền dùng 1 lần.</li>
+        </ul>
+        <div class="text-center">
+          <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-500 border border-blue-400 px-10 py-3 rounded-full font-bold text-white shadow-lg">Đã hiểu</button>
+        </div>
+      `;
+      showModal(html);
+    }
+
+    function showWinScreen() {
+      sounds.win();
+      document.getElementById('screen-game').classList.add('hidden');
+      document.getElementById('screen-game').classList.remove('flex');
+      
+      document.getElementById('screen-win').classList.remove('hidden');
+      document.getElementById('screen-win').classList.add('flex');
+    }
+
+    function startGame() {
+      initAudio();
+      document.getElementById('screen-start').classList.add('hidden');
+      document.getElementById('screen-start').classList.remove('flex');
+      
+      document.getElementById('screen-game').classList.remove('hidden');
+      document.getElementById('screen-game').classList.add('flex');
+      
+      currentQIndex = 0;
+      selectedOption = null;
+      isLocked = false;
+      eliminatedOptions = [];
+      lifelines = { fifty: true, audience: true, expert: true };
+      
+      renderLifelines();
+      renderQuestion();
+    }
+
+    function resetGame() {
+      document.getElementById('screen-win').classList.remove('flex');
+      document.getElementById('screen-win').classList.add('hidden');
+      closeModal();
+      startGame();
+    }
+
+    function resetToStart() {
+      document.getElementById('screen-game').classList.add('hidden');
+      document.getElementById('screen-game').classList.remove('flex');
+      document.getElementById('screen-start').classList.remove('hidden');
+      document.getElementById('screen-start').classList.add('flex');
+      closeModal();
+    }
+
+  </script>
+</body>
+</html>

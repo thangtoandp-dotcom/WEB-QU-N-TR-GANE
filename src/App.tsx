@@ -192,10 +192,13 @@ export default function App() {
     if (
       activePlayingGame.isUploaded ||
       activePlayingGame.fileUrl ||
+      activePlayingGame.embedCode ||
       activePlayingGame.fileType === 'video' ||
       activePlayingGame.fileType === 'powerpoint' ||
       activePlayingGame.fileType === 'html' ||
-      activePlayingGame.fileType === 'embed'
+      activePlayingGame.fileType === 'embed' ||
+      activePlayingGame.id.startsWith('game_custom_') ||
+      activePlayingGame.id.startsWith('g-uploaded-')
     ) {
       return <FullScreenGameViewer {...props} />;
     }

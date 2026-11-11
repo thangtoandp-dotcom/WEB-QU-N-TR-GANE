@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <!-- Cấu hình viewport chuẩn cho mọi thiết bị -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuộc Đua Trải Nghiệm - Bứt Phá Tư Duy Độc Lập</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b, #0f172a, #020617);
+            color: white;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .btn-option {
+            transition: all 0.2s ease;
+        }
+        
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-option:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .track-lane {
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.05) 40px, rgba(255,255,255,0.05) 80px);
+            border-bottom: 2px dashed rgba(255,255,255,0.2);
+        }
+
+        .avatar-container {
+            transition: left 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .timer-pulse {
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); color: #ef4444; text-shadow: 0 0 10px #ef4444; }
+            50% { transform: scale(1.1); color: #f87171; text-shadow: 0 0 20px #ef4444; }
+            100% { transform: scale(1); color: #ef4444; text-shadow: 0 0 10px #ef4444; }
+        }
+
+        /* Pháo hoa Canvas */
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center relative">
+
+    <canvas id="fireworksCanvas"></canvas>
+
+    <!-- START SCREEN -->
+    <div id="screen-start" class="w-full max-w-5xl p-6 flex flex-col items-center z-10 transition-opacity duration-500">
+        <div class="text-center mb-8 animate-bounce">
+            <i class="fas fa-trophy text-6xl text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]"></i>
+        </div>
+        <h1 class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2 text-center drop-shadow-lg uppercase tracking-wider">
+            Cuộc Đua Trải Nghiệm
+        </h1>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-300 mb-6 tracking-widest uppercase text-center">
+            Bứt Phá Tư Duy Độc Lập
+        </h2>
+
+        <!-- Khung hướng dẫn phím tắt -->
+        <div class="bg-blue-900/40 border border-blue-500/30 rounded-xl p-4 mb-8 text-base text-blue-200 text-center w-full max-w-4xl shadow-inner">
+            <i class="fas fa-keyboard mr-2"></i> <strong>Phím tắt hỗ trợ:</strong> Space (Tạm dừng/Tiếp tục), Phím 1-2-3-4 hoặc A-B-C-D (Chọn đáp án), Enter (Chuyển câu tiếp theo).
+        </div>
+
+        <div class="glass-panel rounded-2xl p-8 w-full max-w-4xl mb-8">
+            <h3 class="text-2xl font-bold mb-4 text-center text-blue-300">THIẾT LẬP ĐỘI CHƠI</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-center bg-white/5 p-3 rounded-lg border border-white/10">
+                    <span class="text-4xl mr-3">🔥</span>
+                    <input type="text" id="team1-name" value="Ngọn Lửa" class="bg-transparent border-b border-gray-500 text-2xl font-bold text-white w-full focus:outline-none focus:border-blue-400" maxlength="15">
+                </div>
+                <div class="flex items-center bg-white/5 p-3 rounded-lg border border-white/10">
+                    <span class="text-4xl mr-3">⚡</span>
+                    <input type="text" id="team2-name" value="Tia Chớp" class="bg-transparent border-b border-gray-500 text-2xl font-bold text-white w-full focus:outline-none focus:border-blue-400" maxlength="15">
+                </div>
+                <div class="flex items-center bg-white/5 p-3 rounded-lg border border-white/10">
+                    <span class="text-4xl mr-3">🦅</span>
+                    <input type="text" id="team3-name" value="Đại Bàng" class="bg-transparent border-b border-gray-500 text-2xl font-bold text-white w-full focus:outline-none focus:border-blue-400" maxlength="15">
+                </div>
+                <div class="flex items-center bg-white/5 p-3 rounded-lg border border-white/10">
+                    <span class="text-4xl mr-3">🚀</span>
+                    <input type="text" id="team4-name" value="Bứt Phá" class="bg-transparent border-b border-gray-500 text-2xl font-bold text-white w-full focus:outline-none focus:border-blue-400" maxlength="15">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-6 flex-wrap justify-center">
+            <button onclick="showRules()" class="px-8 py-4 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-full shadow-lg transition-transform hover:scale-105 text-xl">
+                <i class="fas fa-book-open mr-2"></i> Luật chơi
+            </button>
+            <button onclick="startGame()" class="px-10 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black rounded-full shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-transform hover:scale-110 text-2xl uppercase tracking-wide">
+                <i class="fas fa-play mr-2"></i> Bắt đầu ngay
+            </button>
+        </div>
+    </div>
+
+    <!-- RULES MODAL -->
+    <div id="modal-rules" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="glass-panel w-full max-w-4xl rounded-3xl p-10 transform scale-95 transition-transform duration-300 shadow-2xl border border-white/20">
+            <h2 class="text-4xl font-black text-blue-400 mb-6 text-center border-b border-white/10 pb-4 uppercase">Luật Chơi</h2>
+            <div class="space-y-5 text-xl text-gray-200">
+                <p><i class="fas fa-check-circle text-green-400 mr-2"></i> Có <strong>4 đội chơi</strong>, lần lượt trả lời các câu hỏi theo vòng (Mỗi đội 7 câu).</p>
+                <p><i class="fas fa-clock text-yellow-400 mr-2"></i> Mỗi câu hỏi có <strong>25 giây</strong> suy nghĩ. Trả lời đúng được <strong>100 điểm</strong>.</p>
+                <p><i class="fas fa-times-circle text-red-400 mr-2"></i> Trả lời sai hoặc hết giờ: <strong>0 điểm</strong> (Không bị trừ điểm).</p>
+                <p><i class="fas fa-pause-circle text-blue-400 mr-2"></i> Giáo viên có thể bấm <strong>Tạm dừng</strong> bất cứ lúc nào để giải thích thêm.</p>
+                <p><i class="fas fa-flag-checkered text-white mr-2"></i> Đội cao điểm nhất sau 28 câu sẽ giành Cúp Vô Địch!</p>
+            </div>
+            <div class="mt-10 flex justify-center">
+                <button onclick="closeRules()" class="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white text-xl font-bold rounded-full shadow-lg transition-transform hover:scale-105">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="w-full h-screen hidden flex-col p-2 md:p-6 z-10 max-w-7xl mx-auto relative">
+        <!-- Overlay Tạm Dừng -->
+        <div id="pause-overlay" class="absolute inset-0 bg-black/80 z-40 hidden flex-col items-center justify-center backdrop-blur-md rounded-3xl">
+            <i class="fas fa-pause-circle text-6xl text-blue-400 mb-4 animate-pulse"></i>
+            <h2 class="text-4xl font-black text-white tracking-widest uppercase">Đang Tạm Dừng</h2>
+            <p class="text-gray-400 mt-2 text-lg">Bấm Nút Play hoặc phím Space để tiếp tục</p>
+        </div>
+
+        <!-- Header: Turn & Timer -->
+        <div class="flex justify-between items-center mb-4 glass-panel p-4 rounded-2xl z-20 relative">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-900/50 border border-blue-400/50 px-5 py-3 rounded-xl">
+                    <span class="text-blue-200 text-base font-semibold uppercase block">Lượt của đội</span>
+                    <span id="current-team-display" class="text-3xl font-black text-white flex items-center gap-2">
+                        <span id="current-team-icon">🔥</span> <span id="current-team-name">Ngọn Lửa</span>
+                    </span>
+                </div>
+                <div class="bg-white/10 px-5 py-3 rounded-xl text-center hidden md:block">
+                    <span class="text-gray-300 text-sm font-semibold uppercase block">Tiến trình</span>
+                    <span class="text-2xl font-bold text-pink-300"><span id="q-current">1</span>/28</span>
+                </div>
+            </div>
+            
+            <div class="text-center bg-black/40 border border-white/10 px-10 py-3 rounded-2xl shadow-inner relative overflow-hidden group">
+                <span class="text-gray-400 text-sm uppercase font-bold tracking-widest">Thời gian</span>
+                <div id="timer-display" class="text-6xl font-black text-white font-mono leading-none tracking-tighter transition-colors">25</div>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="btn-pause" onclick="togglePause()" class="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-colors shadow-lg" title="Tạm dừng / Tiếp tục (Phím Space)">
+                    <i class="fas fa-pause text-2xl"></i>
+                </button>
+                <button id="btn-toggle-sound" onclick="toggleSound()" class="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors hidden md:flex" title="Bật/Tắt Âm thanh">
+                    <i class="fas fa-volume-up text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Question Area -->
+        <div class="flex-grow flex flex-col lg:flex-row gap-6 mb-4 z-20 relative">
+            <!-- Question Text -->
+            <div class="lg:w-1/2 glass-panel p-6 md:p-10 rounded-3xl flex flex-col justify-center relative">
+                <div class="absolute -top-4 -left-4 w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-3xl font-black shadow-lg border-4 border-[#0f172a]">
+                    Q<span id="q-number-circle">1</span>
+                </div>
+                <h3 id="question-text" class="text-3xl md:text-4xl font-semibold leading-relaxed text-gray-100 mt-4">
+                    Nội dung câu hỏi sẽ hiển thị ở đây...
+                </h3>
+                <!-- Difficulty Badge -->
+                <div class="mt-6 inline-block">
+                    <span id="difficulty-badge" class="px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        Nhận biết
+                    </span>
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div class="lg:w-1/2 grid grid-cols-1 gap-4 flex-grow">
+                <button onclick="selectAnswer(0)" id="opt-0" class="btn-option glass-panel text-left p-4 md:p-6 rounded-2xl text-xl md:text-2xl font-medium border-l-8 border-transparent hover:bg-white/10 flex items-start gap-4">
+                    <span class="w-12 h-12 rounded-full bg-blue-500/20 text-blue-300 flex-shrink-0 flex items-center justify-center font-black border border-blue-500/30 text-xl">A</span>
+                    <span id="opt-text-0" class="pt-1">Phương án A</span>
+                </button>
+                <button onclick="selectAnswer(1)" id="opt-1" class="btn-option glass-panel text-left p-4 md:p-6 rounded-2xl text-xl md:text-2xl font-medium border-l-8 border-transparent hover:bg-white/10 flex items-start gap-4">
+                    <span class="w-12 h-12 rounded-full bg-purple-500/20 text-purple-300 flex-shrink-0 flex items-center justify-center font-black border border-purple-500/30 text-xl">B</span>
+                    <span id="opt-text-1" class="pt-1">Phương án B</span>
+                </button>
+                <button onclick="selectAnswer(2)" id="opt-2" class="btn-option glass-panel text-left p-4 md:p-6 rounded-2xl text-xl md:text-2xl font-medium border-l-8 border-transparent hover:bg-white/10 flex items-start gap-4">
+                    <span class="w-12 h-12 rounded-full bg-pink-500/20 text-pink-300 flex-shrink-0 flex items-center justify-center font-black border border-pink-500/30 text-xl">C</span>
+                    <span id="opt-text-2" class="pt-1">Phương án C</span>
+                </button>
+                <button onclick="selectAnswer(3)" id="opt-3" class="btn-option glass-panel text-left p-4 md:p-6 rounded-2xl text-xl md:text-2xl font-medium border-l-8 border-transparent hover:bg-white/10 flex items-start gap-4">
+                    <span class="w-12 h-12 rounded-full bg-orange-500/20 text-orange-300 flex-shrink-0 flex items-center justify-center font-black border border-orange-500/30 text-xl">D</span>
+                    <span id="opt-text-3" class="pt-1">Phương án D</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Racing Track & Scores -->
+        <div class="glass-panel p-4 rounded-2xl flex-shrink-0 h-56 flex flex-col relative overflow-hidden z-20">
+            <!-- Đích đến line -->
+            <div class="absolute right-10 top-0 bottom-0 w-8 bg-black/40 z-0 flex flex-col">
+                <div class="flex-grow w-full border-l-4 border-r-4 border-white border-dashed"></div>
+            </div>
+            
+            <div class="flex-grow relative z-10 flex flex-col justify-around">
+                <!-- Lane 1 -->
+                <div class="h-10 track-lane relative flex items-center w-full pr-16">
+                    <span class="absolute left-2 text-sm md:text-base font-bold text-gray-400 w-32 truncate" id="score-name-1">Tên Đội 1</span>
+                    <div id="avatar-1" class="avatar-container absolute top-0 text-4xl drop-shadow-md z-20" style="left: 0%;">🔥</div>
+                    <span id="score-val-1" class="absolute right-2 text-lg md:text-xl font-mono font-bold text-blue-300 bg-black/50 px-3 py-1 rounded">0</span>
+                </div>
+                <!-- Lane 2 -->
+                <div class="h-10 track-lane relative flex items-center w-full pr-16">
+                    <span class="absolute left-2 text-sm md:text-base font-bold text-gray-400 w-32 truncate" id="score-name-2">Tên Đội 2</span>
+                    <div id="avatar-2" class="avatar-container absolute top-0 text-4xl drop-shadow-md z-20" style="left: 0%;">⚡</div>
+                    <span id="score-val-2" class="absolute right-2 text-lg md:text-xl font-mono font-bold text-purple-300 bg-black/50 px-3 py-1 rounded">0</span>
+                </div>
+                <!-- Lane 3 -->
+                <div class="h-10 track-lane relative flex items-center w-full pr-16">
+                    <span class="absolute left-2 text-sm md:text-base font-bold text-gray-400 w-32 truncate" id="score-name-3">Tên Đội 3</span>
+                    <div id="avatar-3" class="avatar-container absolute top-0 text-4xl drop-shadow-md z-20" style="left: 0%;">🦅</div>
+                    <span id="score-val-3" class="absolute right-2 text-lg md:text-xl font-mono font-bold text-pink-300 bg-black/50 px-3 py-1 rounded">0</span>
+                </div>
+                <!-- Lane 4 -->
+                <div class="h-10 track-lane relative flex items-center w-full pr-16 border-b-0">
+                    <span class="absolute left-2 text-sm md:text-base font-bold text-gray-400 w-32 truncate" id="score-name-4">Tên Đội 4</span>
+                    <div id="avatar-4" class="avatar-container absolute top-0 text-4xl drop-shadow-md z-20" style="left: 0%;">🚀</div>
+                    <span id="score-val-4" class="absolute right-2 text-lg md:text-xl font-mono font-bold text-orange-300 bg-black/50 px-3 py-1 rounded">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK MODAL (Shows after each question) -->
+    <div id="modal-feedback" class="fixed inset-0 bg-black/80 z-50 hidden flex flex-col items-center justify-center backdrop-blur-sm p-4">
+        <div class="glass-panel w-full max-w-3xl rounded-3xl p-10 text-center shadow-2xl relative overflow-hidden">
+            <!-- Result Icon & Title -->
+            <div id="feedback-icon" class="text-7xl mb-6"></div>
+            <h2 id="feedback-title" class="text-4xl md:text-5xl font-black mb-4 uppercase tracking-wide">Kết quả</h2>
+            
+            <div class="bg-black/30 p-8 rounded-2xl mt-6 border border-white/10 text-left">
+                <p class="text-gray-400 text-base font-bold uppercase mb-3">Đáp án đúng:</p>
+                <p id="feedback-correct-answer" class="text-2xl md:text-3xl font-bold text-white mb-6">A. Nội dung đáp án</p>
+                
+                <p class="text-gray-400 text-base font-bold uppercase mb-3">Giải thích:</p>
+                <p id="feedback-explanation" class="text-xl md:text-2xl text-blue-100 leading-relaxed">
+                    Lời giải thích ở đây.
+                </p>
+            </div>
+
+            <button onclick="goToNextTurn()" class="mt-10 px-12 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-[0_0_15px_rgba(37,99,235,0.5)] transition-transform hover:scale-105 text-2xl w-full md:w-auto">
+                Tiếp tục (Enter) <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- END SCREEN -->
+    <div id="screen-end" class="w-full max-w-5xl p-6 hidden flex-col items-center z-10">
+        <h1 class="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-4 drop-shadow-lg text-center uppercase">
+            Tổng Kết Cuộc Đua
+        </h1>
+        
+        <div class="glass-panel rounded-3xl p-10 w-full mt-8 relative overflow-hidden text-center">
+            <i class="fas fa-crown text-7xl text-yellow-400 mb-6 drop-shadow-[0_0_20px_rgba(250,204,21,1)] animate-bounce"></i>
+            <h2 class="text-3xl text-gray-300 font-bold mb-4" id="winner-title">Đội Vô Địch</h2>
+            <h3 id="winner-name" class="text-6xl md:text-7xl font-black text-white mb-10 text-shadow-xl">TÊN ĐỘI</h3>
+            
+            <div class="bg-black/30 rounded-2xl p-8 w-full max-w-3xl mx-auto border border-white/10">
+                <h4 class="text-gray-400 uppercase font-bold mb-6 tracking-widest text-base">Bảng Xếp Hạng</h4>
+                <div id="leaderboard-container" class="space-y-4">
+                    <!-- Leaderboard injected here -->
+                </div>
+            </div>
+
+            <p class="mt-10 text-2xl font-medium text-blue-200 italic px-4">
+                "Tư duy độc lập bắt đầu từ việc biết suy nghĩ, biết kiểm chứng và dám chịu trách nhiệm với lựa chọn của mình!"
+            </p>
+        </div>
+
+        <div class="flex gap-6 mt-10 flex-wrap justify-center">
+            <button onclick="showReviewScreen()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-full transition-transform hover:scale-105 text-xl">
+                <i class="fas fa-list-ol mr-2"></i> Xem lại đáp án
+            </button>
+            <button onclick="resetGame()" class="px-8 py-4 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded-full transition-transform hover:scale-105 text-xl">
+                <i class="fas fa-home mr-2"></i> Về trang chủ
+            </button>
+        </div>
+    </div>
+
+    <!-- REVIEW SCREEN -->
+    <div id="screen-review" class="w-full h-screen hidden flex-col p-4 md:p-8 z-10 max-w-5xl mx-auto overflow-y-auto">
+        <div class="flex justify-between items-center mb-6 sticky top-0 bg-[#0f172a]/90 backdrop-blur-md p-4 rounded-xl z-20 border border-white/10 shadow-lg">
+            <h1 class="text-2xl md:text-3xl font-black text-blue-400 uppercase tracking-wide">Hệ thống câu hỏi</h1>
+            <button onclick="hideReviewScreen()" class="px-6 py-2 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded-full transition-transform hover:scale-105">
+                Đóng
+            </button>
+        </div>
+        <div id="review-list" class="space-y-6 pb-20">
+            <!-- Answers injected here -->
+        </div>
+    </div>
+
+    <script>
+        // --- DATA SYSTEM (Đã phân bổ lại vị trí đáp án đều hơn) ---
+        const quizData = [
+            // Cấp độ: Nhận biết (1-8)
+            {
+                q: "Khái niệm cốt lõi nhất của 'Tư duy độc lập' là gì?",
+                options: [
+                    "A. Là khả năng tự suy nghĩ, phân tích và ra quyết định không phụ thuộc mù quáng vào người khác.",
+                    "B. Là việc luôn luôn phản đối ý kiến của số đông để chứng tỏ bản thân khác biệt.",
+                    "C. Là tự mình làm mọi việc mà không bao giờ cần đến sự giúp đỡ của bạn bè hay thầy cô.",
+                    "D. Là giữ vững quan điểm ban đầu của mình dù có ai đưa ra bằng chứng ngược lại."
+                ],
+                ans: 0,
+                exp: "Tư duy độc lập là quá trình tự chủ trong nhận thức, tự phân tích thông tin và tự ra quyết định dựa trên lý trí, chứ không phải là sự cô lập hay chống đối mù quáng.",
+                diff: "Nhận biết"
+            },
+            {
+                q: "Biểu hiện nào sau đây KHÔNG phải là đặc điểm của người có tư duy độc lập?",
+                options: [
+                    "A. Đặt câu hỏi khi tiếp nhận một thông tin mới chưa được kiểm chứng.",
+                    "B. Luôn đồng ý với ý kiến của lớp trưởng vì cho rằng lớp trưởng luôn đúng.",
+                    "C. Tìm kiếm thêm các góc nhìn khác nhau trước khi đưa ra kết luận.",
+                    "D. Dám bảo vệ ý kiến của mình bằng những lập luận có cơ sở."
+                ],
+                ans: 1,
+                exp: "Sự tin tưởng tuyệt đối và làm theo người khác (dù là người có thẩm quyền) mà không tự suy xét là biểu hiện của sự phụ thuộc, không phải tư duy độc lập.",
+                diff: "Nhận biết"
+            },
+            {
+                q: "Khi đối mặt với một vấn đề phức tạp, người có tư duy độc lập sẽ ưu tiên làm gì đầu tiên?",
+                options: [
+                    "A. Nhanh chóng hỏi xin lời khuyên của người lớn để làm theo y hệt.",
+                    "B. Lên mạng tìm xem số đông đang ủng hộ phương án nào để chọn theo.",
+                    "C. Tự thu thập thông tin, phân tích nguyên nhân và suy nghĩ các hướng giải quyết.",
+                    "D. Bỏ qua vấn đề vì nó quá khó, chờ người khác giải quyết giúp."
+                ],
+                ans: 2,
+                exp: "Người độc lập tự chủ động tìm kiếm và xử lý thông tin bằng năng lực của mình trước khi tham khảo ý kiến bên ngoài.",
+                diff: "Nhận biết"
+            },
+            {
+                q: "Tư duy độc lập đòi hỏi kỹ năng nền tảng nào quan trọng nhất?",
+                options: [
+                    "A. Kỹ năng giao tiếp lưu loát và thuyết trình hay.",
+                    "B. Kỹ năng nhượng bộ người khác để giữ hòa khí.",
+                    "C. Kỹ năng ghi nhớ máy móc các kiến thức trong sách giáo khoa.",
+                    "D. Kỹ năng phân tích, đánh giá và phản biện thông tin."
+                ],
+                ans: 3,
+                exp: "Để tư duy độc lập, ta cần biết phân tích, soi xét tính đúng sai của thông tin (tư duy phản biện) làm cơ sở cho quyết định của mình.",
+                diff: "Nhận biết"
+            },
+            {
+                q: "Thái độ phù hợp nhất của người có tư duy độc lập khi tham gia tranh luận là gì?",
+                options: [
+                    "A. Cắt lời đối phương để thể hiện ý kiến của mình là xuất sắc nhất.",
+                    "B. Chỉ giữ im lặng vì sợ làm mất lòng bạn bè trong nhóm.",
+                    "C. Tôn trọng góc nhìn khác biệt và dùng lý lẽ, dẫn chứng để bảo vệ quan điểm.",
+                    "D. Nổi cáu khi có người đưa ra quan điểm trái ngược với mình."
+                ],
+                ans: 2,
+                exp: "Tư duy độc lập đi kèm với sự văn minh: dùng lý lẽ thuyết phục chứ không dùng cảm xúc tiêu cực hay sự áp đặt.",
+                diff: "Nhận biết"
+            },
+            {
+                q: "Mục đích quan trọng nhất của việc rèn luyện tư duy độc lập trong học tập đối với học sinh lớp 12 là gì?",
+                options: [
+                    "A. Để thể hiện sự thông minh hơn các bạn cùng lớp.",
+                    "B. Để biến kiến thức thành của mình, hiểu sâu và vận dụng giải quyết vấn đề.",
+                    "C. Để có thể tự học mà không cần đến trường lớp, thầy cô giáo.",
+                    "D. Để phản bác mọi lời giảng của giáo viên trên lớp."
+                ],
+                ans: 1,
+                exp: "Tư duy độc lập giúp học sinh không học vẹt, thực sự làm chủ kiến thức và biết cách vận dụng linh hoạt vào thực tế.",
+                diff: "Nhận biết"
+            },
+            {
+                q: "Sự khác biệt cơ bản giữa tư duy độc lập và sự chống đối (nổi loạn) là gì?",
+                options: [
+                    "A. Chống đối là phản ứng cảm tính, còn độc lập dựa trên lý trí và sự phân tích.",
+                    "B. Tư duy độc lập thường ồn ào hơn sự chống đối.",
+                    "C. Chống đối luôn mang lại kết quả tốt hơn tư duy độc lập.",
+                    "D. Tư duy độc lập chỉ xuất hiện ở người lớn, còn chống đối ở tuổi vị thành niên."
+                ],
+                ans: 0,
+                exp: "Chống đối thường là phủ nhận mọi thứ theo cảm xúc. Tư duy độc lập là sự xem xét khách quan dựa trên logic và bằng chứng.",
+                diff: "Nhận biết"
+            },
+            {
+                q: "Người có tư duy độc lập sẽ ứng xử thế nào khi biết quyết định của mình đã sai?",
+                options: [
+                    "A. Tìm cách đổ lỗi cho hoàn cảnh hoặc người khác để giữ thể diện.",
+                    "B. Kiên quyết không thừa nhận sai lầm để bảo vệ sự 'độc lập' của mình.",
+                    "C. Lặng lẽ sửa sai mà không cho ai biết để tránh bị chê cười.",
+                    "D. Dũng cảm thừa nhận, phân tích nguyên nhân sai và chủ động sửa chữa."
+                ],
+                ans: 3,
+                exp: "Dám chịu trách nhiệm về những quyết định do chính mình đưa ra là biểu hiện trưởng thành của tư duy độc lập.",
+                diff: "Nhận biết"
+            },
+
+            // Cấp độ: Thông hiểu (9-16)
+            {
+                q: "Một bạn học sinh luôn cãi lại ý kiến của nhóm dù lý lẽ của nhóm rất thuyết phục. Bạn ấy đang mắc phải điều gì?",
+                options: [
+                    "A. Đang rèn luyện tư duy phản biện xuất sắc.",
+                    "B. Rơi vào trạng thái bảo thủ, cố chấp chứ không phải tư duy độc lập.",
+                    "C. Thể hiện bản lĩnh cá nhân vượt trội so với tập thể.",
+                    "D. Đang áp dụng kỹ năng lãnh đạo nhóm."
+                ],
+                ans: 1,
+                exp: "Từ chối tiếp thu sự thật và bằng chứng hợp lý là biểu hiện của sự bảo thủ, cản trở việc nhìn nhận vấn đề khách quan.",
+                diff: "Thông hiểu"
+            },
+            {
+                q: "Thấy nhiều bạn trên mạng chê bai một bộ phim, Lan chưa xem nhưng cũng hùa theo bình luận chê bai. Hành động của Lan là biểu hiện của:",
+                options: [
+                    "A. Sự chia sẻ quan điểm cá nhân.",
+                    "B. Tư duy nhạy bén với trào lưu xã hội.",
+                    "C. Suy nghĩ cảm tính, a dua và hiệu ứng đám đông.",
+                    "D. Sự đánh giá tác phẩm nghệ thuật khách quan."
+                ],
+                ans: 2,
+                exp: "Hành vi làm theo số đông mà không tự trải nghiệm hay kiểm chứng là biểu hiện rõ nhất của sự thiếu tư duy độc lập.",
+                diff: "Thông hiểu"
+            },
+            {
+                q: "Tư duy độc lập khác biệt hoàn toàn với tính bảo thủ ở điểm cốt lõi nào?",
+                options: [
+                    "A. Người độc lập giữ ý kiến của mình lâu hơn người bảo thủ.",
+                    "B. Người độc lập biết lắng nghe và sẵn sàng thay đổi khi có bằng chứng thuyết phục.",
+                    "C. Người bảo thủ thường ít nói hơn người có tư duy độc lập.",
+                    "D. Người độc lập luôn phản đối ý kiến của chuyên gia."
+                ],
+                ans: 1,
+                exp: "Người độc lập khách quan và tôn trọng chân lý, họ sẽ tự điều chỉnh nhận thức nếu bằng chứng mới chứng minh họ sai.",
+                diff: "Thông hiểu"
+            },
+            {
+                q: "Hành vi nào dưới đây thể hiện sự THIẾU độc lập trong định hướng nghề nghiệp của học sinh lớp 12?",
+                options: [
+                    "A. Chọn ngành theo năng lực bản thân sau khi làm trắc nghiệm sở thích.",
+                    "B. Tìm hiểu kỹ chương trình đào tạo của trường đại học trước nộp hồ sơ.",
+                    "C. Tham khảo ý kiến bố mẹ nhưng tự mình đưa ra quyết định cuối cùng.",
+                    "D. Đăng ký vào một ngành học chỉ vì bạn thân rủ học chung cho vui."
+                ],
+                ans: 3,
+                exp: "Việc chọn ngành nghề định hình tương lai. Chạy theo mong muốn của bạn bè bỏ qua sự phù hợp của bản thân là thiếu trách nhiệm với chính mình.",
+                diff: "Thông hiểu"
+            },
+            {
+                q: "Khi nhóm đưa ra một phương án mà bạn nhận thấy có rủi ro lớn, cách xử sự nào thể hiện tư duy độc lập?",
+                options: [
+                    "A. Trình bày rõ ràng các rủi ro đó với nhóm bằng lý lẽ và dẫn chứng cụ thể.",
+                    "B. Im lặng đồng ý vì đa số các bạn đã nhất trí rồi.",
+                    "C. Rút khỏi nhóm ngay lập tức vì họ không chung suy nghĩ với mình.",
+                    "D. Cứ để nhóm làm sai rồi sau này nói 'Tôi đã bảo mà'."
+                ],
+                ans: 0,
+                exp: "Nêu chính kiến xây dựng dựa trên sự phân tích là cách người tư duy độc lập đóng góp giá trị cho tập thể.",
+                diff: "Thông hiểu"
+            },
+            {
+                q: "Đứng trước một bài toán khó chưa có lời giải mẫu, học sinh có tư duy độc lập sẽ thường làm gì?",
+                options: [
+                    "A. Chờ đợi thầy cô chữa bài rồi chép lại cẩn thận.",
+                    "B. Lên các hội nhóm nhờ người khác giải hộ toàn bộ.",
+                    "C. Từ bỏ vì cho rằng đề bài có thể bị sai.",
+                    "D. Tự mày mò, phân tích giả thiết và thử nghiệm nhiều cách tiếp cận khác nhau."
+                ],
+                ans: 3,
+                exp: "Sự kiên trì tự mình đối mặt với thử thách trí tuệ để tìm ra đường đi là cốt lõi của việc rèn luyện tư duy.",
+                diff: "Thông hiểu"
+            },
+            {
+                q: "Việc 'kiểm chứng thông tin' quan trọng như thế nào đối với tư duy độc lập?",
+                options: [
+                    "A. Chỉ làm mất thời gian, cứ tin vào trực giác là đủ.",
+                    "B. Giúp tìm ra lỗi sai của người khác để chỉ trích họ.",
+                    "C. Là bộ lọc cần thiết để không bị thao túng bởi tin giả và định kiến.",
+                    "D. Chỉ quan trọng với người làm nhà báo, không quan trọng với học sinh."
+                ],
+                ans: 2,
+                exp: "Sự bùng nổ thông tin dễ dẫn dắt cảm xúc. Kiểm chứng thông tin giúp bảo vệ tâm trí khỏi sự thao túng của số đông.",
+                diff: "Thông hiểu"
+            },
+            {
+                q: "Tại sao người có tư duy độc lập cao vẫn rất cần lắng nghe ý kiến từ người khác?",
+                options: [
+                    "A. Để thu thập thêm góc nhìn mới, củng cố hoặc điều chỉnh lại nhận định của mình.",
+                    "B. Để giả vờ lịch sự trong giao tiếp xã hội.",
+                    "C. Để tìm cách bắt bẻ và chứng minh người khác sai.",
+                    "D. Để cuối cùng làm theo lời người khác cho an toàn."
+                ],
+                ans: 0,
+                exp: "Không ai có cái nhìn toàn diện. Lắng nghe là cách người độc lập nạp thêm dữ liệu để bộ não phân tích chính xác hơn.",
+                diff: "Thông hiểu"
+            },
+
+            // Cấp độ: Vận dụng (17-24)
+            {
+                q: "Nhóm bạn thân rủ bạn cúp học đi chơi vì 'ai cũng phải cúp học một lần cho biết'. Bạn xử lý thế nào?",
+                options: [
+                    "A. Đi cùng vì sợ nếu từ chối sẽ bị nhóm cô lập.",
+                    "B. Từ chối rõ ràng và khuyên các bạn không nên vi phạm nội quy.",
+                    "C. Đi nhưng trong lòng cảm thấy áy náy và lo sợ.",
+                    "D. Mách ngay với giáo viên chủ nhiệm để các bạn bị phạt nặng."
+                ],
+                ans: 1,
+                exp: "Việc từ chối áp lực từ bạn bè (peer pressure) khi biết điều đó sai trái là vận dụng mạnh mẽ của tư duy độc lập.",
+                diff: "Vận dụng"
+            },
+            {
+                q: "Bạn đọc được bài viết ẩn danh tố cáo tiêu cực về trường mình đang học. Bạn sẽ làm gì?",
+                options: [
+                    "A. Bình tĩnh, không vội tin, không chia sẻ và chờ thông tin chính thức đa chiều.",
+                    "B. Chia sẻ ngay lên trang cá nhân kèm bình luận bức xúc.",
+                    "C. Gửi ngay cho bạn bè trong lớp để mọi người cùng tẩy chay trường.",
+                    "D. Mặc định bài viết đó là sai sự thật hoàn toàn mà không cần đọc."
+                ],
+                ans: 0,
+                exp: "Trong môi trường mạng xã hội, giữ cái đầu lạnh và chờ đợi thông tin kiểm chứng là hành động thiết thực nhất của tư duy độc lập.",
+                diff: "Vận dụng"
+            },
+            {
+                q: "Bố mẹ mong bạn thi ngành Y, nhưng bạn thực sự đam mê và có năng lực ngành CNTT. Bạn nên:",
+                options: [
+                    "A. Tuyệt thực để phản đối sự áp đặt của bố mẹ.",
+                    "B. Miễn cưỡng thi ngành Y để làm tròn chữ hiếu.",
+                    "C. Thu thập thông tin minh chứng năng lực và cơ hội ngành CNTT để thuyết phục bố mẹ.",
+                    "D. Lén lút đăng ký CNTT mà không nói cho bố mẹ biết."
+                ],
+                ans: 2,
+                exp: "Việc ra quyết định độc lập cần đi kèm với sự thấu hiểu, tôn trọng gia đình và năng lực bảo vệ quan điểm bằng bằng chứng thực tế.",
+                diff: "Vận dụng"
+            },
+            {
+                q: "Ý kiến của bạn về cách tổ chức dã ngoại hoàn toàn đi ngược lại đa số các bạn. Bạn sẽ làm gì?",
+                options: [
+                    "A. Tự tin trình bày quan điểm của mình kèm theo những phân tích cụ thể.",
+                    "B. Thu lại ý kiến ngay lập tức vì ngại khác biệt.",
+                    "C. Tỏ thái độ giận dỗi vì không ai hiểu mình.",
+                    "D. Ép buộc các bạn phải làm theo ý mình bằng mọi giá."
+                ],
+                ans: 0,
+                exp: "Tư duy độc lập khuyến khích sự đa dạng góc nhìn. Đám đông không phải lúc nào cũng tối ưu, đóng góp ý kiến là quyền và trách nhiệm.",
+                diff: "Vận dụng"
+            },
+            {
+                q: "Một học sinh mua đôi giày đắt tiền không thực sự cần, chỉ vì thần tượng (idol) vừa quảng cáo. Đánh giá hành động này:",
+                options: [
+                    "A. Đây là sự lựa chọn tiêu dùng thông minh và thức thời.",
+                    "B. Thể hiện sự thiếu tư duy độc lập trong việc kiểm soát nhu cầu cá nhân.",
+                    "C. Thể hiện tình yêu mãnh liệt với nghệ thuật.",
+                    "D. Là biểu hiện của tư duy kinh tế độc lập."
+                ],
+                ans: 1,
+                exp: "Việc chi tiêu bị dẫn dắt hoàn toàn bởi yếu tố ngoại cảnh (quảng cáo, idol) mà bỏ qua nhu cầu thực tế là sự thiếu tự chủ.",
+                diff: "Vận dụng"
+            },
+            {
+                q: "Trưởng nhóm phân công bạn làm slide trong khi bạn giỏi tìm nội dung hơn. Cách xử lý có tư duy độc lập là:",
+                options: [
+                    "A. Âm thầm chịu đựng, làm thật xấu để lần sau không bị giao nữa.",
+                    "B. Nói xấu trưởng nhóm với các thành viên khác.",
+                    "C. Chủ động gặp trưởng nhóm, nêu rõ thế mạnh và đề xuất đổi công việc.",
+                    "D. Cứ làm theo phân công nhưng tỏ thái độ không hợp tác."
+                ],
+                ans: 2,
+                exp: "Người tự chủ hiểu rõ năng lực bản thân và giao tiếp thẳng thắn, xây dựng để mang lại hiệu quả cao nhất cho tập thể.",
+                diff: "Vận dụng"
+            },
+            {
+                q: "Đang nghe thầy giáo giải bài, bạn phát hiện ra một cách giải ngắn gọn và logic hơn nhiều. Bạn sẽ làm gì?",
+                options: [
+                    "A. Giơ tay xin phép thầy trình bày cách giải của mình để cả lớp cùng xem xét.",
+                    "B. Ngồi cười thầm và cho rằng thầy giáo kém cỏi hơn mình.",
+                    "C. Nói leo từ dưới lớp để ngắt lời thầy giáo.",
+                    "D. Chỉ giữ cách giải đó cho riêng mình dùng lúc đi thi."
+                ],
+                ans: 0,
+                exp: "Tinh thần chia sẻ kiến thức, mạnh dạn nêu sáng kiến một cách lễ phép là biểu hiện đẹp của học sinh có tư duy độc lập.",
+                diff: "Vận dụng"
+            },
+            {
+                q: "Bạn thân khuyên bạn không nên chơi với bạn M vì 'nghe đồn M kiêu ngạo lắm'. Nếu có tư duy độc lập, bạn sẽ:",
+                options: [
+                    "A. Tránh xa M ngay lập tức vì tin tưởng người bạn thân.",
+                    "B. Chạy đến hỏi thẳng M xem có đúng là kiêu ngạo không.",
+                    "C. Cắt đứt quan hệ với người bạn thân vì hay nói xấu.",
+                    "D. Ghi nhận thông tin, nhưng tự mình quan sát, tiếp xúc trực tiếp để đánh giá khách quan."
+                ],
+                ans: 3,
+                exp: "Tin đồn (dù từ người thân) vẫn cần qua bộ lọc cá nhân. Người độc lập xây dựng mối quan hệ dựa trên sự đánh giá trực tiếp.",
+                diff: "Vận dụng"
+            },
+
+            // Cấp độ: Vận dụng cao (25-28)
+            {
+                q: "Kế hoạch sự kiện của lớp có rủi ro tài chính lớn, nhưng không ai lên tiếng vì nể nang lớp trưởng. Cách giải quyết tối ưu nhất?",
+                options: [
+                    "A. Chuẩn bị bảng dự toán chi tiết, giơ tay phân tích rủi ro một cách xây dựng để tập thể tháo gỡ.",
+                    "B. Im lặng vì đó là trách nhiệm của lớp trưởng.",
+                    "C. Lên Facebook đăng bài bóng gió về sự yếu kém của ban tổ chức.",
+                    "D. Đứng lên công kích gay gắt lớp trưởng giữa cuộc họp."
+                ],
+                ans: 0,
+                exp: "Tình huống này cần sự dũng cảm (bứt phá) và trí tuệ. Dùng số liệu minh chứng và thái độ xây dựng là cách giải quyết xuất sắc.",
+                diff: "Vận dụng cao"
+            },
+            {
+                q: "Bạn đang bảo vệ quan điểm khoa học của mình. Tuy nhiên, một bạn khác đưa ra bài báo từ tạp chí uy tín thế giới chứng minh bạn sai. Cách ứng xử đỉnh cao là:",
+                options: [
+                    "A. Cố gắng cãi cùn để bảo vệ danh dự bản thân trước lớp.",
+                    "B. Đánh trống lãng sang chuyện khác để mọi người quên đi.",
+                    "C. Thừa nhận dẫn chứng hợp lý, ghi nhận ý kiến bạn và điều chỉnh lại nhận định của mình.",
+                    "D. Đổ lỗi cho sách giáo khoa đã cung cấp thông tin sai."
+                ],
+                ans: 2,
+                exp: "Đỉnh cao của tư duy độc lập là sự trung thực trí tuệ. Sẵn sàng thay đổi tư duy cũ khi đối mặt với bằng chứng đúng thể hiện bản lĩnh lớn.",
+                diff: "Vận dụng cao"
+            },
+            {
+                q: "Đứng trước nhiều bài báo 'Ngành X 5 năm tới sẽ thất nghiệp', một học sinh lớp 12 thực sự đam mê ngành X nên làm gì?",
+                options: [
+                    "A. Vội vàng từ bỏ đam mê để chọn ngành khác cho an toàn.",
+                    "B. Bỏ qua mọi lời khuyên, cứ nhắm mắt chọn mù quáng vì 'đam mê chiến thắng tất cả'.",
+                    "C. Đối chiếu báo cáo thị trường lao động chính thống và tự đánh giá năng lực thích ứng của bản thân trước khi quyết định.",
+                    "D. Chuyển sang học nghề thay vì thi Đại học."
+                ],
+                ans: 2,
+                exp: "Trước thông tin gây hoang mang, người tự chủ không sợ hãi mù quáng. Họ phân tích rủi ro, dự đoán tương lai và đánh giá nội lực bản thân.",
+                diff: "Vận dụng cao"
+            },
+            {
+                q: "Nhận định nào sau đây phản ánh đúng và sâu sắc nhất bản chất của việc ra quyết định ở người có tư duy độc lập?",
+                options: [
+                    "A. Lấy ý kiến biểu quyết của số đông làm quyết định cuối cùng của bản thân.",
+                    "B. Luôn ra quyết định trái ngược với số đông để khẳng định bản sắc.",
+                    "C. Tự ra quyết định sau khi cân nhắc mọi khía cạnh, và hoàn toàn chịu trách nhiệm với hệ quả.",
+                    "D. Chỉ ra quyết định khi chắc chắn kết quả 100% sẽ thành công."
+                ],
+                ans: 2,
+                exp: "Tư duy độc lập không tách rời với Trách nhiệm. Quyền tự quyết đi liền với việc chịu trách nhiệm hoàn toàn về cuộc đời mình.",
+                diff: "Vận dụng cao"
+            }
+        ];
+
+        // --- GAME STATE ---
+        let teams = [];
+        let currentQuestionGlobal = 0; // 0 to 27
+        let currentTurnIndex = 0; // 0 to 3 (đội 1 đến 4)
+        let timer = 25;
+        let intervalId = null;
+        let isAnswerLocked = false;
+        let isPaused = false; // Trạng thái tạm dừng
+
+        // --- AUDIO ENGINE (Web Audio API) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let actx;
+
+        function initAudio() {
+            if (!actx) actx = new AudioContext();
+            if (actx.state === 'suspended') actx.resume();
+        }
+
+        let soundEnabled = true;
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('btn-toggle-sound');
+            if (soundEnabled) {
+                btn.innerHTML = '<i class="fas fa-volume-up text-xl"></i>';
+                btn.classList.remove('text-red-400');
+            } else {
+                btn.innerHTML = '<i class="fas fa-volume-mute text-xl text-red-400"></i>';
+            }
+        }
+
+        function playTone(freq, type, duration, vol = 0.1) {
+            if (!soundEnabled || !actx) return;
+            try {
+                const osc = actx.createOscillator();
+                const gain = actx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, actx.currentTime);
+                
+                gain.gain.setValueAtTime(vol, actx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.start();
+                osc.stop(actx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function sfxStart() { playTone(440, 'sine', 0.1); setTimeout(() => playTone(554, 'sine', 0.2), 100); setTimeout(() => playTone(659, 'sine', 0.4), 200); }
+        function sfxClick() { playTone(600, 'sine', 0.1); }
+        function sfxTick() { playTone(800, 'square', 0.05, 0.05); }
+        function sfxTimeout() { playTone(150, 'sawtooth', 1, 0.2); }
+        function sfxCorrect() { 
+            playTone(523.25, 'sine', 0.1); 
+            setTimeout(() => playTone(659.25, 'sine', 0.1), 100); 
+            setTimeout(() => playTone(783.99, 'sine', 0.4), 200); 
+        }
+        function sfxWrong() { 
+            playTone(300, 'square', 0.2, 0.1); 
+            setTimeout(() => playTone(250, 'square', 0.4, 0.1), 200); 
+        }
+        function sfxWin() {
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((n, i) => setTimeout(() => playTone(n, 'sine', 0.2, 0.2), i * 150));
+            setTimeout(() => playTone(1046.50, 'sine', 0.6, 0.2), 600);
+        }
+
+        // --- DOM ELEMENTS ---
+        const screens = {
+            start: document.getElementById('screen-start'),
+            game: document.getElementById('screen-game'),
+            end: document.getElementById('screen-end'),
+            review: document.getElementById('screen-review')
+        };
+        const rulesModal = document.getElementById('modal-rules');
+        const feedbackModal = document.getElementById('modal-feedback');
+        const pauseOverlay = document.getElementById('pause-overlay');
+        const btnPause = document.getElementById('btn-pause');
+
+        function showRules() { rulesModal.classList.remove('hidden'); }
+        function closeRules() { rulesModal.classList.add('hidden'); }
+
+        // Tính năng Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Chỉ bắt sự kiện khi đang ở màn hình chơi
+            if(screens.game.classList.contains('hidden')) return;
+
+            // Nếu đang hiển thị modal kết quả -> bấm Enter để đi tiếp
+            if(isAnswerLocked && !feedbackModal.classList.contains('hidden')) {
+                if(e.key === 'Enter') {
+                    goToNextTurn();
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            // Bấm Space hoặc 'P' để Tạm dừng/Tiếp tục
+            if(e.code === 'Space' || e.key.toLowerCase() === 'p') {
+                if(!isAnswerLocked) {
+                    togglePause();
+                    e.preventDefault();
+                }
+            }
+
+            // Bấm 1-2-3-4 hoặc a-b-c-d để chọn đáp án (chỉ khi chưa khóa và chưa dừng)
+            if(!isPaused && !isAnswerLocked) {
+                if(e.key === '1' || e.key.toLowerCase() === 'a') selectAnswer(0);
+                if(e.key === '2' || e.key.toLowerCase() === 'b') selectAnswer(1);
+                if(e.key === '3' || e.key.toLowerCase() === 'c') selectAnswer(2);
+                if(e.key === '4' || e.key.toLowerCase() === 'd') selectAnswer(3);
+            }
+        });
+
+        function togglePause() {
+            if(isAnswerLocked) return; // Không tạm dừng khi đang hiện đáp án
+            isPaused = !isPaused;
+            sfxClick();
+            
+            if(isPaused) {
+                pauseOverlay.classList.remove('hidden');
+                pauseOverlay.classList.add('flex');
+                btnPause.innerHTML = '<i class="fas fa-play text-xl"></i>';
+                btnPause.classList.replace('bg-blue-600', 'bg-green-600');
+                btnPause.classList.replace('hover:bg-blue-500', 'hover:bg-green-500');
+            } else {
+                pauseOverlay.classList.add('hidden');
+                pauseOverlay.classList.remove('flex');
+                btnPause.innerHTML = '<i class="fas fa-pause text-xl"></i>';
+                btnPause.classList.replace('bg-green-600', 'bg-blue-600');
+                btnPause.classList.replace('hover:bg-green-500', 'hover:bg-blue-500');
+            }
+        }
+
+        function startGame() {
+            initAudio();
+            sfxStart();
+
+            // Reset toàn bộ thông số
+            isPaused = false;
+            pauseOverlay.classList.add('hidden');
+            pauseOverlay.classList.remove('flex');
+            btnPause.innerHTML = '<i class="fas fa-pause text-xl"></i>';
+
+            teams = [
+                { id: 0, name: document.getElementById('team1-name').value || "Ngọn Lửa", icon: "🔥", score: 0 },
+                { id: 1, name: document.getElementById('team2-name').value || "Tia Chớp", icon: "⚡", score: 0 },
+                { id: 2, name: document.getElementById('team3-name').value || "Đại Bàng", icon: "🦅", score: 0 },
+                { id: 3, name: document.getElementById('team4-name').value || "Bứt Phá", icon: "🚀", score: 0 }
+            ];
+
+            for(let i=0; i<4; i++) {
+                document.getElementById(`score-name-${i+1}`).innerText = teams[i].name;
+                document.getElementById(`score-val-${i+1}`).innerText = "0";
+                document.getElementById(`avatar-${i+1}`).style.left = "0%";
+            }
+
+            currentQuestionGlobal = 0;
+            currentTurnIndex = 0;
+            
+            screens.start.classList.add('hidden');
+            screens.game.classList.remove('hidden');
+            screens.game.classList.add('flex');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswerLocked = false;
+            isPaused = false; // Đảm bảo sang câu mới luôn chạy
+            
+            const qData = quizData[currentQuestionGlobal];
+            const currentTeam = teams[currentTurnIndex];
+
+            document.getElementById('current-team-name').innerText = currentTeam.name;
+            document.getElementById('current-team-icon').innerText = currentTeam.icon;
+            document.getElementById('q-current').innerText = currentQuestionGlobal + 1;
+            document.getElementById('q-number-circle').innerText = currentQuestionGlobal + 1;
+            
+            const teamColors = ['text-red-400', 'text-yellow-400', 'text-blue-400', 'text-orange-400'];
+            document.getElementById('current-team-name').className = `text-3xl font-black ${teamColors[currentTurnIndex]}`;
+
+            document.getElementById('question-text').innerText = qData.q;
+            document.getElementById('difficulty-badge').innerText = qData.diff;
+
+            // Đặt lại style các nút đáp án
+            for(let i=0; i<4; i++) {
+                const btn = document.getElementById(`opt-${i}`);
+                btn.className = "btn-option glass-panel text-left p-4 md:p-6 rounded-2xl text-xl md:text-2xl font-medium border-l-8 border-transparent hover:bg-white/10 flex items-start gap-4";
+                if(i===0) btn.classList.add('hover:border-blue-400');
+                if(i===1) btn.classList.add('hover:border-purple-400');
+                if(i===2) btn.classList.add('hover:border-pink-400');
+                if(i===3) btn.classList.add('hover:border-orange-400');
+                
+                document.getElementById(`opt-text-${i}`).innerText = qData.options[i].substring(3);
+                btn.disabled = false;
+            }
+
+            timer = 25;
+            updateTimerDisplay();
+            clearInterval(intervalId);
+            intervalId = setInterval(countdown, 1000);
+        }
+
+        function countdown() {
+            if(isPaused) return; // Dừng thời gian nếu đang pause
+            
+            if(timer > 0) {
+                timer--;
+                updateTimerDisplay();
+                if(timer <= 5 && timer > 0) {
+                    sfxTick();
+                    document.getElementById('timer-display').classList.add('timer-pulse');
+                }
+            } else {
+                clearInterval(intervalId);
+                handleTimeout();
+            }
+        }
+
+        function updateTimerDisplay() {
+            const display = document.getElementById('timer-display');
+            display.innerText = timer;
+            if(timer > 5) {
+                display.classList.remove('timer-pulse');
+                display.style.color = 'white';
+            }
+        }
+
+        function selectAnswer(selectedIndex) {
+            if(isAnswerLocked || isPaused) return; // Chống nhấp đúp và chống nhấp khi tạm dừng
+            isAnswerLocked = true;
+            clearInterval(intervalId);
+            document.getElementById('timer-display').classList.remove('timer-pulse');
+
+            sfxClick();
+            
+            const qData = quizData[currentQuestionGlobal];
+            const isCorrect = (selectedIndex === qData.ans);
+
+            // Xử lý giao diện các nút
+            for(let i=0; i<4; i++) {
+                const btn = document.getElementById(`opt-${i}`);
+                btn.disabled = true;
+                if(i === qData.ans) {
+                    btn.classList.add('bg-green-600/40', 'border-green-400');
+                } else if(i === selectedIndex && !isCorrect) {
+                    btn.classList.add('bg-red-600/40', 'border-red-400');
+                } else {
+                    btn.classList.add('opacity-50');
+                }
+            }
+
+            if(isCorrect) {
+                sfxCorrect();
+                teams[currentTurnIndex].score += 100;
+                updateTrack();
+                setTimeout(() => showFeedback(true, selectedIndex, qData), 1500);
+            } else {
+                sfxWrong();
+                setTimeout(() => showFeedback(false, selectedIndex, qData), 1500);
+            }
+        }
+
+        function handleTimeout() {
+            isAnswerLocked = true;
+            document.getElementById('timer-display').classList.remove('timer-pulse');
+            sfxTimeout();
+            
+            const qData = quizData[currentQuestionGlobal];
+            for(let i=0; i<4; i++) {
+                const btn = document.getElementById(`opt-${i}`);
+                btn.disabled = true;
+                if(i === qData.ans) btn.classList.add('bg-green-600/40', 'border-green-400');
+                else btn.classList.add('opacity-50');
+            }
+
+            setTimeout(() => showFeedback(false, -1, qData), 1500);
+        }
+
+        function updateTrack() {
+            const team = teams[currentTurnIndex];
+            document.getElementById(`score-val-${team.id + 1}`).innerText = team.score;
+            let percent = (team.score / 700) * 85; 
+            document.getElementById(`avatar-${team.id + 1}`).style.left = `${percent}%`;
+        }
+
+        function showFeedback(isCorrect, selectedIndex, qData) {
+            feedbackModal.classList.remove('hidden');
+            const iconEl = document.getElementById('feedback-icon');
+            const titleEl = document.getElementById('feedback-title');
+            
+            if(isCorrect) {
+                iconEl.innerHTML = '<i class="fas fa-check-circle text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.8)]"></i>';
+                titleEl.innerText = "CHÍNH XÁC! +100 ĐIỂM";
+                titleEl.className = "text-4xl md:text-5xl font-black mb-4 uppercase tracking-wide text-green-400";
+            } else {
+                if(selectedIndex === -1) {
+                    iconEl.innerHTML = '<i class="fas fa-hourglass-end text-gray-400 drop-shadow-[0_0_15px_rgba(156,163,175,0.8)]"></i>';
+                    titleEl.innerText = "HẾT THỜI GIAN!";
+                    titleEl.className = "text-4xl md:text-5xl font-black mb-4 uppercase tracking-wide text-gray-400";
+                } else {
+                    iconEl.innerHTML = '<i class="fas fa-times-circle text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"></i>';
+                    titleEl.innerText = "CHƯA ĐÚNG RỒI!";
+                    titleEl.className = "text-4xl md:text-5xl font-black mb-4 uppercase tracking-wide text-red-400";
+                }
+            }
+
+            document.getElementById('feedback-correct-answer').innerText = qData.options[qData.ans];
+            document.getElementById('feedback-explanation').innerText = qData.exp;
+        }
+
+        function goToNextTurn() {
+            sfxClick();
+            feedbackModal.classList.add('hidden');
+            
+            currentQuestionGlobal++;
+            if(currentQuestionGlobal >= 28) {
+                endGame();
+            } else {
+                // Luân phiên 4 đội: 0->1->2->3->0... (Chính xác mỗi đội 7 câu)
+                currentTurnIndex = (currentTurnIndex + 1) % 4;
+                loadQuestion();
+            }
+        }
+
+        function endGame() {
+            screens.game.classList.remove('flex');
+            screens.game.classList.add('hidden');
+            screens.end.classList.remove('hidden');
+            screens.end.classList.add('flex');
+
+            sfxWin();
+            startFireworks();
+
+            // Sắp xếp giảm dần theo điểm
+            const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+            
+            // Cập nhật đội vô địch (có thể có nhiều đội bằng điểm)
+            const topScore = sortedTeams[0].score;
+            const winners = sortedTeams.filter(t => t.score === topScore);
+            
+            if(winners.length === 1) {
+                document.getElementById('winner-title').innerText = "Đội Vô Địch";
+                document.getElementById('winner-name').innerText = `${winners[0].icon} ĐỘI ${winners[0].name.toUpperCase()}`;
+            } else {
+                document.getElementById('winner-title').innerText = "Đồng Vô Địch";
+                document.getElementById('winner-name').innerText = winners.map(w => w.icon).join(" ") + " XUẤT SẮC";
+                document.getElementById('winner-name').style.fontSize = "3rem";
+            }
+
+            const lbContainer = document.getElementById('leaderboard-container');
+            lbContainer.innerHTML = '';
+            
+            let currentRank = 1;
+            for(let i=0; i<sortedTeams.length; i++) {
+                const t = sortedTeams[i];
+                // Tính toán rank đồng hạng
+                if(i > 0 && t.score < sortedTeams[i-1].score) {
+                    currentRank = i + 1;
+                }
+
+                let badge = "";
+                if(currentRank === 1) badge = '<i class="fas fa-medal text-yellow-400 ml-2"></i>';
+                else if(currentRank === 2) badge = '<i class="fas fa-medal text-gray-300 ml-2"></i>';
+                else if(currentRank === 3) badge = '<i class="fas fa-medal text-amber-600 ml-2"></i>';
+
+                lbContainer.innerHTML += `
+                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <span class="text-2xl font-bold text-gray-400 w-8">#${currentRank}</span>
+                            <span class="text-4xl">${t.icon}</span>
+                            <span class="text-2xl md:text-3xl font-bold text-white">${t.name} ${badge}</span>
+                        </div>
+                        <span class="text-3xl md:text-4xl font-black text-blue-300">${t.score} <span class="text-lg font-normal text-gray-400">điểm</span></span>
+                    </div>
+                `;
+            }
+        }
+
+        function resetGame() {
+            sfxClick();
+            stopFireworks();
+            screens.end.classList.add('hidden');
+            screens.end.classList.remove('flex');
+            screens.start.classList.remove('hidden');
+            screens.start.classList.add('flex');
+        }
+
+        function showReviewScreen() {
+            sfxClick();
+            screens.end.classList.add('hidden');
+            screens.end.classList.remove('flex');
+            screens.review.classList.remove('hidden');
+            screens.review.classList.add('flex');
+
+            const list = document.getElementById('review-list');
+            list.innerHTML = '';
+            quizData.forEach((q, idx) => {
+                list.innerHTML += `
+                    <div class="glass-panel p-6 md:p-8 rounded-2xl border-l-4 border-blue-500">
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="w-16 h-16 text-2xl bg-blue-600 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-white border-2 border-blue-400">Q${idx+1}</div>
+                            <div>
+                                <p class="text-2xl font-bold mb-4 text-white leading-snug">${q.q}</p>
+                                <p class="text-green-400 text-xl font-semibold mb-4 bg-green-900/30 p-3 rounded-lg border border-green-500/30"><i class="fas fa-check mr-3"></i>${q.options[q.ans]}</p>
+                                <p class="text-gray-300 text-lg italic bg-black/30 p-4 rounded-xl border border-white/10 shadow-inner">${q.exp}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function hideReviewScreen() {
+            sfxClick();
+            screens.review.classList.add('hidden');
+            screens.review.classList.remove('flex');
+            screens.end.classList.remove('hidden');
+            screens.end.classList.add('flex');
+        }
+
+        // --- FIREWORKS CANVAS LOGIC ---
+        const fcanvas = document.getElementById('fireworksCanvas');
+        const ctx = fcanvas.getContext('2d');
+        let fwParticles = [];
+        let fwAnimationId = null;
+
+        function resizeCanvas() {
+            fcanvas.width = window.innerWidth;
+            fcanvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.015 + 0.015;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.05; // gravity
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.color}, ${this.life})`;
+                ctx.fill();
+            }
+        }
+
+        function createExplosion(x, y) {
+            const colors = ['255, 99, 71', '135, 206, 235', '255, 215, 0', '144, 238, 144', '238, 130, 238'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            for (let i = 0; i < 60; i++) {
+                fwParticles.push(new Particle(x, y, color));
+            }
+        }
+
+        function animateFireworks() {
+            ctx.clearRect(0, 0, fcanvas.width, fcanvas.height);
+            
+            if(Math.random() < 0.06) {
+                createExplosion(Math.random() * fcanvas.width, Math.random() * fcanvas.height * 0.5);
+            }
+
+            for (let i = fwParticles.length - 1; i >= 0; i--) {
+                const p = fwParticles[i];
+                p.update();
+                p.draw();
+                if (p.life <= 0) fwParticles.splice(i, 1);
+            }
+            fwAnimationId = requestAnimationFrame(animateFireworks);
+        }
+
+        function startFireworks() {
+            resizeCanvas();
+            fcanvas.style.display = 'block';
+            fwParticles = [];
+            animateFireworks();
+        }
+
+        function stopFireworks() {
+            fcanvas.style.display = 'none';
+            cancelAnimationFrame(fwAnimationId);
+            ctx.clearRect(0, 0, fcanvas.width, fcanvas.height);
+        }
+    </script>
+</body>
+</html>

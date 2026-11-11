@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Cờ Caro - Thầy Bùi Ngọc Thắng</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:wght@700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Nền của game */
+        }
+
+        /* --- STYLES CHO MÀN HÌNH INTRO & LUẬT & FORM --- */
+        .screen-dark-bg {
+            background-color: #1a202c; /* Nền tối viền ngoài */
+        }
+        
+        .intro-container {
+            background-color: #1a2332; /* Nền xanh đen bên trong */
+            border: 1px solid #2d3748;
+        }
+
+        .glow-text-yellow {
+            font-family: 'Playfair Display', serif; /* Font chữ có chân cho giống hình */
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.8), 0 0 30px rgba(250, 204, 21, 0.4);
+        }
+
+        .glow-text-yellow-bold {
+            text-shadow: 0 0 20px rgba(250, 204, 21, 0.9), 0 0 40px rgba(250, 204, 21, 0.5);
+        }
+        
+        .glow-icon {
+            filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.8)) drop-shadow(0 0 30px rgba(250, 204, 21, 0.4));
+        }
+
+        .glow-btn-green {
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
+        }
+        .glow-btn-green:hover {
+            box-shadow: 0 0 30px rgba(74, 222, 128, 0.8);
+        }
+
+        /* --- STYLES CHO GAME --- */
+        .board-wrapper {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: auto;
+            padding: 1rem 0;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        @media (min-width: 1024px) {
+            .board-wrapper {
+                justify-content: center; /* Căn giữa trên màn hình lớn */
+            }
+        }
+
+        .board-container {
+            display: grid;
+            grid-template-columns: repeat(20, 45px); /* Kích thước ô cố định 45px */
+            grid-auto-rows: 45px;
+            gap: 0;
+            background-color: #e5e7eb;
+            border: 2px solid #374151;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0; /* Không cho phép co rúm */
+        }
+
+        .cell {
+            width: 45px;
+            height: 45px;
+            border: 1px solid #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem; /* Dấu tích X, O to rõ nét */
+            font-weight: 900;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s, transform 0.1s;
+            background-color: #ffffff;
+        }
+
+        .cell:hover:not(.occupied) {
+            background-color: #fef08a;
+        }
+
+        .cell.win-highlight {
+            background-color: #a7f3d0 !important;
+            animation: pulse-win 1s infinite alternate;
+        }
+
+        @keyframes pulse-win {
+            from { background-color: #a7f3d0; }
+            to { background-color: #34d399; }
+        }
+
+        @media (max-width: 600px) {
+            .intro-container { padding: 2rem 1rem; }
+            .glow-text-yellow-bold { font-size: 3.5rem; } 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= MÀN HÌNH 1: GIỚI THIỆU (INTRO SCREEN) ================= -->
+    <div id="intro-screen" class="screen-dark-bg fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div class="intro-container rounded-3xl p-10 md:p-16 text-center max-w-5xl w-full shadow-2xl flex flex-col items-center">
+            
+            <p class="text-gray-400 tracking-[0.25em] text-lg md:text-2xl uppercase mb-6 font-semibold">
+                Sản phẩm game được sáng tạo bởi
+            </p>
+            
+            <h2 class="text-[#fcd34d] text-6xl md:text-7xl font-bold mb-4 glow-text-yellow tracking-wide">
+                Thầy giáo
+            </h2>
+            
+            <h1 class="text-[#facc15] text-5xl sm:text-6xl md:text-8xl lg:text-[6rem] font-black uppercase mb-12 glow-text-yellow-bold whitespace-nowrap">
+                BÙI NGỌC THẮNG
+            </h1>
+            
+            <p class="text-white text-2xl md:text-4xl font-bold mb-14 tracking-wide">
+                Đơn vị công tác: Trường THPT Đan Phượng
+            </p>
+            
+            <button id="start-btn" class="bg-[#4ade80] hover:bg-[#22c55e] text-white font-bold py-4 px-12 rounded-full text-2xl md:text-4xl glow-btn-green transition-all transform hover:scale-105 flex items-center gap-3">
+                Tiếp tục <span class="text-3xl md:text-5xl">➡</span>
+            </button>
+            
+        </div>
+    </div>
+
+    <!-- ================= MÀN HÌNH 2: LUẬT CHƠI (RULES SCREEN) ================= -->
+    <div id="rules-screen" class="hidden screen-dark-bg fixed inset-0 items-center justify-center z-50 p-4">
+        <div class="intro-container rounded-3xl p-10 md:p-16 text-left max-w-4xl w-full shadow-2xl flex flex-col items-center">
+            
+            <h2 class="text-[#fcd34d] text-5xl md:text-7xl font-bold mb-10 glow-text-yellow tracking-wide text-center uppercase">
+                Luật Chơi
+            </h2>
+            
+            <ul class="text-white text-xl md:text-3xl space-y-6 mb-12 w-full font-medium leading-relaxed">
+                <li class="flex items-start">
+                    <span class="text-[#4ade80] mr-4 text-3xl md:text-4xl">✔</span>
+                    Bàn cờ có kích thước 20x20 ô vuông.
+                </li>
+                <li class="flex items-start">
+                    <span class="text-[#4ade80] mr-4 text-3xl md:text-4xl">✔</span>
+                    Hai đấu thủ thay phiên nhau đánh dấu X (Xanh) hoặc O (Đỏ).
+                </li>
+                <li class="flex items-start">
+                    <span class="text-[#4ade80] mr-4 text-3xl md:text-4xl">✔</span>
+                    Tạo được một đường thẳng (ngang, dọc, chéo) gồm đúng 5 dấu sẽ giành chiến thắng.
+                </li>
+                <li class="flex items-start">
+                    <span class="text-[#4ade80] mr-4 text-3xl md:text-4xl">✔</span>
+                    Trò chơi kết thúc khi có người thắng hoặc bàn cờ đã kín ô.
+                </li>
+            </ul>
+            
+            <button id="start-rules-btn" class="bg-[#4ade80] hover:bg-[#22c55e] text-white font-bold py-4 px-12 rounded-full text-2xl md:text-4xl glow-btn-green transition-all transform hover:scale-105 flex items-center gap-3">
+                Tiếp tục <span class="text-3xl md:text-5xl">➡</span>
+            </button>
+            
+        </div>
+    </div>
+
+    <!-- ================= MÀN HÌNH 3: THÔNG TIN NGƯỜI CHƠI ================= -->
+    <div id="player-screen" class="hidden screen-dark-bg fixed inset-0 items-center justify-center z-50 p-4">
+        <div class="intro-container rounded-3xl p-10 md:p-16 text-center max-w-4xl w-full shadow-2xl flex flex-col items-center">
+            
+            <!-- Biểu tượng bắt tay phát sáng -->
+            <div class="mb-6 text-[#facc15] text-8xl md:text-9xl glow-icon">
+                <i class="fa-solid fa-handshake"></i>
+            </div>
+            
+            <h2 class="text-[#fcd34d] text-4xl md:text-6xl font-bold mb-10 glow-text-yellow tracking-wide uppercase">
+                Giao hữu Cờ Caro
+            </h2>
+            
+            <div class="w-full space-y-8 mb-12">
+                <!-- Input Người chơi 1 -->
+                <div>
+                    <label for="p1-name" class="block text-left text-blue-400 text-2xl md:text-3xl mb-3 font-bold tracking-wide">
+                        <i class="fa-solid fa-user mr-2"></i> Họ và tên người chơi 1 (X)
+                    </label>
+                    <input type="text" id="p1-name" class="w-full px-6 py-4 rounded-2xl bg-gray-800 text-white border-2 border-gray-600 focus:border-blue-500 focus:ring-4 focus:ring-blue-500 outline-none transition-all text-2xl md:text-3xl placeholder-gray-500" placeholder="Nhập tên người chơi 1...">
+                </div>
+                
+                <!-- Input Người chơi 2 -->
+                <div>
+                    <label for="p2-name" class="block text-left text-red-400 text-2xl md:text-3xl mb-3 font-bold tracking-wide">
+                        <i class="fa-solid fa-user mr-2"></i> Họ và tên người chơi 2 (O)
+                    </label>
+                    <input type="text" id="p2-name" class="w-full px-6 py-4 rounded-2xl bg-gray-800 text-white border-2 border-gray-600 focus:border-red-500 focus:ring-4 focus:ring-red-500 outline-none transition-all text-2xl md:text-3xl placeholder-gray-500" placeholder="Nhập tên người chơi 2...">
+                </div>
+            </div>
+            
+            <button id="start-game-btn" class="bg-[#4ade80] hover:bg-[#22c55e] text-white font-bold py-4 px-12 rounded-full text-2xl md:text-4xl glow-btn-green transition-all transform hover:scale-105 flex items-center gap-3">
+                Bắt đầu trận đấu <i class="fa-solid fa-play ml-2"></i>
+            </button>
+            
+        </div>
+    </div>
+
+    <!-- ================= MÀN HÌNH 4: GAME ================= -->
+    <div id="game-screen" class="hidden min-h-screen flex-col items-center py-8 px-2 sm:px-6 w-full overflow-hidden">
+        
+        <!-- Header & Trạng thái -->
+        <div class="text-center mb-8 w-full max-w-5xl">
+            <h1 class="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-red-600 mb-4 drop-shadow-sm">
+                Cờ Caro 20x20
+            </h1>
+            <p class="text-gray-600 font-medium mb-6 text-2xl md:text-3xl">Giao hữu: <span id="display-p1" class="font-bold text-blue-600">P1</span> vs <span id="display-p2" class="font-bold text-red-600">P2</span></p>
+            
+            <div class="flex items-center justify-between bg-white px-8 py-4 rounded-3xl shadow-lg border border-gray-200 max-w-3xl mx-auto">
+                <div id="turn-indicator" class="text-2xl md:text-3xl font-bold flex items-center space-x-3">
+                    <span>Lượt của:</span>
+                    <span id="current-player-icon" class="text-blue-600 text-2xl md:text-4xl drop-shadow-sm">Nguyễn Văn A (X)</span>
+                </div>
+                <button id="reset-btn" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-200 shadow-md hover:shadow-xl active:scale-95 text-xl md:text-2xl ml-4">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Chơi lại
+                </button>
+            </div>
+        </div>
+
+        <!-- Bàn cờ cuộn ngang -->
+        <div class="board-wrapper">
+            <div id="board" class="board-container rounded-sm">
+                <!-- Các ô cờ sẽ được tạo bằng JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Thông báo Win -->
+    <div id="winner-modal" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-12 py-10 rounded-[2rem] shadow-[0_0_60px_rgba(0,0,0,0.5)] border-4 border-yellow-400 z-50 text-center flex-col items-center w-11/12 max-w-2xl">
+        <div class="text-8xl md:text-9xl mb-6">🏆</div>
+        <h2 class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight" id="winner-text">Người chơi X Thắng!</h2>
+        <p class="text-gray-500 mb-10 text-2xl md:text-3xl font-medium">Xin chúc mừng!</p>
+        <button id="modal-reset-btn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-4 px-12 rounded-full shadow-xl transition transform hover:scale-105 text-2xl md:text-3xl w-full">
+            Trận đấu mới
+        </button>
+    </div>
+
+    <script>
+        const BOARD_SIZE = 20;
+        const WIN_CONDITION = 5;
+        let board = [];
+        let currentPlayer = 'X';
+        let isGameOver = false;
+        let audioCtx = null;
+        
+        // Tên người chơi mặc định
+        let player1Name = "Người chơi 1";
+        let player2Name = "Người chơi 2";
+
+        // --- Elements DOM ---
+        const introScreen = document.getElementById('intro-screen');
+        const rulesScreen = document.getElementById('rules-screen');
+        const playerScreen = document.getElementById('player-screen');
+        const gameScreen = document.getElementById('game-screen');
+        
+        const startBtn = document.getElementById('start-btn');
+        const startRulesBtn = document.getElementById('start-rules-btn');
+        const startGameBtn = document.getElementById('start-game-btn');
+        
+        const p1Input = document.getElementById('p1-name');
+        const p2Input = document.getElementById('p2-name');
+        const displayP1 = document.getElementById('display-p1');
+        const displayP2 = document.getElementById('display-p2');
+        
+        const boardEl = document.getElementById('board');
+        const currentPlayerIconEl = document.getElementById('current-player-icon');
+        const winnerModal = document.getElementById('winner-modal');
+        const winnerText = document.getElementById('winner-text');
+        const resetBtn = document.getElementById('reset-btn');
+        const modalResetBtn = document.getElementById('modal-reset-btn');
+
+        // --- Chuyển màn hình ---
+        // Intro -> Rules
+        startBtn.addEventListener('click', () => {
+            introScreen.classList.add('hidden');
+            rulesScreen.classList.remove('hidden');
+            rulesScreen.classList.add('flex');
+        });
+
+        // Rules -> Player Form
+        startRulesBtn.addEventListener('click', () => {
+            rulesScreen.classList.remove('flex');
+            rulesScreen.classList.add('hidden');
+            playerScreen.classList.remove('hidden');
+            playerScreen.classList.add('flex');
+        });
+
+        // Player Form -> Game
+        startGameBtn.addEventListener('click', () => {
+            if (p1Input.value.trim() !== "") player1Name = p1Input.value.trim();
+            if (p2Input.value.trim() !== "") player2Name = p2Input.value.trim();
+
+            displayP1.textContent = player1Name;
+            displayP2.textContent = player2Name;
+
+            playerScreen.classList.remove('flex');
+            playerScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.add('flex');
+            
+            initAudio(); // Khởi tạo AudioContext
+            initGame();
+        });
+
+        // --- Web Audio API (Âm thanh) ---
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playClickSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = currentPlayer === 'X' ? 'sine' : 'triangle';
+            osc.frequency.setValueAtTime(currentPlayer === 'X' ? 600 : 400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(currentPlayer === 'X' ? 800 : 200, audioCtx.currentTime + 0.05);
+            
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playWinSound() {
+            if (!audioCtx) return;
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            const duration = 0.15;
+            
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'square';
+                osc.frequency.value = freq;
+                
+                const startTime = audioCtx.currentTime + index * duration;
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+                gain.gain.linearRampToValueAtTime(0, startTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            });
+        }
+
+        // --- Pháo hoa ---
+        function triggerFireworks() {
+            const duration = 3000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        // --- Logic Game ---
+        function initGame() {
+            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+            currentPlayer = 'X';
+            isGameOver = false;
+            updateTurnIndicator();
+            winnerModal.classList.add('hidden');
+            winnerModal.classList.remove('flex');
+            renderBoard();
+        }
+
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', handleCellClick);
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function updateTurnIndicator() {
+            const currentName = currentPlayer === 'X' ? player1Name : player2Name;
+            currentPlayerIconEl.textContent = `${currentName} (${currentPlayer})`;
+            
+            if (currentPlayer === 'X') {
+                currentPlayerIconEl.classList.remove('text-red-500');
+                currentPlayerIconEl.classList.add('text-blue-600');
+            } else {
+                currentPlayerIconEl.classList.remove('text-blue-600');
+                currentPlayerIconEl.classList.add('text-red-500');
+            }
+        }
+
+        function handleCellClick(e) {
+            initAudio();
+            if (isGameOver) return;
+
+            const r = parseInt(e.target.dataset.row);
+            const c = parseInt(e.target.dataset.col);
+
+            if (board[r][c] !== null) return;
+
+            board[r][c] = currentPlayer;
+            
+            e.target.textContent = currentPlayer;
+            e.target.classList.add('occupied');
+            if (currentPlayer === 'X') {
+                e.target.classList.add('text-blue-600');
+            } else {
+                e.target.classList.add('text-red-500');
+            }
+
+            playClickSound();
+
+            const winningCells = checkWin(r, c, currentPlayer);
+            if (winningCells) {
+                handleWin(winningCells, currentPlayer);
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                updateTurnIndicator();
+            }
+        }
+
+        function checkWin(r, c, player) {
+            const directions = [
+                [[0, 1], [0, -1]], // Ngang
+                [[1, 0], [-1, 0]], // Dọc
+                [[1, 1], [-1, -1]], // Chéo chính
+                [[1, -1], [-1, 1]] // Chéo phụ
+            ];
+
+            for (let dir of directions) {
+                let count = 1;
+                let cells = [[r, c]];
+
+                for (let way of dir) {
+                    let dr = way[0];
+                    let dc = way[1];
+                    let nr = r + dr;
+                    let nc = c + dc;
+
+                    while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === player) {
+                        count++;
+                        cells.push([nr, nc]);
+                        nr += dr;
+                        nc += dc;
+                    }
+                }
+
+                if (count >= WIN_CONDITION) {
+                    return cells;
+                }
+            }
+            return null;
+        }
+
+        function handleWin(winningCells, player) {
+            isGameOver = true;
+            playWinSound();
+            triggerFireworks();
+
+            const allCells = document.querySelectorAll('.cell');
+            winningCells.forEach(coord => {
+                const index = coord[0] * BOARD_SIZE + coord[1];
+                allCells[index].classList.add('win-highlight');
+            });
+
+            const winnerName = player === 'X' ? player1Name : player2Name;
+            const colorClass = player === 'X' ? 'text-blue-600' : 'text-red-600';
+            
+            winnerText.innerHTML = `<span class="${colorClass} font-black">${winnerName}</span> Thắng!`;
+            
+            setTimeout(() => {
+                winnerModal.classList.remove('hidden');
+                winnerModal.classList.add('flex');
+            }, 500);
+        }
+
+        resetBtn.addEventListener('click', initGame);
+        modalResetBtn.addEventListener('click', () => {
+            // Có thể reset lại form nhập tên nếu muốn, nhưng ở đây ta giữ nguyên tên và đấu lại
+            initGame(); 
+        });
+
+    </script>
+</body>
+</html>

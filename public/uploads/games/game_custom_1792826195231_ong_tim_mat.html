@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Ong Tìm Mật</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #87CEEB; /* Sky blue background */
+            background-image: radial-gradient(#ffffff 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+            touch-action: none; /* Prevent scrolling on touch devices */
+            margin: 0;
+            padding: 0;
+        }
+        
+        h1, .game-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #gameCanvas {
+            background-color: #90EE90; /* Light green grass */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 16px;
+            border: 4px solid #4CAF50;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Custom UI Panel */
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 24px;
+            border-radius: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        .btn-play {
+            background: linear-gradient(to bottom, #FFD700, #FFA500);
+            border: 3px solid #FFF;
+            box-shadow: 0 4px 0 #CC8400, 0 5px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .btn-play:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #CC8400, 0 2px 5px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container" class="p-2 sm:p-4">
+        
+        <div id="ui-panel" class="game-font text-xl md:text-2xl text-gray-800 flex items-center justify-between gap-6 pointer-events-auto">
+            <div class="flex items-center gap-2">
+                <span>🍯</span>
+                <span id="scoreDisplay">0</span>
+            </div>
+            <button id="pauseBtn" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-1 px-4 rounded-full text-lg shadow transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+                ⏸ Tạm Dừng
+            </button>
+        </div>
+
+        <!-- Main Canvas -->
+        <div class="relative w-full h-full max-w-4xl max-h-[800px] flex items-center justify-center">
+            <canvas id="gameCanvas"></canvas>
+
+            <!-- Intro Menu Overlay -->
+            <div id="introOverlay" class="overlay" style="background-color: #0f172a; z-index: 20;">
+                <div class="w-[95%] max-w-5xl rounded-2xl border border-gray-700/50 p-6 md:p-12 flex flex-col items-center text-center shadow-2xl" style="background-color: #1a2235;">
+                    <p class="text-[#94a3b8] tracking-[0.2em] md:tracking-[0.3em] uppercase text-sm md:text-lg font-bold mb-3 md:mb-4">Sản phẩm game được sáng tạo bởi</p>
+                    <h2 class="game-font text-3xl md:text-5xl text-[#facc15] mb-1" style="text-shadow: 0 0 15px rgba(250, 204, 21, 0.6), 0 0 30px rgba(250, 204, 21, 0.4);">Thầy giáo</h2>
+                    <h1 class="game-font text-3xl sm:text-5xl md:text-6xl text-[#facc15] uppercase mb-6 md:mb-8 whitespace-nowrap" style="text-shadow: 0 0 20px rgba(250, 204, 21, 0.6), 0 0 40px rgba(250, 204, 21, 0.4);">BÙI NGỌC THẮNG</h1>
+                    <p class="text-white text-lg md:text-2xl font-bold mb-8 md:mb-10">Đơn vị công tác: Trường THPT Đan Phượng</p>
+                    <button id="continueBtn" class="bg-[#4ade80] hover:bg-[#22c55e] text-white font-bold text-xl md:text-2xl py-3 px-8 md:px-10 rounded-full shadow-[0_0_20px_rgba(74,222,128,0.4)] transition-transform hover:scale-105 active:scale-95 cursor-pointer pointer-events-auto">
+                        Tiếp tục ➔
+                    </button>
+                </div>
+            </div>
+
+            <!-- Start Menu Overlay -->
+            <div id="startOverlay" class="overlay hidden">
+                <h1 class="text-7xl md:text-8xl text-white mb-4 text-center drop-shadow-lg">Ong Tìm Mật</h1>
+                <p class="text-white text-2xl md:text-3xl mb-10 text-center px-4 max-w-2xl">
+                    Di chuyển chuột, chạm màn hình hoặc dùng phím mũi tên để điều khiển ong 🐝 ăn mật 🌸 và tránh nhện 🕷️!
+                </p>
+                <button id="startBtn" class="btn-play game-font text-white text-4xl py-4 px-10 rounded-full cursor-pointer pointer-events-auto hover:brightness-110">
+                    BẮT ĐẦU
+                </button>
+            </div>
+
+            <div id="pauseOverlay" class="overlay hidden">
+                <h1 class="text-6xl md:text-7xl text-yellow-400 mb-6 drop-shadow-lg game-font">TẠM DỪNG</h1>
+                <p class="text-white text-xl md:text-2xl mb-8">Trò chơi đang tạm dừng.</p>
+                <button id="resumeBtn" class="btn-play game-font text-white text-3xl py-3 px-8 rounded-full cursor-pointer pointer-events-auto hover:brightness-110">
+                    TIẾP TỤC CHƠI
+                </button>
+            </div>
+
+            <!-- Game Over Overlay -->
+            <div id="gameOverOverlay" class="overlay hidden">
+                <h1 class="text-5xl md:text-6xl text-red-500 mb-2 drop-shadow-lg">Game Over!</h1>
+                <p class="text-white text-xl md:text-2xl mb-2">Điểm của bạn: <span id="finalScore" class="game-font text-yellow-400">0</span></p>
+                <button id="restartBtn" class="btn-play game-font text-white text-2xl py-3 px-8 mt-6 rounded-full cursor-pointer pointer-events-auto hover:brightness-110">
+                    CHƠI LẠI
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // UI Elements
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const introOverlay = document.getElementById('introOverlay');
+        const continueBtn = document.getElementById('continueBtn');
+        const startOverlay = document.getElementById('startOverlay');
+        const pauseOverlay = document.getElementById('pauseOverlay');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resumeBtn = document.getElementById('resumeBtn');
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        const finalScore = document.getElementById('finalScore');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // Game State
+        let isPlaying = false;
+        let isPaused = false;
+        let score = 0;
+        let animationId;
+        
+        // Dimensions
+        let width = canvas.width;
+        let height = canvas.height;
+
+        // Load Images
+        const beeImg = new Image();
+        beeImg.src = 'ong 1.png';
+        const flowerImg = new Image();
+        flowerImg.src = 'Hoa.jpg';
+
+        // Entities
+        let player = {
+            x: 0, y: 0, 
+            targetX: 0, targetY: 0,
+            size: 24, // Radius
+            speed: 0.1, // Lerp factor for smooth follow
+            emoji: '🐝'
+        };
+
+        // Danh sách công thức Đạo Hàm Toán 11 chuẩn ký hiệu
+        const derivativeFormulas = [
+            "(C)' = 0",
+            "(x)' = 1",
+            "(xⁿ)' = n·xⁿ⁻¹",
+            "(√x)' = 1 / (2√x)",
+            "(sin x)' = cos x",
+            "(cos x)' = -sin x",
+            "(tan x)' = 1 / cos²x",
+            "(cot x)' = -1 / sin²x",
+            "(u ± v)' = u' ± v'",
+            "(u·v)' = u'v + uv'",
+            "(u/v)' = (u'v - uv')/v²",
+            "(sin u)' = u'·cos u",
+            "(cos u)' = -u'·sin u"
+        ];
+
+        let flowers = [];
+        let spiders = [];
+        let particles = [];
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            width = canvas.width;
+            height = canvas.height;
+            
+            // Re-center player if game hasn't started
+            if (!isPlaying) {
+                player.x = width / 2;
+                player.y = height / 2;
+                player.targetX = width / 2;
+                player.targetY = height / 2;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function initGame() {
+            resizeCanvas();
+            score = 0;
+            scoreDisplay.textContent = score;
+            
+            // Reset player to center
+            player.x = width / 2;
+            player.y = height / 2;
+            player.targetX = width / 2;
+            player.targetY = height / 2;
+
+            flowers = [];
+            spiders = [];
+            particles = [];
+
+            // Spawn initial items
+            spawnFlower();
+            spawnFlower();
+            spawnSpider();
+
+            isPlaying = true;
+            isPaused = false;
+            startOverlay.classList.add('hidden');
+            pauseOverlay.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden');
+            pauseBtn.textContent = '⏸ Tạm Dừng';
+            
+            // Start game loop
+            cancelAnimationFrame(animationId);
+            gameLoop();
+        }
+
+        function togglePause() {
+            if (!isPlaying && !isPaused) return;
+            
+            if (!isPaused) {
+                isPaused = true;
+                isPlaying = false;
+                cancelAnimationFrame(animationId);
+                pauseOverlay.classList.remove('hidden');
+                pauseBtn.textContent = '▶ Tiếp Tục';
+            } else {
+                isPaused = false;
+                isPlaying = true;
+                pauseOverlay.classList.add('hidden');
+                pauseBtn.textContent = '⏸ Tạm Dừng';
+                gameLoop();
+            }
+        }
+
+        function spawnFlower() {
+            const margin = 40;
+            const randomFormula = derivativeFormulas[Math.floor(Math.random() * derivativeFormulas.length)];
+            
+            flowers.push({
+                x: margin + Math.random() * (width - margin * 2),
+                y: margin + Math.random() * (height - margin * 2),
+                size: 20,
+                emoji: '🌸',
+                wobble: Math.random() * Math.PI * 2,
+                formula: randomFormula
+            });
+        }
+
+        function spawnSpider() {
+            const margin = 30;
+            // Determine spawn edge (0: top, 1: right, 2: bottom, 3: left)
+            let edge = Math.floor(Math.random() * 4);
+            let x, y;
+            if(edge === 0) { x = Math.random() * width; y = -margin; }
+            else if(edge === 1) { x = width + margin; y = Math.random() * height; }
+            else if(edge === 2) { x = Math.random() * width; y = height + margin; }
+            else { x = -margin; y = Math.random() * height; }
+
+            // Random velocity
+            const speed = 1.5 + Math.random() * 1.5 + (score * 0.1); // Gets faster with score
+            const angle = Math.atan2(player.y - y, player.x - x) + (Math.random() - 0.5); // Roughly towards player
+
+            spiders.push({
+                x: x, y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: 22,
+                emoji: '🕷️'
+            });
+        }
+
+        function createParticles(x, y, color) {
+            for(let i=0; i<8; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    life: 1,
+                    color: color
+                });
+            }
+        }
+
+        function update() {
+            if (!isPlaying || isPaused) return;
+
+            // Player movement (smooth follow target)
+            player.x += (player.targetX - player.x) * player.speed;
+            player.y += (player.targetY - player.y) * player.speed;
+
+            // Keep player in bounds
+            player.x = Math.max(player.size, Math.min(width - player.size, player.x));
+            player.y = Math.max(player.size, Math.min(height - player.size, player.y));
+
+            // Check flower collisions
+            for (let i = flowers.length - 1; i >= 0; i--) {
+                const f = flowers[i];
+                f.wobble += 0.05; // Animation wobble
+                
+                const dx = player.x - f.x;
+                const dy = player.y - f.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < player.size + f.size - 5) {
+                    // Collected!
+                    flowers.splice(i, 1);
+                    score += 10;
+                    scoreDisplay.textContent = score;
+                    createParticles(f.x, f.y, '#FF69B4');
+                    
+                    spawnFlower();
+                    // Every 30 points, spawn a new spider
+                    if (score % 30 === 0) spawnSpider();
+                }
+            }
+
+            // Update & check spider collisions
+            for (let i = spiders.length - 1; i >= 0; i--) {
+                const s = spiders[i];
+                s.x += s.vx;
+                s.y += s.vy;
+
+                // Bounce off walls
+                if (s.x < -50 || s.x > width + 50) s.vx *= -1;
+                if (s.y < -50 || s.y > height + 50) s.vy *= -1;
+
+                // Simple homing behavior (slowly adjust towards player)
+                const angleToPlayer = Math.atan2(player.y - s.y, player.x - s.x);
+                const currentAngle = Math.atan2(s.vy, s.vx);
+                const newAngle = currentAngle + (angleToPlayer - currentAngle) * 0.01;
+                const speed = Math.sqrt(s.vx*s.vx + s.vy*s.vy);
+                s.vx = Math.cos(newAngle) * speed;
+                s.vy = Math.sin(newAngle) * speed;
+
+                // Collision with player
+                const dx = player.x - s.x;
+                const dy = player.y - s.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < player.size + s.size - 8) { // -8 gives a bit of leeway
+                    gameOver();
+                }
+            }
+
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw flowers
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            for (const f of flowers) {
+                ctx.save();
+                ctx.translate(f.x, f.y + Math.sin(f.wobble) * 3);
+                if (flowerImg.complete && flowerImg.naturalWidth !== 0) {
+                    // Kích thước ảnh hoa
+                    ctx.drawImage(flowerImg, -f.size * 6, -f.size * 6, f.size * 12, f.size * 12);
+                } else {
+                    ctx.font = `${f.size * 2}px Arial`;
+                    ctx.fillText(f.emoji, 0, 0);
+                }
+                
+                // Vẽ công thức Đạo Hàm ở giữa bông hoa
+                ctx.font = "bold 18px 'Nunito', sans-serif";
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.95)"; // Viền trắng nổi bật chữ
+                ctx.lineWidth = 4;
+                ctx.strokeText(f.formula, 0, 0);
+                ctx.fillStyle = "#111827"; // Chữ màu xám đen đậm
+                ctx.fillText(f.formula, 0, 0);
+                
+                ctx.restore();
+            }
+
+            // Draw spiders
+            for (const s of spiders) {
+                ctx.save();
+                ctx.translate(s.x, s.y);
+                // Rotate spider slightly based on movement
+                ctx.rotate(Math.atan2(s.vy, s.vx) + Math.PI/2); 
+                ctx.font = `${s.size * 2}px Arial`;
+                ctx.fillText(s.emoji, 0, 0);
+                ctx.restore();
+            }
+
+            // Draw particles
+            for (const p of particles) {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Draw player
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            // Flip bee if moving left
+            if (player.targetX < player.x - 2) {
+                ctx.scale(-1, 1);
+            }
+            if (beeImg.complete && beeImg.naturalWidth !== 0) {
+                // Draw bee image slightly larger than collision radius for aesthetics
+                ctx.drawImage(beeImg, -player.size * 2, -player.size * 2, player.size * 4, player.size * 4);
+            } else {
+                ctx.font = `${player.size * 2}px Arial`;
+                ctx.fillText(player.emoji, 0, 0);
+            }
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            if (!isPlaying || isPaused) return;
+            update();
+            draw();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            isPaused = false;
+            finalScore.textContent = score;
+            gameOverOverlay.classList.remove('hidden');
+        }
+
+        // Mouse and Touch Controls
+        function setTarget(e) {
+            if (!isPlaying || isPaused) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            player.targetX = (clientX - rect.left) * scaleX;
+            player.targetY = (clientY - rect.top) * scaleY;
+        }
+
+        canvas.addEventListener('mousemove', setTarget);
+        canvas.addEventListener('touchmove', setTarget, { passive: false });
+        canvas.addEventListener('touchstart', setTarget, { passive: false });
+
+        // Keyboard Controls
+        const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, a: false, s: false, d: false };
+        
+        window.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = true;
+                handleKeyboard();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+        });
+
+        function handleKeyboard() {
+            if (!isPlaying || isPaused) return;
+            const step = 40;
+            if (keys.ArrowUp || keys.w) player.targetY -= step;
+            if (keys.ArrowDown || keys.s) player.targetY += step;
+            if (keys.ArrowLeft || keys.a) player.targetX -= step;
+            if (keys.ArrowRight || keys.d) player.targetX += step;
+        }
+
+        continueBtn.addEventListener('click', () => {
+            introOverlay.classList.add('hidden');
+            startOverlay.classList.remove('hidden');
+        });
+        startBtn.addEventListener('click', initGame);
+        restartBtn.addEventListener('click', initGame);
+        pauseBtn.addEventListener('click', togglePause);
+        resumeBtn.addEventListener('click', togglePause);
+
+        window.onload = () => {
+            resizeCanvas();
+            draw();
+        };
+    </script>
+</body>
+</html>

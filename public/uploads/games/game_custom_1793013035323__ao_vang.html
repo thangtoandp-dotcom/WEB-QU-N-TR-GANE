@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <!-- Cấu hình viewport cực kỳ quan trọng cho mobile: khóa zoom, full màn hình -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bé Đào Vàng 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load thư viện Three.js để dựng 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Load MathJax để hiển thị công thức Toán học chuẩn -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap');
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #87CEEB; /* Màu trời */
+            font-family: 'Baloo 2', cursive, sans-serif;
+            /* Ngăn các hành vi cuộn, kéo trang mặc định trên điện thoại */
+            touch-action: none; 
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        #game-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Cho phép touch/click xuyên qua UI xuống canvas */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 5;
+        }
+
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 4px solid #FFC107;
+            border-radius: 16px;
+            padding: 8px 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .score-text {
+            color: #FF5722;
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 0;
+            text-shadow: 1px 1px 0px #fff;
+        }
+
+        .timer-text {
+            color: #2196F3;
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        /* Màn hình Start và Game Over */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto; /* Bắt sự kiện click cho các nút */
+            z-index: 10;
+        }
+
+        .menu-box {
+            background: linear-gradient(135deg, #fff9c4, #ffeb3b);
+            border: 6px solid #FF9800;
+            border-radius: 24px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            width: 90%;
+            max-width: 400px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .title {
+            color: #E65100;
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0,0,0,0.1);
+        }
+
+        .btn-play {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #2E7D32, 0 10px 10px rgba(0,0,0,0.2);
+            transition: all 0.1s;
+            font-family: inherit;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .btn-play:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 #2E7D32, 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Style cho nút trả lời trắc nghiệm */
+        .btn-option {
+            background: #fff;
+            color: #333;
+            border: 3px solid #1976D2;
+            padding: 16px 20px;
+            font-size: 1.5rem;
+            font-family: Arial, sans-serif;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .btn-option:hover { background: #e3f2fd; }
+        .btn-option:disabled { cursor: not-allowed; opacity: 0.9; }
+        .btn-option.correct {
+            background: #4CAF50 !important;
+            color: white !important;
+            border-color: #2E7D32 !important;
+        }
+        .btn-option.wrong {
+            background: #F44336 !important;
+            color: white !important;
+            border-color: #C62828 !important;
+        }
+        
+        #question-text {
+            font-family: Arial, sans-serif;
+            font-size: 1.7rem;
+            line-height: 1.6;
+        }
+
+        /* Đảm bảo modal câu hỏi luôn luôn nằm trên cùng */
+        #question-modal {
+            z-index: 9999 !important; 
+        }
+
+        @media (min-width: 768px) {
+            .score-text, .timer-text { font-size: 1.5rem; }
+            .title { font-size: 3.5rem; }
+            .btn-play { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas chứa game 3D -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Giao diện trong game (HUD) -->
+    <div class="ui-layer" id="hud" style="display: none;">
+        <div class="hud-top">
+            <div class="panel">
+                <p class="score-text">ĐIỂM: <span id="score-val">0</span></p>
+            </div>
+            <div class="panel">
+                <p class="timer-text">GIỜ: <span id="timer-val">60</span>s</p>
+            </div>
+        </div>
+        <!-- Vùng hướng dẫn nhấp nháy ở dưới -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <span style="background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; color: white; font-size: 1.2rem; animation: pulse 1.5s infinite;">
+                Chạm màn hình để thả ngàm
+            </span>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes pulse {
+            0% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.7; transform: scale(1); }
+        }
+    </style>
+
+    <!-- Màn hình Bắt đầu -->
+    <div class="overlay" id="start-screen">
+        <div class="menu-box">
+            <h1 class="title">Bé Đào Vàng<br>3D</h1>
+            <p class="text-lg md:text-xl mb-6 text-gray-800 font-bold">Kéo thật nhiều vàng nhé!</p>
+            <button class="btn-play" onclick="startGame()">CHƠI NGAY</button>
+        </div>
+    </div>
+
+    <!-- Màn hình Kết thúc -->
+    <div class="overlay hidden" id="game-over-screen">
+        <div class="menu-box">
+            <h1 class="title" style="color: #D32F2F;">HẾT GIỜ!</h1>
+            <p class="text-xl mb-2 text-gray-800 font-bold">Điểm của bạn:</p>
+            <p class="text-6xl mb-6 text-orange-600 font-black" id="final-score">0</p>
+            <button class="btn-play" onclick="resetGame()">CHƠI LẠI</button>
+        </div>
+    </div>
+
+    <!-- Màn hình Câu hỏi Toán học -->
+    <div class="overlay hidden" id="question-modal" style="z-index: 20;">
+        <div class="menu-box" style="max-width: 750px; width: 95%; padding: 30px;">
+            <h2 class="title" style="font-size: 2.2rem; color: #1976D2; margin-bottom: 20px;">Toán 12 - Giải Tích</h2>
+            <div id="question-text" class="mb-8 font-bold text-gray-800 text-left">
+                <!-- Nội dung câu hỏi -->
+            </div>
+            <div id="options-container" class="grid grid-cols-1 gap-4">
+                <!-- Các phương án -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Các biến toàn cục cho game logic
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = false;
+        let timerInterval;
+        let isQuestionActive = false; // Trạng thái đang trả lời câu hỏi
+
+        // Kho câu hỏi Toán 12 (Đơn điệu, Cực trị, GTLN/GTNN, Tiệm cận)
+        const mathQuestions = [
+            {
+                q: "Cho hàm số \\( y = x^3 - 3x^2 + 2 \\). Hàm số nghịch biến trên khoảng nào dưới đây?",
+                opts: ["\\( (0; 2) \\)", "\\( (-\\infty; 0) \\)", "\\( (2; +\\infty) \\)", "\\( (0; +\\infty) \\)"],
+                ans: 0 // A là đúng (mảng xáo trộn sau)
+            },
+            {
+                q: "Điểm cực đại của đồ thị hàm số \\( y = -x^3 + 3x - 1 \\) là:",
+                opts: ["\\( (1; 1) \\)", "\\( (-1; -3) \\)", "\\( (0; -1) \\)", "\\( (-1; 1) \\)"],
+                ans: 0
+            },
+            {
+                q: "Giá trị nhỏ nhất của hàm số \\( y = x^4 - 2x^2 + 3 \\) trên đoạn \\( [0; 2] \\) là:",
+                opts: ["\\( 2 \\)", "\\( 3 \\)", "\\( 11 \\)", "\\( 0 \\)"],
+                ans: 0
+            },
+            {
+                q: "Đường tiệm cận đứng của đồ thị hàm số \\( y = \\frac{2x-1}{x+2} \\) là đường thẳng có phương trình:",
+                opts: ["\\( x = -2 \\)", "\\( x = 2 \\)", "\\( y = 2 \\)", "\\( y = -2 \\)"],
+                ans: 0
+            },
+            {
+                q: "Tiệm cận ngang của đồ thị hàm số \\( y = \\frac{3x-2}{x-1} \\) là đường thẳng:",
+                opts: ["\\( y = 3 \\)", "\\( x = 1 \\)", "\\( y = -2 \\)", "\\( y = -3 \\)"],
+                ans: 0
+            },
+            {
+                q: "Hàm số \\( y = x^4 + 2x^2 - 3 \\) có bao nhiêu điểm cực trị?",
+                opts: ["\\( 1 \\)", "\\( 0 \\)", "\\( 2 \\)", "\\( 3 \\)"],
+                ans: 0
+            },
+            {
+                q: "Cho hàm số \\( y = \\frac{x+1}{x-1} \\). Mệnh đề nào sau đây đúng?",
+                opts: ["Hàm số nghịch biến trên các khoảng \\( (-\\infty; 1) \\) và \\( (1; +\\infty) \\).", "Hàm số đồng biến trên các khoảng \\( (-\\infty; 1) \\) và \\( (1; +\\infty) \\).", "Hàm số nghịch biến trên \\( \\mathbb{R} \\).", "Hàm số đồng biến trên \\( \\mathbb{R} \\)."],
+                ans: 0
+            },
+            {
+                q: "Gọi \\( M, m \\) lần lượt là giá trị lớn nhất và giá trị nhỏ nhất của hàm số \\( y = x^3 - 3x^2 + 1 \\) trên đoạn \\( [1; 3] \\). Tính tổng \\( M + m \\).",
+                opts: ["\\( -2 \\)", "\\( 2 \\)", "\\( -4 \\)", "\\( 4 \\)"],
+                ans: 0
+            },
+            {
+                q: "Tiệm cận ngang của đồ thị hàm số \\( y = \\frac{5x+1}{x-2} \\) là đường thẳng có phương trình:",
+                opts: ["\\( y = 5 \\)", "\\( x = 2 \\)", "\\( y = -5 \\)", "\\( y = \\frac{-1}{2} \\)"],
+                ans: 0
+            },
+            {
+                q: "Hàm số \\( y = -x^4 + 2x^2 + 1 \\) đồng biến trên khoảng nào dưới đây?",
+                opts: ["\\( (-\\infty; -1) \\)", "\\( (-1; 0) \\)", "\\( (1; +\\infty) \\)", "\\( (-\\infty; 1) \\)"],
+                ans: 0
+            },
+            {
+                q: "Giá trị lớn nhất của hàm số \\( y = \\frac{2x-1}{x+1} \\) trên đoạn \\( [0; 2] \\) là:",
+                opts: ["\\( 1 \\)", "\\( -1 \\)", "\\( 2 \\)", "\\( \\frac{1}{2} \\)"],
+                ans: 0
+            },
+            {
+                q: "Giao điểm hai đường tiệm cận của đồ thị hàm số \\( y = \\frac{2x+1}{x-1} \\) có tọa độ là:",
+                opts: ["\\( (1; 2) \\)", "\\( (2; 1) \\)", "\\( (-1; 2) \\)", "\\( (1; -1) \\)"],
+                ans: 0
+            },
+            {
+                q: "Hàm số nào dưới đây có đúng một điểm cực trị?",
+                opts: ["\\( y = x^4 + 2x^2 - 1 \\)", "\\( y = x^3 - 3x \\)", "\\( y = x^4 - 2x^2 \\)", "\\( y = \\frac{x+1}{x-1} \\)"],
+                ans: 0
+            }
+        ];
+
+        // Các biến Three.js
+        let scene, camera, renderer;
+        let babyGroup, hookGroup, ropeMesh;
+        let items = []; // Mảng chứa vàng và đá
+        
+        // Cơ chế ngàm
+        let pivotPos = new THREE.Vector3(0, 5, 0); // Vị trí quay của dây
+        let hookAngle = 0;
+        let hookLength = 2;
+        let minLength = 2;
+        let maxLength = 25;
+        let swingDir = 1;
+        let swingSpeed = 0.025; // Tăng tốc độ lắc nhẹ để chơi trên mobile mượt hơn
+        
+        // Trạng thái ngàm: 'swing' (đang lắc), 'shoot' (đang thả xuống), 'pull' (đang kéo lên)
+        let hookState = 'swing'; 
+        let shootSpeed = 0.5;
+        let pullSpeedBase = 0.35;
+        let currentPullSpeed = 0.35;
+        let caughtItem = null;
+        let audioCtx;
+
+        // Cấu hình âm thanh (dùng Web Audio API)
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'shoot') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now); osc.stop(now + 0.15);
+            } else if (type === 'catch_gold') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.setValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'catch_rock') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            }
+        }
+
+        // Khởi tạo Three.js
+        function init3D() {
+            const canvas = document.getElementById('game-canvas');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); 
+            scene.fog = new THREE.FogExp2(0x87CEEB, 0.015);
+
+            // Camera - tinh chỉnh góc nhìn rộng hơn để bao quát trên mobile
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(55, aspect, 0.1, 1000);
+            camera.position.set(0, 2, 28); 
+            camera.lookAt(0, -4, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Tối ưu hiệu năng trên mobile
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(10, 20, 10);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 1024;
+            dirLight.shadow.mapSize.height = 1024;
+            scene.add(dirLight);
+
+            // Tạo môi trường và nhân vật
+            createEnvironment();
+            createBaby();
+            createHookSystem();
+
+            // Đăng ký sự kiện Tương tác (Hỗ trợ cả Mobile và PC cực nhạy)
+            const handleInteract = (e) => {
+                if (e.target === canvas) {
+                    e.preventDefault(); 
+                    // KHẮC PHỤC LỖI PC: Khóa hoàn toàn thao tác bấm khi câu hỏi đang hiện
+                    if (!gameActive || isQuestionActive) return; 
+                    
+                    if (hookState === 'swing') {
+                        hookState = 'shoot';
+                        playSound('shoot');
+                    }
+                }
+            };
+
+            canvas.addEventListener('mousedown', handleInteract);
+            canvas.addEventListener('touchstart', handleInteract, {passive: false});
+
+            // Resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            animate();
+        }
+
+        function createEnvironment() {
+            // Đất
+            const groundGeo = new THREE.PlaneGeometry(80, 50);
+            const groundMat = new THREE.MeshLambertMaterial({ color: 0x5C4033 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.position.set(0, -20, -3);
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Cỏ 
+            const grassGeo = new THREE.BoxGeometry(80, 2, 6);
+            const grassMat = new THREE.MeshLambertMaterial({ color: 0x4CAF50 });
+            const grass = new THREE.Mesh(grassGeo, grassMat);
+            grass.position.set(0, 5, -2);
+            grass.receiveShadow = true;
+            scene.add(grass);
+        }
+
+        function createBaby() {
+            babyGroup = new THREE.Group();
+            babyGroup.position.set(0, 6.5, 0);
+
+            const skinMat = new THREE.MeshLambertMaterial({ color: 0xffccaa });
+            const shirtMat = new THREE.MeshLambertMaterial({ color: 0x2196F3 });
+            const hatMat = new THREE.MeshLambertMaterial({ color: 0xFFC107 });
+            const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+            // Thân
+            const body = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), shirtMat);
+            body.scale.set(1, 0.8, 0.8);
+            body.castShadow = true;
+            babyGroup.add(body);
+
+            // Đầu
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), skinMat);
+            head.position.y = 1.2;
+            head.castShadow = true;
+            babyGroup.add(head);
+
+            // Mắt
+            const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
+            const eyeL = new THREE.Mesh(eyeGeo, blackMat); eyeL.position.set(-0.3, 1.3, 0.75);
+            const eyeR = new THREE.Mesh(eyeGeo, blackMat); eyeR.position.set(0.3, 1.3, 0.75);
+            babyGroup.add(eyeL); babyGroup.add(eyeR);
+
+            // Mũ
+            const hat = new THREE.Mesh(new THREE.ConeGeometry(1, 1.2, 32), hatMat);
+            hat.position.y = 2.0;
+            hat.rotation.x = -0.1;
+            hat.castShadow = true;
+            babyGroup.add(hat);
+            
+            // Tay
+            const armGeo = new THREE.CylinderGeometry(0.2, 0.2, 1.2, 16);
+            const armL = new THREE.Mesh(armGeo, skinMat);
+            armL.position.set(-1.1, 0.5, 0.5);
+            armL.rotation.set(Math.PI/2, 0, -Math.PI/4);
+            const armR = new THREE.Mesh(armGeo, skinMat);
+            armR.position.set(1.1, 0.5, 0.5);
+            armR.rotation.set(Math.PI/2, 0, Math.PI/4);
+            babyGroup.add(armL); babyGroup.add(armR);
+
+            scene.add(babyGroup);
+        }
+
+        function createHookSystem() {
+            // Máy tời
+            const winch = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 16), new THREE.MeshLambertMaterial({ color: 0x607D8B }));
+            winch.rotation.z = Math.PI / 2;
+            winch.position.set(0, 5, 0.5);
+            scene.add(winch);
+
+            // Dây cáp
+            const ropeGeo = new THREE.CylinderGeometry(0.06, 0.06, 1, 8);
+            ropeGeo.translate(0, -0.5, 0); 
+            ropeMesh = new THREE.Mesh(ropeGeo, new THREE.MeshBasicMaterial({ color: 0x222222 }));
+            ropeMesh.position.copy(pivotPos);
+            scene.add(ropeMesh);
+
+            // Ngàm
+            hookGroup = new THREE.Group();
+            const clawMat = new THREE.MeshLambertMaterial({ color: 0xCFD8DC });
+            
+            const top = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.2), clawMat);
+            const prongL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.8, 0.2), clawMat); prongL.position.set(-0.35, -0.4, 0);
+            const prongR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.8, 0.2), clawMat); prongR.position.set(0.35, -0.4, 0);
+            
+            hookGroup.add(top); hookGroup.add(prongL); hookGroup.add(prongR);
+            scene.add(hookGroup);
+
+            updateHookTransform();
+        }
+
+        function spawnItems() {
+            items.forEach(item => scene.remove(item.mesh));
+            items = [];
+
+            const goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.9, roughness: 0.1 });
+            const rockMat = new THREE.MeshLambertMaterial({ color: 0x757575 });
+
+            // Số lượng thay đổi theo tỉ lệ khung hình (nhiều hơn trên màn hình rộng)
+            const isMobile = window.innerWidth < 768;
+            const goldCount = isMobile ? 6 : 9;
+            const rockCount = isMobile ? 4 : 6;
+            const spreadX = isMobile ? 12 : 22; // Độ rộng rải vật phẩm
+
+            for (let i = 0; i < goldCount; i++) createItem('gold', goldMat, spreadX);
+            for (let i = 0; i < rockCount; i++) createItem('rock', rockMat, spreadX);
+        }
+
+        function createItem(type, material, spreadX) {
+            let size, scoreValue, weight;
+            if (type === 'gold') {
+                size = Math.random() * 0.8 + 0.4;
+                scoreValue = Math.floor(size * 250); 
+                weight = size;
+            } else {
+                size = Math.random() * 1.2 + 0.6;
+                scoreValue = 10; 
+                weight = size * 3; 
+            }
+
+            const geo = new THREE.DodecahedronGeometry(size, 0);
+            const pos = geo.attributes.position;
+            for(let i=0; i<pos.count; i++){
+                pos.setX(i, pos.getX(i) + (Math.random()-0.5)*0.15);
+                pos.setY(i, pos.getY(i) + (Math.random()-0.5)*0.15);
+                pos.setZ(i, pos.getZ(i) + (Math.random()-0.5)*0.15);
+            }
+            geo.computeVertexNormals();
+
+            const mesh = new THREE.Mesh(geo, material);
+            
+            // Đảm bảo sinh ra trong giới hạn màn hình
+            let x = (Math.random() - 0.5) * spreadX; 
+            let y = -Math.random() * 16 - 3;   
+            
+            mesh.position.set(x, y, 0);
+            mesh.castShadow = true;
+            
+            scene.add(mesh);
+
+            items.push({ mesh, type, size, score: scoreValue, weight, active: true });
+        }
+
+        function updateHookTransform() {
+            ropeMesh.rotation.z = hookAngle;
+            ropeMesh.scale.y = hookLength;
+
+            const hx = pivotPos.x + Math.sin(hookAngle) * hookLength;
+            const hy = pivotPos.y - Math.cos(hookAngle) * hookLength;
+            
+            hookGroup.position.set(hx, hy, 0);
+            hookGroup.rotation.z = hookAngle; 
+        }
+
+        function checkCollisions() {
+            for (let i = 0; i < items.length; i++) {
+                let item = items[i];
+                if (!item.active) continue;
+
+                let dist = hookGroup.position.distanceTo(item.mesh.position);
+                
+                // Va chạm mềm hơn chút
+                if (dist < item.size + 0.6) {
+                    caughtItem = item;
+                    item.active = false;
+                    hookState = 'pull';
+                    currentPullSpeed = pullSpeedBase / (1 + item.weight * 0.6);
+                    
+                    if(item.type === 'gold') playSound('catch_gold');
+                    else playSound('catch_rock');
+
+                    break;
+                }
+            }
+        }
+
+        function updateGame() {
+            if (!gameActive || isQuestionActive) return;
+
+            // Hiệu ứng baby
+            babyGroup.position.y = 6.5 + Math.sin(Date.now() * 0.005) * 0.1;
+
+            if (hookState === 'swing') {
+                hookAngle += swingSpeed * swingDir;
+                // Giới hạn góc lắc (tùy thuộc màn hình để không lắc ra ngoài quá xa)
+                const maxAngle = window.innerWidth < 768 ? 1.0 : 1.3;
+                if (hookAngle > maxAngle) { hookAngle = maxAngle; swingDir = -1; }
+                if (hookAngle < -maxAngle) { hookAngle = -maxAngle; swingDir = 1; }
+                
+            } else if (hookState === 'shoot') {
+                hookLength += shootSpeed;
+                checkCollisions();
+                if (hookLength > maxLength) {
+                    hookLength = maxLength;
+                    hookState = 'pull';
+                    currentPullSpeed = pullSpeedBase; 
+                }
+
+            } else if (hookState === 'pull') {
+                hookLength -= currentPullSpeed;
+
+                if (caughtItem) {
+                    caughtItem.mesh.position.copy(hookGroup.position);
+                    caughtItem.mesh.position.y -= 0.6; 
+                }
+
+                if (hookLength <= minLength) {
+                    hookLength = minLength;
+                    hookState = 'swing';
+                    
+                    if (caughtItem) {
+                        if (caughtItem.type === 'gold') {
+                            // Tạm dừng game để bật modal câu hỏi
+                            isQuestionActive = true;
+                            showQuestion(caughtItem);
+                        } else {
+                            // Là cục đá, tính điểm bình thường, không hỏi
+                            processCaughtItem(caughtItem, true);
+                        }
+                    }
+                }
+            }
+            updateHookTransform();
+        }
+
+        // Logic xử lý thu hoạch vật phẩm
+        function processCaughtItem(item, isCorrect) {
+            if (isCorrect) {
+                score += item.score;
+                const scoreEl = document.getElementById('score-val');
+                scoreEl.innerText = score;
+                
+                // Hiệu ứng nhảy số
+                const textEl = document.querySelector('.score-text');
+                textEl.style.transform = 'scale(1.5)';
+                textEl.style.transition = 'transform 0.2s';
+                setTimeout(() => textEl.style.transform = 'scale(1)', 200);
+            }
+
+            scene.remove(item.mesh);
+            caughtItem = null;
+            
+            // Sinh đồ mới nếu đã dọn sạch bãi
+            if (!items.some(i => i.active)) {
+                setTimeout(spawnItems, 500); 
+            }
+        }
+
+        // Hiện câu hỏi Toán
+        function showQuestion(goldItem) {
+            const modal = document.getElementById('question-modal');
+            const qText = document.getElementById('question-text');
+            const optsContainer = document.getElementById('options-container');
+            
+            // 1. Ép buộc hiển thị form ngay lập tức (Không đợi tải dữ liệu)
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex'; 
+
+            try {
+                // Random 1 câu hỏi
+                const qData = mathQuestions[Math.floor(Math.random() * mathQuestions.length)];
+                
+                // Hiển thị đề
+                qText.innerHTML = qData.q;
+                
+                // Trộn ngẫu nhiên 4 phương án
+                let indices = [0, 1, 2, 3];
+                indices.sort(() => Math.random() - 0.5);
+                
+                optsContainer.innerHTML = '';
+                const labels = ['A', 'B', 'C', 'D'];
+                
+                indices.forEach((originalIndex, viewIndex) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-option';
+                    // Đánh dấu nút nào là đáp án đúng
+                    btn.dataset.isCorrect = (originalIndex === qData.ans) ? 'true' : 'false';
+                    btn.innerHTML = `<span style="font-weight: 800; color: #E65100; margin-right: 15px;">${labels[viewIndex]}.</span> ${qData.opts[originalIndex]}`;
+                    btn.onclick = () => handleAnswer(btn, originalIndex === qData.ans, goldItem);
+                    optsContainer.appendChild(btn);
+                });
+                
+            } catch (e) {
+                console.error("Lỗi khi tạo bảng câu hỏi:", e);
+                // Nút vớt để không bao giờ bị kẹt game
+                qText.innerHTML = "Lỗi mạng hoặc trình duyệt chặn thư viện. Bạn được cộng điểm miễn phí!";
+                optsContainer.innerHTML = `<button class="btn-option correct" onclick="handleAnswer(this, true, caughtItem)">Nhận điểm luôn</button>`;
+            }
+
+            // 2. Gọi MathJax render công thức trong một khối an toàn riêng biệt
+            try {
+                if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                    window.MathJax.typesetPromise([modal]).catch((err) => console.log("Lỗi render Toán:", err));
+                } else if (window.MathJax && typeof window.MathJax.typeset === 'function') {
+                    window.MathJax.typeset([modal]);
+                }
+            } catch (mathErr) {
+                console.warn("Bỏ qua lỗi MathJax, tiếp tục hiển thị form thô:", mathErr);
+            }
+        }
+
+        function handleAnswer(clickedBtn, isCorrect, goldItem) {
+            // Khóa tất cả các nút
+            const btns = document.querySelectorAll('.btn-option');
+            btns.forEach(b => b.disabled = true);
+            
+            if (isCorrect) {
+                clickedBtn.classList.add('correct');
+                playSound('catch_gold'); // Báo đúng
+            } else {
+                clickedBtn.classList.add('wrong');
+                playSound('catch_rock'); // Báo sai
+                
+                // Chuyển nút đáp án thực sự sang màu xanh để người chơi học
+                btns.forEach(b => {
+                    if (b.dataset.isCorrect === 'true') {
+                        b.classList.add('correct');
+                    }
+                });
+            }
+            
+            // Đợi 1.5 giây rồi đóng cửa sổ và đi tiếp
+            setTimeout(() => {
+                const modal = document.getElementById('question-modal');
+                modal.classList.add('hidden');
+                modal.style.display = 'none'; // Ép buộc ẩn
+                isQuestionActive = false; // Tiếp tục game (và đồng hồ)
+                processCaughtItem(goldItem, isCorrect);
+            }, 1500);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            updateGame();
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        function onWindowResize() {
+            if(camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                
+                // Điều chỉnh độ mở của camera trên điện thoại dọc
+                if (window.innerHeight > window.innerWidth) {
+                    camera.position.set(0, 4, 38); // Nâng cao và lùi xa để thấy toàn bộ đầu em bé
+                    camera.lookAt(0, -6, 0);
+                } else {
+                    camera.position.set(0, 2, 28); // Tinh chỉnh cho màn hình máy tính ngang
+                    camera.lookAt(0, -4, 0);
+                }
+            }
+        }
+
+        // --- Hệ Thống UI & Nút Bấm ---
+        window.startGame = function() {
+            initAudio(); // Khởi tạo âm thanh sau khi user tương tác (luật của trình duyệt)
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('hud').style.display = 'flex';
+            
+            // Đảm bảo bảng câu hỏi được ẩn đi khi reset game
+            const qModal = document.getElementById('question-modal');
+            if (qModal) {
+                qModal.classList.add('hidden');
+                qModal.style.display = 'none';
+            }
+            
+            score = 0;
+            timeLeft = 60;
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('timer-val').innerText = timeLeft;
+            
+            onWindowResize(); // Set lại khung nhìn
+            spawnItems();
+            
+            hookLength = minLength;
+            hookState = 'swing';
+            caughtItem = null;
+            gameActive = true;
+            isQuestionActive = false;
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                // Không trừ thời gian nếu đang làm toán
+                if (!gameActive || isQuestionActive) return;
+
+                timeLeft--;
+                document.getElementById('timer-val').innerText = timeLeft;
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        };
+
+        window.endGame = function() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            
+            // Hiệu ứng đếm điểm cuối cùng
+            let displayScore = 0;
+            const finalScoreEl = document.getElementById('final-score');
+            const inc = Math.ceil(score / 30);
+            const scoreAnim = setInterval(() => {
+                displayScore += inc;
+                if(displayScore >= score) {
+                    displayScore = score;
+                    clearInterval(scoreAnim);
+                }
+                finalScoreEl.innerText = displayScore;
+            }, 30);
+        };
+
+        window.resetGame = function() {
+            document.getElementById('game-over-screen').classList.add('hidden');
+            startGame();
+        };
+
+        // Khởi động
+        window.onload = () => {
+            init3D();
+            onWindowResize();
+        };
+    </script>
+</body>
+</html>

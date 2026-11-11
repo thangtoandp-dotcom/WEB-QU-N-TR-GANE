@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 CUỘC ĐUA TRẢI NGHIỆM - LỚP 12</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+            color: white;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Animation cho câu trả lời */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        @keyframes shake-red {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .correct-answer {
+            background: linear-gradient(135deg, #166534, #15803d) !important;
+            border-color: #4ade80 !important;
+            animation: pulse-green 1s infinite;
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        .wrong-answer {
+            background: linear-gradient(135deg, #7f1d1d, #991b1b) !important;
+            border-color: #f87171 !important;
+            animation: shake-red 0.5s ease-in-out;
+            opacity: 0.7;
+        }
+
+        .disabled-option {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Animation đếm ngược */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .timer-warning { color: #facc15; }
+        .timer-danger { color: #ef4444; animation: pop 0.5s infinite; text-shadow: 0 0 10px rgba(239, 68, 68, 0.8); }
+
+        /* Đường đua */
+        .track-lane {
+            position: relative;
+            height: 40px;
+            border-bottom: 2px dashed rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+        }
+        .runner-icon {
+            position: absolute;
+            left: 0%;
+            transition: left 1s cubic-bezier(0.34, 1.56, 0.64, 1); /* Hiệu ứng nảy khi tiến lên */
+            font-size: 1.5rem;
+            transform: translateX(-50%);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        .finish-line {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            background: repeating-linear-gradient(45deg, #fff, #fff 5px, #000 5px, #000 10px);
+        }
+
+        /* Active Team Highlight */
+        .active-team-card {
+            border: 2px solid white;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Popup Notification */
+        .popup-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 50;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .popup-content {
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .popup-active { opacity: 1; pointer-events: auto; }
+        .popup-active .popup-content { transform: scale(1); }
+
+        /* Confetti */
+        .confetti {
+            position: absolute; width: 10px; height: 10px;
+            background-color: #f00; opacity: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div id="start-screen" class="w-full max-w-4xl glass-panel rounded-3xl p-8 flex flex-col items-center text-center space-y-8 animate-fade-in">
+        <div class="space-y-4">
+            <h2 class="text-2xl md:text-3xl font-bold text-yellow-400 tracking-wider">MÔN HOẠT ĐỘNG TRẢI NGHIỆM, HƯỚNG NGHIỆP - LỚP 12</h2>
+            <h1 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 uppercase drop-shadow-lg">
+                🏆 Cuộc Đua Trải Nghiệm
+            </h1>
+            <h3 class="text-xl md:text-2xl font-semibold text-gray-200">THỂ HIỆN SỰ TRƯỞNG THÀNH CỦA BẢN THÂN TRONG CUỘC SỐNG</h3>
+            <p class="text-lg italic text-gray-400 max-w-2xl mx-auto">
+                "Hiểu mình – Làm chủ bản thân – Có trách nhiệm – Sẵn sàng trưởng thành"
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl mt-8">
+            <div class="flex flex-col">
+                <label class="text-blue-400 font-bold mb-2 text-left">🔵 Đội 1</label>
+                <input type="text" id="team1-name" value="Đội 1" class="px-4 py-3 rounded-xl bg-blue-900/30 border border-blue-500/50 text-white focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/50 transition">
+            </div>
+            <div class="flex flex-col">
+                <label class="text-green-400 font-bold mb-2 text-left">🟢 Đội 2</label>
+                <input type="text" id="team2-name" value="Đội 2" class="px-4 py-3 rounded-xl bg-green-900/30 border border-green-500/50 text-white focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/50 transition">
+            </div>
+            <div class="flex flex-col">
+                <label class="text-orange-400 font-bold mb-2 text-left">🟠 Đội 3</label>
+                <input type="text" id="team3-name" value="Đội 3" class="px-4 py-3 rounded-xl bg-orange-900/30 border border-orange-500/50 text-white focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/50 transition">
+            </div>
+            <div class="flex flex-col">
+                <label class="text-purple-400 font-bold mb-2 text-left">🟣 Đội 4</label>
+                <input type="text" id="team4-name" value="Đội 4" class="px-4 py-3 rounded-xl bg-purple-900/30 border border-purple-500/50 text-white focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/50 transition">
+            </div>
+        </div>
+
+        <button onclick="startGame()" class="mt-10 px-10 py-5 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-black text-2xl rounded-full shadow-[0_0_20px_rgba(234,179,8,0.5)] transform hover:scale-105 transition duration-300">
+            ▶ BẮT ĐẦU CUỘC ĐUA
+        </button>
+    </div>
+
+    <div id="game-screen" class="hidden w-full max-w-6xl flex-col h-[95vh] space-y-4">
+        <!-- Header -->
+        <div class="flex justify-between items-center glass-panel p-4 rounded-2xl">
+            <h1 class="text-xl md:text-2xl font-bold text-yellow-400 uppercase tracking-widest hidden md:block">🏆 Cuộc Đua Trải Nghiệm</h1>
+            <div class="flex items-center space-x-6 text-lg font-bold">
+                <div class="bg-gray-800 px-4 py-2 rounded-lg border border-gray-600">
+                    VÒNG <span id="round-display" class="text-white">1</span>/7
+                </div>
+                <div id="turn-display" class="px-6 py-2 rounded-lg text-white shadow-lg uppercase transition-colors duration-300">
+                    LƯỢT CỦA: ĐỘI 1
+                </div>
+                <div class="bg-gray-800 px-4 py-2 rounded-lg border border-gray-600">
+                    CÂU <span id="question-count-display" class="text-white">1</span>/28
+                </div>
+            </div>
+            <button onclick="toggleSound()" id="sound-btn" class="p-3 bg-gray-800 rounded-full hover:bg-gray-700 transition" title="Bật/Tắt Âm thanh">
+                🔊
+            </button>
+        </div>
+
+        <!-- Race Track -->
+        <div class="glass-panel p-4 rounded-2xl relative overflow-hidden flex-shrink-0">
+            <h3 class="text-sm text-gray-400 font-bold mb-2 uppercase text-center tracking-widest">Đường Đua Tới Sự Trưởng Thành</h3>
+            <div class="relative w-full h-full pl-6 pr-6 py-2">
+                <div class="finish-line"></div>
+                <!-- Lanes -->
+                <div class="track-lane">
+                    <span class="text-blue-400 w-24 text-sm font-bold truncate pr-2" id="track-name-0">Đội 1</span>
+                    <div class="flex-grow relative h-full">
+                        <div id="runner-0" class="runner-icon text-blue-400" style="left: 0%;">🏃‍♂️</div>
+                    </div>
+                </div>
+                <div class="track-lane">
+                    <span class="text-green-400 w-24 text-sm font-bold truncate pr-2" id="track-name-1">Đội 2</span>
+                    <div class="flex-grow relative h-full">
+                        <div id="runner-1" class="runner-icon text-green-400" style="left: 0%;">🚴‍♀️</div>
+                    </div>
+                </div>
+                <div class="track-lane">
+                    <span class="text-orange-400 w-24 text-sm font-bold truncate pr-2" id="track-name-2">Đội 3</span>
+                    <div class="flex-grow relative h-full">
+                        <div id="runner-2" class="runner-icon text-orange-400" style="left: 0%;">🏎️</div>
+                    </div>
+                </div>
+                <div class="track-lane border-b-0">
+                    <span class="text-purple-400 w-24 text-sm font-bold truncate pr-2" id="track-name-3">Đội 4</span>
+                    <div class="flex-grow relative h-full">
+                        <div id="runner-3" class="runner-icon text-purple-400" style="left: 0%;">🚀</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Area -->
+        <div class="flex-grow glass-panel rounded-2xl p-6 flex flex-col justify-between relative">
+            <!-- Timer -->
+            <div class="absolute top-4 right-6 text-5xl md:text-6xl font-black text-white" id="timer-display">
+                25
+            </div>
+
+            <div class="w-full text-center mb-6 pt-4 pr-24"> <!-- Padding right to avoid timer -->
+                <div class="inline-block bg-white/10 px-4 py-1 rounded-full text-sm font-semibold mb-4 text-gray-300 uppercase tracking-widest" id="difficulty-display">
+                    MỨC ĐỘ: NHẬN BIẾT
+                </div>
+                <h2 id="question-text" class="text-2xl md:text-3xl font-bold leading-relaxed text-blue-50">
+                    Đang tải câu hỏi...
+                </h2>
+            </div>
+
+            <!-- Options -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-auto">
+                <button onclick="selectAnswer(0)" id="option-0" class="option-btn text-left p-4 rounded-xl bg-gray-800/80 border-2 border-gray-600 hover:border-blue-400 hover:bg-gray-700 transition duration-200 text-lg md:text-xl relative overflow-hidden group">
+                    <span class="font-bold text-blue-400 mr-2 group-hover:text-blue-300">A.</span> <span id="opt-text-0"></span>
+                </button>
+                <button onclick="selectAnswer(1)" id="option-1" class="option-btn text-left p-4 rounded-xl bg-gray-800/80 border-2 border-gray-600 hover:border-blue-400 hover:bg-gray-700 transition duration-200 text-lg md:text-xl relative overflow-hidden group">
+                    <span class="font-bold text-green-400 mr-2 group-hover:text-green-300">B.</span> <span id="opt-text-1"></span>
+                </button>
+                <button onclick="selectAnswer(2)" id="option-2" class="option-btn text-left p-4 rounded-xl bg-gray-800/80 border-2 border-gray-600 hover:border-blue-400 hover:bg-gray-700 transition duration-200 text-lg md:text-xl relative overflow-hidden group">
+                    <span class="font-bold text-orange-400 mr-2 group-hover:text-orange-300">C.</span> <span id="opt-text-2"></span>
+                </button>
+                <button onclick="selectAnswer(3)" id="option-3" class="option-btn text-left p-4 rounded-xl bg-gray-800/80 border-2 border-gray-600 hover:border-blue-400 hover:bg-gray-700 transition duration-200 text-lg md:text-xl relative overflow-hidden group">
+                    <span class="font-bold text-purple-400 mr-2 group-hover:text-purple-300">D.</span> <span id="opt-text-3"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="grid grid-cols-4 gap-2 md:gap-4 flex-shrink-0 mt-2">
+            <div id="score-card-0" class="glass-panel p-3 md:p-4 rounded-xl text-center border-b-4 border-blue-500 transition-all duration-300">
+                <h3 class="text-sm md:text-base font-bold text-blue-400 truncate" id="score-name-0">Đội 1</h3>
+                <p class="text-2xl md:text-3xl font-black text-white mt-1" id="score-val-0">0</p>
+            </div>
+            <div id="score-card-1" class="glass-panel p-3 md:p-4 rounded-xl text-center border-b-4 border-green-500 transition-all duration-300">
+                <h3 class="text-sm md:text-base font-bold text-green-400 truncate" id="score-name-1">Đội 2</h3>
+                <p class="text-2xl md:text-3xl font-black text-white mt-1" id="score-val-1">0</p>
+            </div>
+            <div id="score-card-2" class="glass-panel p-3 md:p-4 rounded-xl text-center border-b-4 border-orange-500 transition-all duration-300">
+                <h3 class="text-sm md:text-base font-bold text-orange-400 truncate" id="score-name-2">Đội 3</h3>
+                <p class="text-2xl md:text-3xl font-black text-white mt-1" id="score-val-2">0</p>
+            </div>
+            <div id="score-card-3" class="glass-panel p-3 md:p-4 rounded-xl text-center border-b-4 border-purple-500 transition-all duration-300">
+                <h3 class="text-sm md:text-base font-bold text-purple-400 truncate" id="score-name-3">Đội 4</h3>
+                <p class="text-2xl md:text-3xl font-black text-white mt-1" id="score-val-3">0</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-screen" class="hidden w-full max-w-4xl glass-panel rounded-3xl p-10 flex flex-col items-center text-center space-y-6 relative overflow-hidden">
+        <h1 class="text-5xl md:text-7xl font-black text-yellow-400 uppercase drop-shadow-xl z-10">TỔNG KẾT CUỘC ĐUA</h1>
+        <h2 class="text-2xl text-white z-10 mb-8">Chúc mừng tất cả các đội đã hoàn thành hành trình trưởng thành!</h2>
+        
+        <div id="final-podium" class="flex items-end justify-center space-x-4 md:space-x-8 w-full h-64 z-10 mt-8">
+            <!-- Sẽ được render qua JS -->
+        </div>
+
+        <button onclick="location.reload()" class="mt-12 px-8 py-4 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl border border-white/50 backdrop-blur-sm transition z-10">
+            🔄 Chơi Lại Từ Đầu
+        </button>
+    </div>
+
+    <!-- Popup Phản hồi -->
+    <div id="feedback-popup" class="popup-overlay">
+        <div class="popup-content glass-panel p-8 rounded-3xl text-center border-2 shadow-2xl flex flex-col items-center justify-center min-w-[300px]" id="feedback-box">
+            <div id="feedback-icon" class="text-7xl mb-4">🎉</div>
+            <h2 id="feedback-title" class="text-4xl font-black uppercase mb-2">CHÍNH XÁC!</h2>
+            <p id="feedback-points" class="text-2xl font-bold text-yellow-400">+100 ĐIỂM</p>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            // --- CÂU 1-7: NHẬN BIẾT - THÔNG HIỂU (Nhận diện cảm xúc, tự chăm sóc, thời gian) ---
+            {
+                level: "NHẬN BIẾT - THÔNG HIỂU",
+                q: "Bạn có thói quen thức đến 2 giờ sáng để lướt mạng xã hội, dẫn đến việc thường xuyên ngủ gật trong lớp. Hành động nào sau đây cho thấy sự trưởng thành trong việc quản lý bản thân?",
+                options: [
+                    "Đổ lỗi cho giáo viên giảng bài nhàm chán gây buồn ngủ.",
+                    "Uống thật nhiều cà phê trước khi đến trường để tỉnh táo.",
+                    "Tự đặt giới hạn thời gian dùng điện thoại, đi ngủ sớm để đảm bảo sức khỏe.",
+                    "Nghỉ học những ngày cảm thấy quá buồn ngủ để ở nhà ngủ bù."
+                ], answer: 2
+            },
+            {
+                level: "NHẬN BIẾT - THÔNG HIỂU",
+                q: "Khi nhận được bài kiểm tra điểm kém do không ôn bài, biểu hiện nào dưới đây thể hiện sự tự nhận thức và trách nhiệm?",
+                options: [
+                    "Chấp nhận kết quả, tìm ra lỗ hổng kiến thức và lập kế hoạch ôn tập lại.",
+                    "Giấu bài kiểm tra đi để bố mẹ không biết và không la mắng.",
+                    "Than phiền trên mạng xã hội rằng đề thi quá khó và không công bằng.",
+                    "So bì với người điểm thấp hơn để thấy mình vẫn chưa phải tệ nhất."
+                ], answer: 0
+            },
+            {
+                level: "NHẬN BIẾT - THÔNG HIỂU",
+                q: "Bạn đang làm việc nhóm và một thành viên đưa ra ý kiến trái ngược hoàn toàn với bạn. Cách phản ứng trưởng thành nhất là gì?",
+                options: [
+                    "Bác bỏ ngay lập tức vì tin rằng ý kiến của mình là tốt nhất.",
+                    "Lắng nghe, tôn trọng ý kiến của bạn, cùng cả nhóm phân tích ưu nhược điểm.",
+                    "Im lặng rút lui, không tham gia đóng góp nữa vì cảm thấy bị tự ái.",
+                    "Công kích cá nhân thành viên đó để bảo vệ ý kiến của mình."
+                ], answer: 1
+            },
+            {
+                level: "NHẬN BIẾT - THÔNG HIỂU",
+                q: "Trong gia đình, bố mẹ đang gặp khó khăn về kinh tế. Học sinh lớp 12 thể hiện sự trưởng thành về quản lý tài chính cá nhân qua hành động nào?",
+                options: [
+                    "Tiếp tục đòi mua điện thoại mới theo trend để không thua kém bạn bè.",
+                    "Chỉ sử dụng tiền cho những nhu cầu thiết yếu, cắt giảm các khoản ăn vặt, mua sắm không cần thiết.",
+                    "Bỏ học để đi làm thêm kiếm tiền dù chưa tốt nghiệp THPT.",
+                    "Tỏ ra bực tức, khó chịu khi không được cho tiền tiêu vặt như trước."
+                ], answer: 1
+            },
+            {
+                level: "NHẬN BIẾT - THÔNG HIỂU",
+                q: "Một bạn trong lớp thường xuyên bị cô lập và nói xấu. Bạn biết sự thật không phải như lời đồn. Sự trưởng thành trong quan hệ xã hội khuyên bạn nên làm gì?",
+                options: [
+                    "Hùa theo đám đông nói xấu để không bị cô lập giống bạn ấy.",
+                    "Thờ ơ, coi như không liên quan đến mình để tránh rắc rối.",
+                    "Chủ động trò chuyện, động viên bạn ấy và lên tiếng bảo vệ sự thật một cách khéo léo.",
+                    "Lên mạng xã hội chửi bới những người đang nói xấu bạn kia."
+                ], answer: 2
+            },
+            {
+                level: "NHẬN BIẾT - THÔNG HIỂU",
+                q: "Bạn được giao làm nhóm trưởng nhưng một số thành viên không chịu làm việc. Bạn sẽ xử lý thế nào cho thấy mình có trách nhiệm?",
+                options: [
+                    "Tự mình làm hết phần của mọi người để đảm bảo tiến độ.",
+                    "Mặc kệ nhóm, ai làm thì có điểm, không làm thì thôi.",
+                    "Gặp riêng từng người, tìm hiểu khó khăn, nhắc nhở trách nhiệm và báo cáo giáo viên nếu họ vẫn cố tình chây ì.",
+                    "Đăng bài nói bóng gió trên Facebook để 'đá xéo' các thành viên lười biếng."
+                ], answer: 2
+            },
+            {
+                level: "NHẬN BIẾT - THÔNG HIỂU",
+                q: "Kỳ thi tốt nghiệp đang đến gần, bạn cảm thấy vô cùng lo lắng, áp lực và mất ngủ. Cách giải quyết vấn đề hiệu quả và trưởng thành là:",
+                options: [
+                    "Thức trắng đêm học bài liên tục để bù đắp cảm giác lo âu.",
+                    "Chia sẻ áp lực với người thân, thầy cô hoặc chuyên gia tâm lý và điều chỉnh lại lịch học - nghỉ ngơi hợp lý.",
+                    "Bỏ cuộc, buông xuôi vì nghĩ rằng có học cũng không kịp nữa.",
+                    "Chơi game liên tục để quên đi áp lực thi cử."
+                ], answer: 1
+            },
+
+            // --- CÂU 8-14: THÔNG HIỂU - VẬN DỤNG (Ra quyết định, kiểm soát cảm xúc) ---
+            {
+                level: "THÔNG HIỂU - VẬN DỤNG",
+                q: "Bạn đã lỡ lời xúc phạm một người bạn thân trong lúc nóng giận. Nhận ra mình sai, hành động nào là đúng đắn nhất?",
+                options: [
+                    "Coi như chưa có chuyện gì xảy ra, đợi bạn tự quên đi.",
+                    "Nhờ một người thứ ba đi xin lỗi hộ để đỡ ngại ngùng.",
+                    "Chân thành xin lỗi trực tiếp bạn, giải thích vì sao mình mất kiểm soát và cam kết không tái phạm.",
+                    "Cho rằng bạn thân thì phải hiểu và thông cảm cho lúc nóng giận của mình, không cần xin lỗi."
+                ], answer: 2
+            },
+            {
+                level: "THÔNG HIỂU - VẬN DỤNG",
+                q: "Năm lớp 12, bạn phải chọn ngành nghề. Bố mẹ muốn bạn học Y, nhưng bạn đam mê và có năng khiếu Thiết kế đồ họa. Bạn nên làm gì?",
+                options: [
+                    "Lặng lẽ tự đăng ký ngành Thiết kế, đến khi thi đậu mới báo bố mẹ.",
+                    "Phản ứng gay gắt, cãi lời bố mẹ và dọa sẽ bỏ nhà đi nếu bị ép buộc.",
+                    "Nghiên cứu kỹ về ngành Thiết kế, cơ hội việc làm, đối chiếu năng lực bản thân và trình bày thuyết phục với bố mẹ.",
+                    "Nhắm mắt nghe lời bố mẹ học Y dù biết mình không có năng lực và đam mê, để gia đình êm ấm."
+                ], answer: 2
+            },
+            {
+                level: "THÔNG HIỂU - VẬN DỤNG",
+                q: "Bạn vô tình làm hỏng thiết bị thí nghiệm của trường. Không ai nhìn thấy. Biểu hiện của sự trưởng thành và tính trung thực là:",
+                options: [
+                    "Nhanh chóng rời khỏi hiện trường và giữ im lặng tuyệt đối.",
+                    "Chủ động báo cáo ngay với giáo viên phụ trách, nhận lỗi và xin đền bù thiệt hại.",
+                    "Đợi đến khi có người phát hiện rồi mới miễn cưỡng nhận lỗi.",
+                    "Đổ lỗi cho bạn học sinh khác đã sử dụng thiết bị trước đó."
+                ], answer: 1
+            },
+            {
+                level: "THÔNG HIỂU - VẬN DỤNG",
+                q: "Thời gian biểu của bạn đang bị quá tải giữa việc học chính khóa, học thêm và tham gia CLB. Cách quản lý thời gian tối ưu nhất là:",
+                options: [
+                    "Rút khỏi tất cả các CLB và hoạt động ngoại khóa, chỉ tập trung vào việc học.",
+                    "Vẫn giữ nguyên mọi lịch trình, chấp nhận việc thường xuyên đi trễ hoặc làm việc không hiệu quả.",
+                    "Lập ma trận ưu tiên (Quan trọng - Cấp bách), sắp xếp lại lịch và mạnh dạn từ chối những việc không cần thiết.",
+                    "Dành toàn bộ thời gian cuối tuần để ngủ bù, không làm bất cứ việc gì khác."
+                ], answer: 2
+            },
+            {
+                level: "THÔNG HIỂU - VẬN DỤNG",
+                q: "Khi nhận được những lời góp ý, phê bình thẳng thắn từ giáo viên về thái độ học tập sa sút, cách tiếp nhận trưởng thành là gì?",
+                options: [
+                    "Bực tức, cho rằng giáo viên có thành kiến với mình.",
+                    "Bình tĩnh lắng nghe, tự nhìn nhận lại bản thân và lập kế hoạch thay đổi thái độ học tập.",
+                    "Cười trừ cho qua chuyện, sau đó vẫn chứng nào tật nấy.",
+                    "Tự ti, suy sụp và nghĩ rằng mình là một kẻ thất bại hoàn toàn."
+                ], answer: 1
+            },
+            {
+                level: "THÔNG HIỂU - VẬN DỤNG",
+                q: "Trong quá trình chuẩn bị cho sự kiện của trường, bạn và một bạn khác xảy ra mâu thuẫn gay gắt về cách tổ chức. Giải pháp tốt nhất là:",
+                options: [
+                    "Tạm dừng tranh cãi, đợi cả hai bình tĩnh lại rồi ngồi xuống phân tích logic từng phương án để tìm điểm chung.",
+                    "Sử dụng uy quyền cá nhân (nếu là lớp trưởng/trưởng ban) để ép người kia phải nghe theo.",
+                    "Rút lui khỏi ban tổ chức để không phải làm việc với người đó nữa.",
+                    "Nói xấu người đó với các thành viên khác để lôi kéo đồng minh."
+                ], answer: 0
+            },
+            {
+                level: "THÔNG HIỂU - VẬN DỤNG",
+                q: "Một người bạn rủ bạn tham gia vào một hoạt động có tính rủi ro cao và vi phạm nội quy nhà trường (ví dụ: cúp học đi chơi xa). Bạn ứng xử thế nào?",
+                options: [
+                    "Đồng ý ngay vì sợ bạn chê là nhát gan, không hết mình.",
+                    "Lấy lý do ốm để từ chối khéo, không dám nói thẳng quan điểm.",
+                    "Kiên quyết từ chối thẳng thắn, giải thích hậu quả và khuyên bạn không nên thực hiện.",
+                    "Đồng ý đi nhưng trong lòng luôn nơm nớp lo sợ bị phát hiện."
+                ], answer: 2
+            },
+
+            // --- CÂU 15-21: VẬN DỤNG (Tình huống phức tạp, trách nhiệm xã hội) ---
+            {
+                level: "VẬN DỤNG",
+                q: "Bạn chứng kiến một vụ bắt nạt trên mạng (cyberbullying) nhắm vào một học sinh trường khác. Dù không quen biết, cách hành xử thể hiện trách nhiệm cộng đồng là:",
+                options: [
+                    "Chia sẻ lại bài viết đó vì thấy hiếu kỳ và muốn câu like.",
+                    "Không tham gia bình luận tiêu cực, báo cáo (report) bài viết bắt nạt và khuyên bạn bè không hùa theo.",
+                    "Vào bình luận bênh vực bằng cách dùng những lời lẽ thô tục chửi lại kẻ bắt nạt.",
+                    "Đọc để biết thông tin nhưng coi như không phải việc của mình, không làm gì cả."
+                ], answer: 1
+            },
+            {
+                level: "VẬN DỤNG",
+                q: "Trong một dự án khởi nghiệp tại trường, nhóm bạn thất bại hoàn toàn và mất một khoản quỹ nhỏ. Phản ứng nào cho thấy kỹ năng vượt qua khó khăn?",
+                options: [
+                    "Cãi vã, đổ lỗi cho nhau về sự thất bại và giải tán nhóm trong phẫn nộ.",
+                    "Chấp nhận thất bại, cùng họp rút kinh nghiệm, phân tích nguyên nhân và tìm cách làm lại hoặc bù đắp quỹ.",
+                    "Tự bỏ tiền túi cá nhân ra đền bù âm thầm để che giấu sự thất bại với nhà trường.",
+                    "Tuyệt vọng, từ bỏ hoàn toàn ý định tham gia bất kỳ dự án nào khác trong tương lai."
+                ], answer: 1
+            },
+            {
+                level: "VẬN DỤNG",
+                q: "Bố mẹ bạn cãi nhau to và không nói chuyện với nhau nhiều ngày, ảnh hưởng đến không khí gia đình và tâm lý của bạn. Bạn nên làm gì?",
+                options: [
+                    "Bỏ nhà sang nhà bạn ở vài ngày để tránh không khí ngột ngạt.",
+                    "Hét lên với bố mẹ, trách móc họ không quan tâm đến cảm nhận của con cái.",
+                    "Tâm sự khéo léo với từng người, bày tỏ cảm xúc của mình và mong muốn gia đình hòa thuận trở lại.",
+                    "Can thiệp trực tiếp vào mâu thuẫn của người lớn, phân định ai đúng ai sai."
+                ], answer: 2
+            },
+            {
+                level: "VẬN DỤNG",
+                q: "Bạn nhận ra mình có cảm xúc đặc biệt (tình cảm học trò) với một người bạn thân, nhưng điều này bắt đầu làm bạn xao nhãng việc ôn thi đại học. Cách giải quyết là:",
+                options: [
+                    "Tỏ tình ngay lập tức, bất chấp kết quả ra sao, để giải tỏa tâm lý.",
+                    "Cắt đứt hoàn toàn liên lạc với bạn đó một cách lạnh lùng để tập trung học.",
+                    "Nhận diện cảm xúc, tự đặt ranh giới cho bản thân, ưu tiên mục tiêu học tập lúc này và giữ tình bạn đẹp.",
+                    "Đắm chìm trong tình cảm, dành toàn bộ thời gian nhắn tin, bỏ bê việc học."
+                ], answer: 2
+            },
+            {
+                level: "VẬN DỤNG",
+                q: "Lớp bạn tổ chức liên hoan cuối cấp cần đóng quỹ khá lớn. Một số bạn trong lớp có hoàn cảnh khó khăn không thể tham gia. Bạn là cán bộ lớp, bạn sẽ giải quyết sao?",
+                options: [
+                    "Ai có tiền thì đi, không có thì thôi, đó là quy luật công bằng.",
+                    "Tự ý lấy quỹ lớp (quỹ học tập) bù vào cho các bạn đó mà không hỏi ý kiến tập thể.",
+                    "Tổ chức họp lớp, đề xuất phương án tổ chức tiết kiệm hơn hoặc kêu gọi tinh thần chia sẻ, hỗ trợ nhau từ tập thể.",
+                    "Hủy bỏ hoàn toàn buổi liên hoan để không ai cảm thấy tủi thân."
+                ], answer: 2
+            },
+            {
+                level: "VẬN DỤNG",
+                q: "Bạn thi thử đại học được điểm rất cao, dẫn đến nảy sinh tâm lý chủ quan, lơ là ôn tập trong giai đoạn nước rút. Hành động nào sau đây giúp bạn điều chỉnh bản thân?",
+                options: [
+                    "Tiếp tục thư giãn vì cho rằng kiến thức của mình đã quá đủ để thi thật.",
+                    "Chuyển sang làm những đề thi vượt xa chương trình để thể hiện đẳng cấp.",
+                    "Tự nhắc nhở bản thân về tính rủi ro của kỳ thi, thiết lập kỷ luật và duy trì nhịp độ ôn tập ổn định.",
+                    "Đi chơi liên tục, đến sát ngày thi mới mang sách vở ra đọc lại."
+                ], answer: 2
+            },
+            {
+                level: "VẬN DỤNG",
+                q: "Khi tiếp nhận một lượng lớn thông tin trên mạng xã hội về các ngành nghề 'hot', 'việc nhẹ lương cao', bạn nên xử lý thông tin này như thế nào?",
+                options: [
+                    "Tin tưởng tuyệt đối và lập tức thay đổi nguyện vọng thi đại học theo các ngành 'hot' đó.",
+                    "Chê bai, bài xích mọi thông tin trên mạng, chỉ nghe theo định hướng truyền thống của gia đình.",
+                    "Sàng lọc thông tin, tìm hiểu từ các nguồn chính thống, chuyên gia và tham chiếu với sở thích, năng lực cá nhân.",
+                    "Đăng ký tất cả các ngành 'hot' đó, đỗ ngành nào thì học ngành đó."
+                ], answer: 2
+            },
+
+            // --- CÂU 22-28: VẬN DỤNG CAO (Định hướng tương lai, tư duy hệ thống) ---
+            {
+                level: "VẬN DỤNG CAO",
+                q: "Bạn khao khát đi du học nhưng tài chính gia đình không cho phép. Thái độ và hành động trưởng thành nhất là:",
+                options: [
+                    "Trách móc bố mẹ không đủ khả năng lo cho tương lai của mình.",
+                    "Vay mượn tiền tín dụng đen bất chấp hậu quả để đạt được mục đích.",
+                    "Từ bỏ hẳn ước mơ, chấp nhận học một trường đại học trong nước một cách chán nản.",
+                    "Nỗ lực học tập xuất sắc để săn học bổng toàn phần, hoặc đặt mục tiêu du học ở bậc Thạc sĩ sau khi tự chủ tài chính."
+                ], answer: 3
+            },
+            {
+                level: "VẬN DỤNG CAO",
+                q: "Đứng trước ngưỡng cửa tuổi 18, bạn nhận ra những giá trị sống và niềm tin của mình đang khác biệt khá nhiều so với thế hệ ông bà, cha mẹ. Bạn ứng xử thế nào?",
+                options: [
+                    "Luôn tạo ra những cuộc tranh luận nảy lửa trong bữa ăn để bảo vệ hệ tư tưởng của mình.",
+                    "Khép mình lại, không giao tiếp với người lớn vì cho rằng 'khoảng cách thế hệ là không thể lấp đầy'.",
+                    "Chấp nhận và tôn trọng sự khác biệt, chọn lọc những giá trị truyền thống tốt đẹp, đồng thời khéo léo chứng minh lối đi riêng của mình bằng hành động thực tế.",
+                    "Miễn cưỡng sống theo ý người lớn bề ngoài, nhưng ngấm ngầm làm trái lời sau lưng."
+                ], answer: 2
+            },
+            {
+                level: "VẬN DỤNG CAO",
+                q: "Một người bạn từng rất thân bỗng nhiên thay đổi tính cách, chơi với nhóm bạn xấu và dần xa lánh bạn. Mặc dù đã cố khuyên can nhưng không thành. Quyết định phù hợp nhất là:",
+                options: [
+                    "Đeo bám, ép buộc bạn ấy phải thay đổi bằng mọi giá, kể cả việc dùng vũ lực.",
+                    "Tham gia vào nhóm bạn xấu đó để hiểu và lôi kéo bạn ấy ra khỏi đó.",
+                    "Lên án, bêu rếu bạn ấy trước toàn trường để bạn ấy xấu hổ mà tỉnh ngộ.",
+                    "Chấp nhận giới hạn của bản thân, giữ khoảng cách an toàn, nhưng vẫn để ngỏ sự giúp đỡ nếu bạn ấy thực sự cần quay lại."
+                ], answer: 3
+            },
+            {
+                level: "VẬN DỤNG CAO",
+                q: "Bạn đang chuẩn bị tâm thế cho cuộc sống sinh viên (xa nhà, tự lập). Bước chuẩn bị nào cho thấy tư duy trưởng thành toàn diện nhất?",
+                options: [
+                    "Chỉ tập trung luyện thi để đỗ đại học, mọi việc khác (nấu ăn, quản lý tiền) lên đại học tính sau.",
+                    "Bắt đầu rèn luyện kỹ năng sinh tồn cơ bản (nấu ăn, giặt giũ), học cách quản lý chi tiêu và tự tìm hiểu về kỹ năng tự vệ, an toàn.",
+                    "Yêu cầu bố mẹ thuê người giúp việc hoặc chu cấp thật nhiều tiền khi lên thành phố học.",
+                    "Dành thời gian rảnh rỗi hiện tại để chơi game thỏa thích trước khi bước vào chuỗi ngày sinh viên vất vả."
+                ], answer: 1
+            },
+            {
+                level: "VẬN DỤNG CAO",
+                q: "Khi đối mặt với sự thất bại liên tiếp trong nhiều mục tiêu (thi rớt học sinh giỏi, bị từ chối vào CLB, điểm kiểm tra thấp), tâm thế nào là biểu hiện cao nhất của khả năng phục hồi (Resilience)?",
+                options: [
+                    "Rơi vào trầm cảm, thu mình và tin rằng mình là người vô dụng.",
+                    "Đổ lỗi cho hoàn cảnh, số phận xui xẻo hoặc sự bất công của những người xung quanh.",
+                    "Chấp nhận nỗi buồn, đánh giá lại tính thực tế của các mục tiêu, rút ra bài học cốt lõi và điều chỉnh lại chiến lược phát triển bản thân.",
+                    "Ngay lập tức đăng ký tham gia hàng loạt cuộc thi khác để gỡ gạc thể diện mà không cần chuẩn bị."
+                ], answer: 2
+            },
+            {
+                level: "VẬN DỤNG CAO",
+                q: "Để xây dựng thương hiệu cá nhân tích cực trên không gian mạng chuẩn bị cho tương lai (tuyển sinh, tuyển dụng), học sinh lớp 12 nên làm gì?",
+                options: [
+                    "Kiểm soát phát ngôn, chia sẻ kiến thức hữu ích, thể hiện sự văn minh và đam mê nghề nghiệp trên mạng xã hội.",
+                    "Xóa toàn bộ tài khoản mạng xã hội để không ai có thể tìm thấy thông tin gì về mình.",
+                    "Đăng tải những hình ảnh hào nhoáng, 'sống ảo' sai sự thật để tạo ấn tượng về sự thành đạt.",
+                    "Liên tục tranh cãi, bóc phốt các vấn đề xã hội để chứng tỏ mình là người có tư duy phản biện xuất sắc."
+                ], answer: 0
+            },
+            {
+                level: "VẬN DỤNG CAO",
+                q: "Câu nói: 'Trưởng thành không phải là khi ta nói những điều lớn lao, mà là khi ta hiểu được những điều nhỏ bé'. Vận dụng vào thực tế học đường, hành động nào minh họa tốt nhất cho câu nói này?",
+                options: [
+                    "Lên sân khấu trường hùng biện về những lý tưởng vĩ đại cứu thế giới.",
+                    "Chủ động nhặt rác trên sân trường, nói lời cảm ơn bác bảo vệ, và tắt điện phòng học khi ra về mà không cần ai nhắc.",
+                    "Luôn đặt mục tiêu phải trở thành người đứng đầu, xuất sắc nhất trường bằng mọi giá.",
+                    "Thường xuyên chia sẻ những triết lý sống sâu sắc trên mạng nhưng ở nhà thì lười biếng, dựa dẫm."
+                ], answer: 1
+            }
+        ];
+
+        class SoundEngine {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            playTone(freq, type, duration, vol = 0.1) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+
+            playTick() { this.playTone(800, 'sine', 0.1, 0.05); }
+            playWarningTick() { this.playTone(900, 'square', 0.1, 0.1); }
+            playSelect() { this.playTone(600, 'sine', 0.1, 0.1); }
+            playCorrect() {
+                this.playTone(523.25, 'sine', 0.1, 0.1); // C5
+                setTimeout(() => this.playTone(659.25, 'sine', 0.1, 0.1), 100); // E5
+                setTimeout(() => this.playTone(783.99, 'sine', 0.3, 0.1), 200); // G5
+            }
+            playWrong() {
+                this.playTone(300, 'sawtooth', 0.3, 0.1);
+                setTimeout(() => this.playTone(250, 'sawtooth', 0.4, 0.1), 150);
+            }
+            playTimeout() {
+                this.playTone(200, 'square', 0.8, 0.15);
+            }
+            playTurnChange() {
+                this.playTone(400, 'triangle', 0.2, 0.1);
+                setTimeout(() => this.playTone(600, 'triangle', 0.3, 0.1), 150);
+            }
+            playWin() {
+                let time = 0;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq) => {
+                    setTimeout(() => this.playTone(freq, 'square', 0.2, 0.1), time);
+                    time += 150;
+                });
+                setTimeout(() => this.playTone(1046.50, 'square', 0.6, 0.1), time);
+            }
+        }
+
+        let sound;
+        let isSoundOn = true;
+
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            document.getElementById('sound-btn').innerText = isSoundOn ? '🔊' : '🔇';
+        }
+
+        function sfx(action) {
+            if (!isSoundOn || !sound) return;
+            switch(action) {
+                case 'tick': sound.playTick(); break;
+                case 'warn': sound.playWarningTick(); break;
+                case 'select': sound.playSelect(); break;
+                case 'correct': sound.playCorrect(); break;
+                case 'wrong': sound.playWrong(); break;
+                case 'timeout': sound.playTimeout(); break;
+                case 'turn': sound.playTurnChange(); break;
+                case 'win': sound.playWin(); break;
+            }
+        }
+
+        const game = {
+            teams: [
+                { id: 0, name: "Đội 1", score: 0, color: "blue", hex: "#3b82f6", bgClass: "bg-blue-600", textClass: "text-blue-400" },
+                { id: 1, name: "Đội 2", score: 0, color: "green", hex: "#22c55e", bgClass: "bg-green-600", textClass: "text-green-400" },
+                { id: 2, name: "Đội 3", score: 0, color: "orange", hex: "#f97316", bgClass: "bg-orange-600", textClass: "text-orange-400" },
+                { id: 3, name: "Đội 4", score: 0, color: "purple", hex: "#a855f7", bgClass: "bg-purple-600", textClass: "text-purple-400" }
+            ],
+            currentRound: 1,
+            currentTurn: 0, // index của team (0-3)
+            globalQuestionIndex: 0,
+            timer: 25,
+            interval: null,
+            isAnswering: false,
+            MAX_ROUNDS: 7
+        };
+
+        // UI Elements Cache
+        const els = {
+            startScreen: document.getElementById('start-screen'),
+            gameScreen: document.getElementById('game-screen'),
+            endScreen: document.getElementById('end-screen'),
+            qText: document.getElementById('question-text'),
+            options: [0, 1, 2, 3].map(i => document.getElementById(`option-${i}`)),
+            optTexts: [0, 1, 2, 3].map(i => document.getElementById(`opt-text-${i}`)),
+            timer: document.getElementById('timer-display'),
+            turnDisplay: document.getElementById('turn-display'),
+            roundDisplay: document.getElementById('round-display'),
+            qCountDisplay: document.getElementById('question-count-display'),
+            difficultyDisplay: document.getElementById('difficulty-display')
+        };
+
+        function startGame() {
+            // Init Sound
+            if (!sound) sound = new SoundEngine();
+            if (sound.ctx.state === 'suspended') sound.ctx.resume();
+            
+            // Lấy tên đội
+            game.teams[0].name = document.getElementById('team1-name').value || "Đội 1";
+            game.teams[1].name = document.getElementById('team2-name').value || "Đội 2";
+            game.teams[2].name = document.getElementById('team3-name').value || "Đội 3";
+            game.teams[3].name = document.getElementById('team4-name').value || "Đội 4";
+
+            // Cập nhật UI Tên đội
+            for(let i=0; i<4; i++) {
+                document.getElementById(`score-name-${i}`).innerText = game.teams[i].name;
+                document.getElementById(`track-name-${i}`).innerText = game.teams[i].name;
+            }
+
+            sfx('turn');
+            els.startScreen.classList.add('hidden');
+            els.gameScreen.classList.remove('hidden');
+            els.gameScreen.classList.add('flex');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (game.globalQuestionIndex >= 28) {
+                endGame();
+                return;
+            }
+
+            game.isAnswering = false;
+            const qData = questions[game.globalQuestionIndex];
+            const activeTeam = game.teams[game.currentTurn];
+
+            // Update Header Info
+            els.roundDisplay.innerText = game.currentRound;
+            els.qCountDisplay.innerText = game.globalQuestionIndex + 1;
+            els.difficultyDisplay.innerText = `MỨC ĐỘ: ${qData.level}`;
+            
+            // Highlight active team & update turn display
+            els.turnDisplay.innerText = `LƯỢT CỦA: ${activeTeam.name}`;
+            els.turnDisplay.className = `px-6 py-2 rounded-lg text-white shadow-lg uppercase transition-colors duration-300 ${activeTeam.bgClass}`;
+            
+            // Highlight score card
+            for(let i=0; i<4; i++) {
+                const card = document.getElementById(`score-card-${i}`);
+                if (i === game.currentTurn) {
+                    card.classList.add('active-team-card');
+                    card.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                } else {
+                    card.classList.remove('active-team-card');
+                    card.style.backgroundColor = 'transparent';
+                }
+            }
+
+            // Fill Question Data
+            els.qText.innerText = qData.q;
+            
+            // Reset Options
+            for (let i = 0; i < 4; i++) {
+                els.optTexts[i].innerText = qData.options[i];
+                els.options[i].className = 'option-btn text-left p-4 rounded-xl bg-gray-800/80 border-2 border-gray-600 hover:border-blue-400 hover:bg-gray-700 transition duration-200 text-lg md:text-xl relative overflow-hidden group';
+                els.options[i].disabled = false;
+            }
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(game.interval);
+            game.timer = 25;
+            els.timer.innerText = game.timer;
+            els.timer.className = 'absolute top-4 right-6 text-5xl md:text-6xl font-black text-white transition-colors';
+
+            game.interval = setInterval(() => {
+                game.timer--;
+                els.timer.innerText = game.timer;
+
+                if (game.timer <= 10 && game.timer > 5) {
+                    els.timer.classList.add('timer-warning');
+                    sfx('tick');
+                } else if (game.timer <= 5 && game.timer > 0) {
+                    els.timer.classList.remove('timer-warning');
+                    els.timer.classList.add('timer-danger');
+                    sfx('warn');
+                } else if (game.timer <= 0) {
+                    clearInterval(game.interval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function handleTimeOut() {
+            if (game.isAnswering) return;
+            game.isAnswering = true;
+            sfx('timeout');
+            els.timer.innerText = "HẾT GIỜ!";
+            els.timer.classList.remove('timer-danger');
+            els.timer.classList.add('text-red-500', 'text-4xl', 'md:text-5xl');
+
+            const qData = questions[game.globalQuestionIndex];
+            
+            // Khóa đáp án và hiện đáp án đúng
+            for (let i = 0; i < 4; i++) {
+                els.options[i].disabled = true;
+                els.options[i].classList.add('disabled-option');
+                if (i === qData.answer) {
+                    els.options[i].classList.remove('disabled-option');
+                    els.options[i].classList.add('correct-answer');
+                }
+            }
+
+            showFeedback(false, "HẾT GIỜ!", "0 ĐIỂM", "#ef4444", "⏰");
+            
+            setTimeout(nextTurn, 3000);
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (game.isAnswering) return;
+            game.isAnswering = true;
+            clearInterval(game.interval);
+            sfx('select');
+
+            const qData = questions[game.globalQuestionIndex];
+            const isCorrect = (selectedIndex === qData.answer);
+            const activeTeam = game.teams[game.currentTurn];
+
+            // Disable all options
+            for (let i = 0; i < 4; i++) {
+                els.options[i].disabled = true;
+                if (i !== selectedIndex && i !== qData.answer) {
+                    els.options[i].classList.add('disabled-option');
+                }
+            }
+
+            if (isCorrect) {
+                sfx('correct');
+                els.options[selectedIndex].classList.add('correct-answer');
+                activeTeam.score += 100;
+                updateScoreBoard(game.currentTurn);
+                updateRaceTrack(game.currentTurn);
+                showFeedback(true, "CHÍNH XÁC!", "+100 ĐIỂM", "#22c55e", "🎉");
+            } else {
+                sfx('wrong');
+                els.options[selectedIndex].classList.add('wrong-answer');
+                els.options[qData.answer].classList.remove('disabled-option');
+                els.options[qData.answer].classList.add('correct-answer'); // Highlight correct
+                showFeedback(false, "CHƯA CHÍNH XÁC!", "0 ĐIỂM", "#ef4444", "❌");
+            }
+
+            setTimeout(nextTurn, 3000);
+        }
+
+        function updateScoreBoard(teamIndex) {
+            const el = document.getElementById(`score-val-${teamIndex}`);
+            // Animating score count
+            const endValue = game.teams[teamIndex].score;
+            let startValue = endValue - 100;
+            const duration = 1000;
+            const frameRate = 30;
+            const step = 100 / (duration / frameRate);
+            
+            const counter = setInterval(() => {
+                startValue += step;
+                if (startValue >= endValue) {
+                    clearInterval(counter);
+                    el.innerText = endValue;
+                    el.classList.add('scale-125', 'text-yellow-400');
+                    setTimeout(() => el.classList.remove('scale-125', 'text-yellow-400'), 300);
+                } else {
+                    el.innerText = Math.floor(startValue);
+                }
+            }, frameRate);
+        }
+
+        function updateRaceTrack(teamIndex) {
+            const runner = document.getElementById(`runner-${teamIndex}`);
+            // Max score is 700. Track is 100% wide.
+            const percentage = (game.teams[teamIndex].score / 700) * 100;
+            runner.style.left = `${Math.min(percentage, 100)}%`;
+        }
+
+        function showFeedback(isSuccess, title, points, color, icon) {
+            const popup = document.getElementById('feedback-popup');
+            const box = document.getElementById('feedback-box');
+            
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-title').style.color = color;
+            document.getElementById('feedback-points').innerText = points;
+            
+            box.style.borderColor = color;
+            popup.classList.add('popup-active');
+
+            setTimeout(() => {
+                popup.classList.remove('popup-active');
+            }, 2500);
+        }
+
+        function nextTurn() {
+            game.globalQuestionIndex++;
+            game.currentTurn++;
+
+            if (game.currentTurn > 3) {
+                game.currentTurn = 0;
+                game.currentRound++;
+            }
+
+            if (game.globalQuestionIndex < 28) {
+                sfx('turn');
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            sfx('win');
+            els.gameScreen.classList.remove('flex');
+            els.gameScreen.classList.add('hidden');
+            els.endScreen.classList.remove('hidden');
+            els.endScreen.classList.add('flex');
+
+            // Sắp xếp đội theo điểm
+            const sortedTeams = [...game.teams].sort((a, b) => b.score - a.score);
+            const podiumContainer = document.getElementById('final-podium');
+            
+            // Tạo bục vinh quang (Podium) - 2nd, 1st, 3rd, 4th
+            const podiumOrder = [
+                { team: sortedTeams[1], height: 'h-40', rank: 2, bg: 'bg-gray-400' },
+                { team: sortedTeams[0], height: 'h-56', rank: 1, bg: 'bg-yellow-400' },
+                { team: sortedTeams[2], height: 'h-28', rank: 3, bg: 'bg-orange-700' },
+                { team: sortedTeams[3], height: 'h-16', rank: 4, bg: 'bg-gray-700' }
+            ];
+
+            podiumContainer.innerHTML = '';
+            podiumOrder.forEach(item => {
+                if(!item.team) return;
+                const html = `
+                    <div class="flex flex-col items-center justify-end animate-fade-in" style="animation-delay: ${item.rank * 200}ms">
+                        <div class="text-xl font-bold mb-2 ${item.team.textClass}">${item.team.score}đ</div>
+                        <div class="text-lg font-bold mb-1 truncate w-20 text-center">${item.team.name}</div>
+                        <div class="w-20 md:w-28 ${item.height} ${item.bg} flex items-start justify-center pt-4 rounded-t-lg shadow-2xl relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                            <span class="text-3xl md:text-5xl font-black text-white/90 z-10">${item.rank}</span>
+                        </div>
+                    </div>
+                `;
+                podiumContainer.innerHTML += html;
+            });
+
+            createFireworks();
+        }
+
+        function createFireworks() {
+            const container = els.endScreen;
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.classList.add('confetti');
+                    
+                    const colors = ['#facc15', '#ef4444', '#3b82f6', '#22c55e', '#a855f7'];
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    const startX = Math.random() * window.innerWidth;
+                    confetti.style.left = `${startX}px`;
+                    confetti.style.top = '-10px';
+                    
+                    // Random fall animation
+                    const duration = 2 + Math.random() * 3;
+                    const endX = startX + (Math.random() - 0.5) * 200;
+                    
+                    confetti.animate([
+                        { transform: `translate3d(0,0,0) rotate(0deg)`, opacity: 1 },
+                        { transform: `translate3d(${endX - startX}px, ${window.innerHeight}px, 0) rotate(${Math.random()*720}deg)`, opacity: 0 }
+                    ], {
+                        duration: duration * 1000,
+                        easing: 'cubic-bezier(.37,0,.63,1)'
+                    });
+
+                    container.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), duration * 1000);
+                }, i * 50);
+            }
+        }
+    </script>
+</body>
+</html>

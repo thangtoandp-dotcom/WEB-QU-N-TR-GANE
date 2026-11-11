@@ -153,7 +153,8 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
   };
 
   const isHtmlGame = (g: GameItem): boolean => {
-    return g.fileType === 'html' || Boolean(g.fileUrl && /\.(html|htm|htlm)$/i.test(g.fileUrl)) || Boolean(g.fileName && /\.(html|htm|htlm)$/i.test(g.fileName));
+    if (isVideoGame(g) || isPowerPointGame(g)) return false;
+    return g.fileType === 'html' || Boolean(g.embedCode) || Boolean(g.fileUrl && /\.(html|htm|htlm)$/i.test(g.fileUrl)) || Boolean(g.fileName && /\.(html|htm|htlm)$/i.test(g.fileName)) || g.id.startsWith('game_custom_');
   };
 
   // Counts for pills
@@ -361,6 +362,8 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
       ? '#7C3AED' 
       : isPpt 
       ? '#EA580C' 
+      : isHtm
+      ? '#059669'
       : game.color || (isDef ? '#0878DC' : '#0369A1');
 
     return (
@@ -373,6 +376,8 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
             ? 'border-2 border-purple-300 hover:border-purple-600'
             : isPpt
             ? 'border-2 border-orange-300 hover:border-orange-600'
+            : isHtm
+            ? 'border-2 border-emerald-300 hover:border-emerald-600'
             : 'border-2 border-slate-200 hover:border-[#0878DC]'
         }`}
       >
@@ -548,12 +553,14 @@ export const GamesGallery: React.FC<GamesGalleryProps> = ({
                   ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-800 hover:to-indigo-700'
                   : isPpt
                   ? 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700'
+                  : isHtm
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'
                   : 'bg-gradient-to-r from-[#063B8E] to-[#0878DC] hover:from-[#052C6E] hover:to-[#0664B8]'
               }`}
               title="Mở rộng hết toàn màn hình máy tính để chơi"
             >
               <Maximize2 className="w-4 h-4 text-[#FFDE59] group-hover:scale-110 transition-transform" />
-              <span>{isVid ? 'Xem & Chơi Video' : isPpt ? 'Trình chiếu PowerPoint' : isDef ? 'Chơi Mặc Định' : 'Mở toàn màn hình'}</span>
+              <span>{isVid ? 'Xem & Chơi Video' : isPpt ? 'Trình chiếu PowerPoint' : isHtm ? 'Chơi Game HTML5' : isDef ? 'Chơi Mặc Định' : 'Mở toàn màn hình'}</span>
             </button>
           </div>
         </div>

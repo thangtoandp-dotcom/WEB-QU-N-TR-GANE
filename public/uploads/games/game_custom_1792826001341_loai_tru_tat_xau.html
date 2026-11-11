@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bảo Vệ Ngân Hà</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        body {
+            background-color: #050510;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; 
+            touch-action: none; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; 
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .score-board {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00f, 0 0 20px #00f;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #game-over-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            pointer-events: auto; 
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s;
+        }
+
+        #game-over-screen.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .go-title {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            color: #ff3366;
+            text-shadow: 0 0 20px #ff3366;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .go-score {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .btn-restart {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-restart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 210, 255, 1);
+        }
+        .btn-restart:active { transform: scale(0.95); }
+
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a1a3a 0%, #000000 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+        }
+
+        .instruction { margin: 20px 20px; font-size: 1.2rem; color: #aaa; text-align: center; max-width: 500px; line-height: 1.6;}
+
+        #author-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #0a0a2a 0%, #000000 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 40;
+            transition: opacity 1s ease-out;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .author-title {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: #fff;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .author-name {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            color: #ffcc00;
+            text-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
+            margin-bottom: 10px;
+            font-weight: bold;
+            animation: pulse-glow 2s infinite;
+        }
+
+        .author-unit {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            color: #00d2ff;
+            margin-bottom: 40px;
+        }
+
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 10px rgba(255, 204, 0, 0.5); }
+            50% { text-shadow: 0 0 25px rgba(255, 204, 0, 1), 0 0 10px rgba(255, 255, 255, 0.8); }
+            100% { text-shadow: 0 0 10px rgba(255, 204, 0, 0.5); }
+        }
+
+        .btn-continue {
+            padding: 12px 35px;
+            font-size: 1.2rem;
+            color: white;
+            background: transparent;
+            border: 2px solid #00d2ff;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-continue:hover {
+            background: rgba(0, 210, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="author-screen">
+        <div class="author-title">Tác Giả Game</div>
+        <div class="author-name">Thầy giáo BÙI NGỌC THẮNG</div>
+        <div class="author-unit">Trường THPT Đan Phượng</div>
+        <button class="btn-continue" id="btn-continue">Tiếp Tục</button>
+    </div>
+
+    <div id="ui-layer">
+        <div class="score-board">
+            <span>ĐIỂM: <span id="scoreVal">0</span></span>
+            <span id="levelVal">CẤP: 1</span>
+        </div>
+    </div>
+
+    <div id="start-screen">
+        <h1 class="go-title" style="color: #00d2ff; text-shadow: 0 0 20px #00d2ff;">LOẠI TRỪ TỒN TẠI</h1>
+        <p class="instruction">
+            🚀 <b>Cách chơi:</b><br>
+            Di chuột hoặc vuốt ngón tay trên màn hình để di chuyển phi thuyền.<br>
+            Hãy bắn hạ các "Tồn tại, Nhược điểm" đang rơi xuống để xây dựng môi trường giáo dục chuẩn mực!
+        </p>
+        <button class="btn-restart" id="btn-start">🚀 BẮT ĐẦU CHIẾN DỊCH</button>
+    </div>
+
+    <div id="game-over-screen">
+        <h1 class="go-title">TÀU BỊ PHÁ HỦY!</h1>
+        <div class="go-score">Tổng Điểm: <span id="finalScore">0</span></div>
+        
+        <input type="text" id="playerName" placeholder="Nhập tên của bạn..." style="padding: 12px; font-size: 1.2rem; margin-bottom: 10px; border-radius: 8px; text-align: center; border: 2px solid #00d2ff; background: #fff; color: #000; width: 80%; max-width: 300px; outline: none;">
+        <button class="btn-restart" id="btn-save-score" style="background: linear-gradient(45deg, #28a745, #218838); margin-bottom: 15px; font-size: 1.2rem; padding: 12px 30px;">💾 LƯU ĐIỂM</button>
+        <div id="save-status" style="margin-bottom: 20px; font-size: 1.2rem; color: #ffeb3b; min-height: 25px; text-align: center; max-width: 90%;"></div>
+
+        <button class="btn-restart" id="btn-restart">🔄 CHƠI LẠI</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('scoreVal');
+        const levelEl = document.getElementById('levelVal');
+        const finalScoreEl = document.getElementById('finalScore');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const startScreen = document.getElementById('start-screen');
+        const authorScreen = document.getElementById('author-screen');
+
+        document.getElementById('btn-continue').addEventListener('click', () => {
+            authorScreen.style.opacity = '0';
+            setTimeout(() => {
+                authorScreen.style.display = 'none';
+            }, 1000); 
+        });
+
+        let width, height;
+        let animationId;
+        let isPlaying = false;
+        let score = 0;
+        let frames = 0;
+        let level = 1;
+
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+        let stars = [];
+
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type, freq, duration, vol) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playShootSound() { playSound('square', 800, 0.1, 0.05); }
+        function playExplodeSound() { playSound('sawtooth', 100, 0.3, 0.1); }
+        function playGameOverSound() { 
+            playSound('sawtooth', 150, 0.5, 0.2); 
+            setTimeout(() => playSound('sawtooth', 100, 0.8, 0.2), 300);
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function createStars() {
+            stars = [];
+            for(let i = 0; i < 100; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.5,
+                    speed: Math.random() * 2 + 0.5
+                });
+            }
+        }
+
+        function updateStars() {
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                star.y += star.speed * (level * 0.5);
+                if (star.y > height) {
+                    star.y = 0;
+                    star.x = Math.random() * width;
+                }
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        class Player {
+            constructor() {
+                this.x = width / 2;
+                this.y = height - 100;
+                this.radius = 20;
+                this.color = '#00d2ff';
+                this.targetX = this.x;
+                this.targetY = this.y;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+                
+                ctx.beginPath();
+                ctx.moveTo(0, -this.radius);
+                ctx.lineTo(this.radius, this.radius);
+                ctx.lineTo(0, this.radius - 5);
+                ctx.lineTo(-this.radius, this.radius);
+                ctx.closePath();
+                
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            update() {
+                this.x += (this.targetX - this.x) * 0.2;
+                this.y += (this.targetY - this.y) * 0.2;
+
+                this.x = Math.max(this.radius, Math.min(width - this.radius, this.x));
+                this.y = Math.max(this.radius, Math.min(height - this.radius, this.y));
+
+                this.draw();
+            }
+        }
+        let player;
+
+        class Bullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 4;
+                this.color = '#ffeb3b';
+                this.velocity = { x: 0, y: -(10 + level) }; 
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.shadowBlur = 0; 
+            }
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.draw();
+            }
+        }
+
+        const enemyTypes = ['QUAY CÓP', 'ĐÁNH NHAU', 'VÔ LỄ', 'VI PHẠM', 'LƯỜI HỌC', 'NÓI TỤC', 'HỌC MUỘN', 'NGỦ GẬT', 'VIỆC RIÊNG', 'GIAN LẬN', 'XÚC PHẠM', 'NÓI CHUYỆN', 'ĐIỂM KÉM', 'CHIA BÈ', 'CHIA NHÓM'];
+
+        class Enemy {
+            constructor() {
+                this.radius = Math.random() * 15 + 35;
+                this.x = Math.random() * (width - this.radius * 2) + this.radius;
+                this.y = -this.radius;
+                const speedMult = 1 + (level * 0.2);
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 2 * speedMult,
+                    y: (Math.random() * 2 + 1.5) * speedMult
+                };
+                this.text = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+                this.hp = Math.floor(this.radius / 10); 
+                
+                this.shapeType = Math.floor(Math.random() * 4); 
+                this.colorHue = Math.floor(Math.random() * 360); 
+            }
+
+            drawShape() {
+                const r = this.radius;
+                ctx.fillStyle = `hsl(${this.colorHue}, 70%, 45%)`;
+                ctx.strokeStyle = `hsl(${this.colorHue}, 100%, 70%)`;
+                ctx.lineWidth = 2;
+
+                switch(this.shapeType) {
+                    case 0: 
+                        ctx.beginPath();
+                        ctx.arc(0, -r/4, r/1.8, Math.PI, 0);
+                        ctx.fillStyle = 'rgba(150, 255, 255, 0.6)';
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, r, r/2.5, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `hsl(${this.colorHue}, 60%, 40%)`;
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath(); ctx.arc(-r/1.8, 0, 3, 0, Math.PI*2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(0, r/4, 3, 0, Math.PI*2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(r/1.8, 0, 3, 0, Math.PI*2); ctx.fill();
+                        break;
+                    case 1: 
+                        ctx.beginPath();
+                        ctx.arc(0, 0, r*0.9, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, r/2.5, r*0.9, 0, 0, Math.PI * 2);
+                        ctx.stroke();
+                        break;
+                    case 2: 
+                        ctx.beginPath();
+                        ctx.moveTo(0, r); 
+                        ctx.lineTo(-r*0.8, -r*0.6); 
+                        ctx.lineTo(0, -r*0.2); 
+                        ctx.lineTo(r*0.8, -r*0.6); 
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
+                        ctx.beginPath();
+                        ctx.moveTo(0, r*0.3);
+                        ctx.lineTo(-r*0.15, 0);
+                        ctx.lineTo(0, -r*0.1);
+                        ctx.lineTo(r*0.15, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                    case 3: 
+                        ctx.beginPath();
+                        ctx.arc(0, 0, r*0.75, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                        for(let i=0; i<8; i++) {
+                            let angle = (i/8) * Math.PI * 2;
+                            ctx.beginPath();
+                            ctx.moveTo(Math.cos(angle)*r*0.75, Math.sin(angle)*r*0.75);
+                            ctx.lineTo(Math.cos(angle)*r*1.15, Math.sin(angle)*r*1.15);
+                            ctx.lineWidth = 3;
+                            ctx.stroke();
+                        }
+                        break;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                this.drawShape();
+
+                // Cấu hình phông chữ lớn và rõ nét hơn
+                ctx.font = 'bold 15px "Segoe UI", Arial, sans-serif'; 
+                
+                // Đo chiều rộng của chữ để vẽ hộp nền vừa vặn
+                const textWidth = ctx.measureText(this.text).width;
+                const boxWidth = Math.max(this.radius * 2, textWidth + 16); 
+                const boxHeight = 28;
+
+                // Vẽ hộp nền đen tối hơn để chữ nổi bật
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+                if (ctx.roundRect) {
+                    ctx.beginPath();
+                    ctx.roundRect(-boxWidth/2, -boxHeight/2, boxWidth, boxHeight, 6);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(-boxWidth/2, -boxHeight/2, boxWidth, boxHeight);
+                }
+
+                // Vẽ chữ trắng tinh và có viền bóng đổ
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = '#000000';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // Dịch xuống 1px để căn giữa hoàn hảo theo chiều dọc
+                ctx.fillText(this.text, 0, 1);
+                
+                ctx.restore();
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                
+                if (this.x - this.radius < 0 || this.x + this.radius > width) {
+                    this.velocity.x = -this.velocity.x;
+                }
+                this.draw();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = Math.random() * 3 + 1;
+                this.color = color || `hsl(${Math.random() * 360}, 50%, 50%)`;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 8,
+                    y: (Math.random() - 0.5) * 8
+                };
+                this.alpha = 1;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.02; 
+                this.draw();
+            }
+        }
+
+        function setPlayerTarget(e) {
+            if (!isPlaying) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            player.targetX = clientX;
+            player.targetY = clientY;
+        }
+
+        window.addEventListener('mousemove', setPlayerTarget);
+        window.addEventListener('touchmove', setPlayerTarget, {passive: false});
+        window.addEventListener('touchstart', setPlayerTarget, {passive: false});
+
+        function createExplosion(x, y, color) {
+            playExplodeSound();
+            for(let i=0; i < 15; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function initGame() {
+            initAudio();
+            player = new Player();
+            bullets = [];
+            enemies = [];
+            particles = [];
+            score = 0;
+            level = 1;
+            frames = 0;
+            scoreEl.innerText = score;
+            levelEl.innerText = `CẤP: ${level}`;
+            createStars();
+            
+            gameOverScreen.classList.remove('active');
+            startScreen.style.display = 'none';
+            document.getElementById('save-status').innerText = ""; 
+            isPlaying = true;
+            
+            animate();
+        }
+
+        function animate() {
+            if (!isPlaying) return;
+            animationId = requestAnimationFrame(animate);
+            frames++;
+
+            ctx.fillStyle = 'rgba(5, 5, 16, 0.4)';
+            ctx.fillRect(0, 0, width, height);
+            
+            updateStars();
+            player.update();
+
+            let fireRate = Math.max(10, 20 - level * 2); 
+            if (frames % fireRate === 0) {
+                bullets.push(new Bullet(player.x, player.y - 20));
+                if (level >= 3) {
+                    let b1 = new Bullet(player.x - 15, player.y - 10);
+                    let b2 = new Bullet(player.x + 15, player.y - 10);
+                    b1.velocity.x = -1; b2.velocity.x = 1;
+                    bullets.push(b1, b2);
+                }
+                playShootSound();
+            }
+
+            let spawnRate = Math.max(30, 80 - level * 5);
+            if (frames % spawnRate === 0) {
+                enemies.push(new Enemy());
+            }
+
+            particles.forEach((particle, index) => {
+                if (particle.alpha <= 0) {
+                    particles.splice(index, 1);
+                } else {
+                    particle.update();
+                }
+            });
+
+            bullets.forEach((bullet, index) => {
+                bullet.update();
+                if (bullet.y + bullet.radius < 0) {
+                    bullets.splice(index, 1);
+                }
+            });
+
+            enemies.forEach((enemy, eIndex) => {
+                enemy.update();
+
+                if (enemy.y > height + enemy.radius) {
+                    enemies.splice(eIndex, 1);
+                }
+
+                bullets.forEach((bullet, bIndex) => {
+                    const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
+                    if (dist - enemy.radius - bullet.radius < 0) {
+                        bullets.splice(bIndex, 1);
+                        enemy.hp -= 1;
+
+                        for(let i=0; i<3; i++) particles.push(new Particle(bullet.x, bullet.y, '#ff0'));
+
+                        if (enemy.hp <= 0) {
+                            createExplosion(enemy.x, enemy.y, '#f55');
+                            enemies.splice(eIndex, 1);
+                            score += 10;
+                            scoreEl.innerText = score;
+
+                            if (score % 200 === 0) {
+                                level++;
+                                levelEl.innerText = `CẤP: ${level}`;
+                            }
+                        }
+                    }
+                });
+
+                const distPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+                if (distPlayer - enemy.radius - (player.radius * 0.6) < 0) {
+                    handleGameOver();
+                }
+            });
+        }
+
+        function handleGameOver() {
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            createExplosion(player.x, player.y, player.color);
+            playGameOverSound();
+            
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, width, height);
+
+            setTimeout(() => {
+                finalScoreEl.innerText = score;
+                gameOverScreen.classList.add('active');
+            }, 800);
+        }
+
+        document.getElementById('btn-start').addEventListener('click', initGame);
+        document.getElementById('btn-restart').addEventListener('click', initGame);
+
+        // Lưu điểm lên Google Sheets
+        document.getElementById('btn-save-score').addEventListener('click', () => {
+            const name = document.getElementById('playerName').value.trim();
+            const statusEl = document.getElementById('save-status');
+            
+            if (!name) {
+                statusEl.innerText = "⚠️ Vui lòng nhập tên của bạn!";
+                statusEl.style.color = "#ff5555";
+                return;
+            }
+            
+            statusEl.innerText = "⏳ Đang lưu dữ liệu lên hệ thống...";
+            statusEl.style.color = "#ffeb3b";
+
+            // Đường link Web App của Thầy
+            const API_URL = "https://script.google.com/macros/s/AKfycbyPGNgOfSNcnIpMqMcmiskRL2oYSnaXYCwf7AvmojbAEbrYA9K0BbpekQr0pzWfdrwi/exec";
+
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ playerName: name, score: score }),
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.result === 'success') {
+                    statusEl.innerText = "✅ Đã lưu điểm thành công!";
+                    statusEl.style.color = "#4caf50";
+                } else {
+                    statusEl.innerText = "❌ Lỗi: Thầy nhớ đổi tên Tab trong trang tính thành 'KetQua' nhé!";
+                    statusEl.style.color = "#ff5555";
+                }
+            })
+            .catch(error => {
+                statusEl.innerText = "❌ Lỗi kết nối mạng, vui lòng thử lại!";
+                statusEl.style.color = "#ff5555";
+                console.error("Error:", error);
+            });
+        });
+
+    </script>
+</body>
+</html>

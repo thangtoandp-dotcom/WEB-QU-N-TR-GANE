@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Em Bé Leo Thang - Toán Hàm Số</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); min-height: 100vh; margin: 0; }
+        .baby { transition: all 0.5s ease-in-out; }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const baseQuestions = [
+            {
+                q: "Hàm số y = x³ - 3x + 2 đồng biến trên khoảng nào?",
+                options: ["(-∞; -1) và (1; +∞)", "(-1; 1)", "(-∞; 1)", "(1; +∞)"],
+                ans: 0
+            },
+            {
+                q: "Điểm cực đại của hàm số y = -x³ + 3x - 1 là?",
+                options: ["x = -1", "x = 1", "x = 0", "x = 2"],
+                ans: 1
+            },
+            {
+                q: "Cho hàm số y = f(x) có đạo hàm f'(x) = x(x-1)². Số điểm cực trị của hàm số là?",
+                options: ["3", "2", "1", "0"],
+                ans: 2
+            },
+            {
+                q: "Hàm số y = (2x+1)/(x-1) nghịch biến trên các khoảng nào?",
+                options: ["(-∞; 1)", "(1; +∞)", "ℝ", "(-∞; 1) và (1; +∞)"],
+                ans: 3
+            },
+            {
+                q: "Giá trị cực tiểu của hàm số y = x⁴ - 2x² + 3 là?",
+                options: ["0", "1", "2", "3"],
+                ans: 2
+            },
+            {
+                q: "Hàm số nào sau đây luôn đồng biến trên ℝ?",
+                options: ["y = x⁴ + x²", "y = x³ + x", "y = (x+1)/(x-1)", "y = -x³ - 3x"],
+                ans: 1
+            },
+            {
+                q: "Hàm số y = ax⁴ + bx² + c (a ≠ 0) có tối đa bao nhiêu điểm cực trị?",
+                options: ["1", "2", "3", "4"],
+                ans: 2
+            },
+            {
+                q: "Đồ thị hàm số bậc 3 có thể có bao nhiêu điểm cực trị?",
+                options: ["0 hoặc 2", "1 hoặc 2", "0 hoặc 1", "2 hoặc 3"],
+                ans: 0
+            },
+            {
+                q: "Tìm m để hàm số y = x³ - 3mx² + 3x + 1 đồng biến trên ℝ.",
+                options: ["m ≥ 1", "m ≤ -1", "-1 < m < 1", "-1 ≤ m ≤ 1"],
+                ans: 3
+            },
+            {
+                q: (
+                    <span>
+                        Hàm số y = <math style={{fontSize: '1.2em'}}><msqrt><mrow><mn>2</mn><mi>x</mi><mo>-</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msqrt></math> đồng biến trên khoảng nào?
+                    </span>
+                ),
+                options: ["(1; 2)", "(0; 1)", "(0; 2)", "ℝ"],
+                ans: 1
+            }
+        ];
+
+        // Hàm xáo trộn mảng (Thuật toán Fisher-Yates)
+        function shuffleArray(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Hàm lấy danh sách câu hỏi và đáp án ngẫu nhiên
+        function getShuffledQuestions() {
+            const shuffledQ = shuffleArray(baseQuestions);
+            return shuffledQ.map(q => {
+                const correctText = q.options[q.ans];
+                const shuffledOptions = shuffleArray(q.options);
+                const newAnsIndex = shuffledOptions.indexOf(correctText); // Cập nhật lại vị trí đáp án đúng
+                return {
+                    ...q,
+                    options: shuffledOptions,
+                    ans: newAnsIndex
+                };
+            });
+        }
+
+        // Khởi tạo AudioContext cho âm thanh Đúng/Sai
+        let audioCtx = null;
+        function playSound(isCorrect) {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (isCorrect) {
+                // Âm thanh báo Đúng (Tít tít cao)
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.4);
+            } else {
+                // Âm thanh báo Sai (Bíp trầm)
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        function App() {
+            const [gameQuestions, setGameQuestions] = React.useState(() => getShuffledQuestions());
+            const [questionIndex, setQuestionIndex] = React.useState(0);
+            const [score, setScore] = React.useState(0); // score tương đương với bậc thang
+            const [screen, setScreen] = React.useState('start'); // 'start', 'playing', 'finished'
+            const [playerName, setPlayerName] = React.useState('');
+            const [playerClass, setPlayerClass] = React.useState('');
+            const [isAnswering, setIsAnswering] = React.useState(false);
+            const [selectedIndex, setSelectedIndex] = React.useState(null);
+            const [feedback, setFeedback] = React.useState(null);
+            const [timeLeft, setTimeLeft] = React.useState(600); // Thêm trạng thái đếm ngược 600s
+            
+            // MỚI: Các state để xử lý lưu Google Sheets
+            const [isSaving, setIsSaving] = React.useState(false);
+            const [savedSuccess, setSavedSuccess] = React.useState(false);
+
+            // QUAN TRỌNG: Thay URL dưới đây bằng URL Web App bạn copy được từ Google Apps Script
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgErAwgqYGjN6kawth4saQPS5g5SxHxJWVi7pZ4BQU5UVf-PXn-v3LWWtwXJrtNu5OOQ/exec';
+
+            // Effect lưu kết quả khi chuyển sang màn hình 'finished'
+            React.useEffect(() => {
+                if (screen === 'finished' && !savedSuccess && GOOGLE_SCRIPT_URL !== 'THAY_BANG_URL_CUA_BAN') {
+                    setIsSaving(true);
+                    const timeUsed = 600 - timeLeft; // Tính số giây đã dùng
+                    
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // Bắt buộc để tránh lỗi bảo mật CORS
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            name: playerName,
+                            playerClass: playerClass,
+                            score: score,
+                            timeUsed: timeUsed
+                        })
+                    }).then(() => {
+                        setIsSaving(false);
+                        setSavedSuccess(true);
+                    }).catch(err => {
+                        console.error('Lỗi khi lưu kết quả:', err);
+                        setIsSaving(false);
+                    });
+                }
+            }, [screen]);
+
+            // Logic đếm ngược thời gian
+            React.useEffect(() => {
+                let timer;
+                if (screen === 'playing' && timeLeft > 0) {
+                    timer = setInterval(() => {
+                        setTimeLeft((prev) => {
+                            if (prev <= 1) {
+                                clearInterval(timer);
+                                setScreen('finished'); // Hết giờ thì kết thúc game
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                }
+                return () => clearInterval(timer);
+            }, [screen, timeLeft]);
+
+            // Hàm định dạng thời gian MM:SS
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+
+            const handleAnswer = (index) => {
+                if (isAnswering) return; 
+                setIsAnswering(true);
+                setSelectedIndex(index);
+                
+                const isCorrect = index === gameQuestions[questionIndex].ans;
+                playSound(isCorrect);
+                
+                if (isCorrect) {
+                    setScore(prev => prev + 1);
+                    setFeedback("correct");
+                } else {
+                    setFeedback("incorrect");
+                }
+
+                // Chờ 1.2 giây để xem kết quả trước khi chuyển câu
+                setTimeout(() => {
+                    if (questionIndex + 1 === gameQuestions.length) {
+                        setScreen('finished');
+                    } else {
+                        setQuestionIndex(questionIndex + 1);
+                    }
+                    setIsAnswering(false);
+                    setSelectedIndex(null);
+                    setFeedback(null);
+                }, 1200);
+            };
+
+            const resetGame = () => {
+                setGameQuestions(getShuffledQuestions());
+                setQuestionIndex(0);
+                setScore(0);
+                setTimeLeft(600); // Đặt lại thời gian
+                setScreen('playing');
+                setSelectedIndex(null);
+                setFeedback(null);
+                setIsAnswering(false);
+                setSavedSuccess(false); // Reset trạng thái lưu
+            };
+
+            const backToStart = () => {
+                setScreen('start');
+                setPlayerName('');
+                setPlayerClass('');
+                setGameQuestions(getShuffledQuestions());
+                setQuestionIndex(0);
+                setScore(0);
+                setTimeLeft(600); // Đặt lại thời gian
+                setSavedSuccess(false); // Reset trạng thái lưu
+            };
+
+            const startGame = () => {
+                if (playerName.trim() && playerClass.trim()) {
+                    setTimeLeft(600); // Đảm bảo thời gian đầy đủ khi bắt đầu
+                    setScreen('playing');
+                }
+            };
+
+            if (screen === 'start') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                        <div className="max-w-xl w-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden p-8 md:p-12 border-4 border-pink-400">
+                            <h1 className="text-4xl md:text-5xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-4 drop-shadow-sm">Em Bé Leo Thang</h1>
+                            <p className="text-center text-xl text-gray-600 mb-8 font-semibold">Vượt qua thử thách Toán học</p>
+                            
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-2xl font-bold text-blue-900 mb-3">Họ và tên của em:</label>
+                                    <input 
+                                        type="text" 
+                                        value={playerName} 
+                                        onChange={e => setPlayerName(e.target.value)} 
+                                        className="w-full text-2xl p-4 border-4 border-blue-200 rounded-2xl focus:outline-none focus:border-pink-400 focus:ring-4 focus:ring-pink-100 transition-all text-gray-800 font-bold" 
+                                        placeholder="Nhập họ và tên..." 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-2xl font-bold text-blue-900 mb-3">Lớp:</label>
+                                    <input 
+                                        type="text" 
+                                        value={playerClass} 
+                                        onChange={e => setPlayerClass(e.target.value)} 
+                                        className="w-full text-2xl p-4 border-4 border-blue-200 rounded-2xl focus:outline-none focus:border-pink-400 focus:ring-4 focus:ring-pink-100 transition-all text-gray-800 font-bold" 
+                                        placeholder="Nhập lớp..." 
+                                        onKeyPress={e => e.key === 'Enter' && startGame()}
+                                    />
+                                </div>
+                                <button
+                                    onClick={startGame}
+                                    disabled={!playerName.trim() || !playerClass.trim()}
+                                    className="w-full mt-8 text-3xl bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-extrabold py-5 px-8 rounded-2xl shadow-xl transition-transform transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed border-b-4 border-blue-700 active:translate-y-1 active:border-b-0"
+                                >
+                                    Bắt Đầu Chơi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                    <div className="max-w-4xl w-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden p-8 border-4 border-pink-400">
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-8 drop-shadow-sm">Trò Chơi Em Bé Leo Thang</h1>
+                        
+                        {/* Biểu đồ bậc thang */}
+                        <div className="relative w-full h-80 bg-blue-50 border-b-8 border-l-8 border-gray-800 rounded-bl-2xl mb-10 overflow-hidden shadow-inner">
+                            {/* Render Cầu thang */}
+                            {[...Array(10)].map((_, i) => (
+                                <div 
+                                    key={i} 
+                                    className="absolute bg-gradient-to-t from-orange-500 to-yellow-400 border-t-4 border-r-4 border-orange-800 shadow-sm"
+                                    style={{
+                                        width: '10%',
+                                        height: `${(i + 1) * 10}%`,
+                                        left: `${i * 10}%`,
+                                        bottom: 0,
+                                    }}
+                                >
+                                    <span className="absolute bottom-2 w-full text-center text-sm md:text-base font-extrabold text-orange-900 drop-shadow-md">
+                                        {i + 1}
+                                    </span>
+                                </div>
+                            ))}
+
+                            {/* Em bé */}
+                            <div 
+                                className="baby absolute text-5xl md:text-6xl drop-shadow-xl z-10"
+                                style={{
+                                    left: `calc(${score * 10}% - 5%)`, // Vị trí dựa vào điểm số/bậc thang
+                                    bottom: score === 0 ? '0%' : `${score * 10}%`,
+                                    marginLeft: score === 0 ? '5%' : '0'
+                                }}
+                            >
+                                {screen === 'finished' && score === 10 ? "🏆" : "👶"}
+                            </div>
+                        </div>
+
+                        {/* Trạng thái game & Điều khiển */}
+                        {screen === 'playing' ? (
+                            <div className={`transition-all ${feedback === 'incorrect' ? 'shake' : ''}`}>
+                                <div className="flex flex-wrap justify-between items-center mb-6 bg-purple-100 p-4 rounded-xl border-2 border-purple-300 shadow-sm gap-4">
+                                    <div className="text-purple-700 text-2xl font-extrabold">
+                                        Câu: {questionIndex + 1} / {gameQuestions.length}
+                                    </div>
+                                    <div className={`text-2xl font-extrabold px-4 py-2 rounded-lg border-2 ${timeLeft <= 60 ? 'text-red-600 border-red-400 bg-red-100 animate-pulse' : 'text-blue-700 border-blue-400 bg-blue-100'}`}>
+                                        ⏱ {formatTime(timeLeft)}
+                                    </div>
+                                    <div className="text-pink-600 text-2xl font-extrabold">
+                                        Điểm (Bậc): <span className="text-3xl text-pink-700">{score}</span>
+                                    </div>
+                                </div>
+                                <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-6 bg-blue-100 p-6 rounded-2xl border-4 border-blue-300 shadow-md leading-relaxed">
+                                    {gameQuestions[questionIndex].q}
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {gameQuestions[questionIndex].options.map((opt, idx) => {
+                                        // Logic hiển thị màu nút khi đã click
+                                        let btnClass = "bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-500 hover:to-emerald-600 text-white border-emerald-700";
+                                        if (isAnswering) {
+                                            if (idx === gameQuestions[questionIndex].ans) {
+                                                btnClass = "bg-green-500 text-white border-green-700 ring-4 ring-green-300 scale-105"; // Hiện đáp án đúng
+                                            } else if (idx === selectedIndex) {
+                                                btnClass = "bg-red-500 text-white border-red-700 ring-4 ring-red-300"; // Hiện đáp án chọn sai
+                                            } else {
+                                                btnClass = "bg-gray-300 text-gray-500 border-gray-400 opacity-50"; // Làm mờ nút khác
+                                            }
+                                        }
+
+                                        return (
+                                            <button
+                                                key={idx}
+                                                onClick={() => handleAnswer(idx)}
+                                                disabled={isAnswering}
+                                                className={`w-full text-left text-2xl md:text-3xl lg:text-4xl font-extrabold py-6 px-8 rounded-xl shadow-lg border-b-4 transition-transform transform whitespace-nowrap overflow-hidden text-ellipsis ${btnClass} ${!isAnswering && 'hover:-translate-y-1 active:translate-y-0 active:border-b-0'}`}
+                                            >
+                                                {String.fromCharCode(65 + idx)}. {opt}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                
+                                {/* Thông báo tức thì khi chọn */}
+                                <div className="h-12 mt-6">
+                                    {feedback === 'correct' && <p className="text-green-500 text-center text-3xl font-extrabold animate-bounce">Chính xác! Lên 1 bậc! 🎉</p>}
+                                    {feedback === 'incorrect' && <p className="text-red-500 text-center text-3xl font-extrabold animate-pulse">Sai rồi! Em bé vẫn ở bậc cũ.</p>}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 mb-4 drop-shadow-lg">
+                                    Hoàn Thành! 🎉
+                                </h2>
+                                <p className="text-3xl text-purple-700 mb-6 font-bold bg-purple-100 inline-block px-6 py-2 rounded-full border-2 border-purple-300">
+                                    Chúc mừng <span className="text-pink-600">{playerName}</span> - Lớp <span className="text-pink-600">{playerClass}</span>
+                                </p>
+                                <p className="text-3xl text-gray-800 mb-4 font-bold">
+                                    Tổng điểm: <span className="text-pink-600 text-5xl">{score}/10</span>
+                                </p>
+                                <p className="text-2xl text-gray-700 mb-8 font-semibold">
+                                    {score === 10 ? "Xuất sắc! Em bé đã leo lên đỉnh cao nhất!" : `Em bé đã leo được đến bậc số ${score}. Cố gắng hơn vào lần sau nhé!`}
+                                </p>
+
+                                {/* MỚI: Thông báo trạng thái lưu kết quả */}
+                                {isSaving && <p className="text-blue-600 font-bold mb-6 text-xl animate-pulse">⏳ Đang lưu kết quả của bạn lên hệ thống...</p>}
+                                {savedSuccess && <p className="text-green-600 font-bold mb-6 text-xl">✅ Đã lưu kết quả thành công!</p>}
+
+                                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                                    <button 
+                                        onClick={resetGame}
+                                        className="text-3xl bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white font-extrabold py-4 px-10 rounded-full shadow-2xl transition-transform transform hover:scale-110 border-b-4 border-orange-600 active:translate-y-1 active:border-b-0"
+                                    >
+                                        Chơi Lại
+                                    </button>
+                                    <button 
+                                        onClick={backToStart}
+                                        className="text-3xl bg-gray-200 hover:bg-gray-300 text-gray-800 font-extrabold py-4 px-10 rounded-full shadow-2xl transition-transform transform hover:scale-110 border-b-4 border-gray-400 active:translate-y-1 active:border-b-0"
+                                    >
+                                        Về Trang Chủ
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đấu Trường Cực Trị - Chinh Phục GTLN & GTNN</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        html { font-size: 18px; } /* Phóng to toàn bộ giao diện mặc định thêm 12.5% */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0F19;
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+        
+        /* Neon Effects */
+        .neon-text-cyan { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff; }
+        .neon-text-green { text-shadow: 0 0 5px #00ff66, 0 0 10px #00ff66; }
+        .neon-text-purple { text-shadow: 0 0 5px #bc13fe, 0 0 10px #bc13fe; }
+        .neon-text-yellow { text-shadow: 0 0 5px #ffea00, 0 0 10px #ffea00; }
+        .neon-text-red { text-shadow: 0 0 5px #ff003c, 0 0 10px #ff003c; }
+
+        .neon-border-cyan { box-shadow: 0 0 10px rgba(0, 243, 255, 0.5), inset 0 0 5px rgba(0, 243, 255, 0.2); border: 1px solid #00f3ff; }
+        .neon-border-green { box-shadow: 0 0 10px rgba(0, 255, 102, 0.5), inset 0 0 5px rgba(0, 255, 102, 0.2); border: 1px solid #00ff66; }
+        .neon-border-purple { box-shadow: 0 0 10px rgba(188, 19, 254, 0.5), inset 0 0 5px rgba(188, 19, 254, 0.2); border: 1px solid #bc13fe; }
+
+        .glass-panel {
+            background: rgba(17, 25, 40, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.125);
+        }
+
+        /* Option Button Hover */
+        .option-btn { transition: all 0.2s ease-in-out; }
+        .option-btn:hover { transform: translateY(-2px); background: rgba(0, 243, 255, 0.1); border-color: #00f3ff; }
+        .option-btn.selected { background: rgba(0, 243, 255, 0.2); border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+        .option-btn.correct { background: rgba(0, 255, 102, 0.2); border-color: #00ff66; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4); }
+        .option-btn.wrong { background: rgba(255, 0, 60, 0.2); border-color: #ff003c; box-shadow: 0 0 15px rgba(255, 0, 60, 0.4); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0B0F19; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .katex { font-size: 1.35em; } /* Phóng to toán học thêm nữa để cực kỳ rõ nét */
+        
+        /* Progress Bar */
+        .progress-bar { transition: width 1s linear; }
+
+        /* Disable Selection for Game Elements */
+        .no-select { user-select: none; -webkit-user-select: none; }
+        
+        /* Modal Overlay */
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative no-select">
+
+    <!-- Header / Controls -->
+    <header class="p-4 flex justify-between items-center glass-panel z-10 sticky top-0">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-bolt text-2xl text-cyan-400"></i>
+            <h1 class="text-xl md:text-2xl font-bold neon-text-cyan hidden md:block">ĐẤU TRƯỜNG CỰC TRỊ</h1>
+        </div>
+        <div class="flex gap-4 items-center">
+            <button onclick="toggleAudio()" class="text-gray-400 hover:text-white transition" title="Bật/Tắt âm thanh">
+                <i id="audio-icon" class="fa-solid fa-volume-high text-xl"></i>
+            </button>
+            <button onclick="showScreen('teacher-screen')" class="text-gray-400 hover:text-purple-400 transition" title="Khu vực Giáo viên">
+                <i class="fa-solid fa-user-tie text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex flex-col relative w-full max-w-7xl mx-auto p-4 md:p-6 overflow-hidden">
+        
+        <!-- 0. SCREEN: INTRO (TÁC GIẢ) -->
+        <div id="intro-screen" class="flex-grow flex flex-col justify-center items-center animate-fade-in w-full z-20">
+            <div class="glass-panel p-10 md:p-16 rounded-[24px] text-center max-w-4xl w-full flex flex-col items-center border border-gray-700/50 shadow-2xl" style="background: rgba(15, 23, 42, 0.85);">
+                <!-- Thêm biểu tượng chiếc Cúp ở đây -->
+                <i class="fa-solid fa-trophy text-6xl md:text-7xl text-[#FFD700] mb-8 neon-text-yellow drop-shadow-2xl"></i>
+                
+                <p class="text-gray-400 text-lg md:text-xl font-medium tracking-[0.15em] uppercase mb-6">SẢN PHẨM GAME HỌC TẬP</p>
+                
+                <h2 class="text-3xl md:text-4xl font-bold text-[#FFD700] mb-3 neon-text-yellow">Thân tặng thầy giáo</h2>
+                <h1 class="text-3xl sm:text-5xl md:text-[5rem] leading-none font-black text-[#FFD700] uppercase mb-8 neon-text-yellow tracking-wide whitespace-nowrap">BÙI LƯƠNG PHÚC</h1>
+                
+                <p class="text-gray-100 text-xl md:text-2xl font-medium mb-12">Đơn vị công tác: Trường THPT NGỌC TẢO</p>
+                
+                <button onclick="showScreen('menu-screen')" class="bg-[#4ADE80] hover:bg-[#22c55e] text-white font-bold text-xl md:text-2xl py-4 px-12 rounded-full shadow-[0_0_30px_rgba(74,222,128,0.3)] transition-all transform hover:scale-105 flex items-center gap-3">
+                    Tiếp tục <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. SCREEN: MAIN MENU -->
+        <div id="menu-screen" class="hidden flex-grow flex flex-col justify-center items-center gap-8 animate-fade-in">
+            <div class="text-center space-y-4">
+                <h1 class="text-5xl md:text-7xl font-black neon-text-cyan uppercase tracking-wider mb-2">Đấu Trường<br>Cực Trị</h1>
+                <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">Chinh phục Giá trị Lớn nhất và Giá trị Nhỏ nhất của hàm số. Tranh tài, rèn kỹ năng và nhận phản hồi tức thời!</p>
+            </div>
+
+            <div class="glass-panel p-6 md:p-8 rounded-2xl w-full max-w-lg neon-border-purple">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-base text-gray-400 mb-2">Tên hoặc Mã người chơi (Không bắt buộc)</label>
+                        <input type="text" id="player-name" placeholder="Nhập tên của bạn..." class="w-full bg-gray-800 border border-gray-600 rounded-lg p-4 text-xl text-white focus:outline-none focus:border-cyan-400 transition">
+                    </div>
+                    
+                    <button onclick="selectMode(1)" class="w-full relative group bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-5 px-6 rounded-xl shadow-lg transition-all transform hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xl"><i class="fa-solid fa-stopwatch mr-2"></i> Chế độ 1: Đấu Trường Tốc Độ</span>
+                            <i class="fa-solid fa-chevron-right opacity-50 group-hover:opacity-100 transition"></i>
+                        </div>
+                    </button>
+                    
+                    <button onclick="selectMode(2)" class="w-full relative group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-5 px-6 rounded-xl shadow-lg transition-all transform hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xl"><i class="fa-solid fa-user-ninja mr-2"></i> Chế độ 2: Đối Kháng Song Đấu</span>
+                            <i class="fa-solid fa-chevron-right opacity-50 group-hover:opacity-100 transition"></i>
+                        </div>
+                    </button>
+                    
+                    <button onclick="selectMode(3)" class="w-full relative group bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-5 px-6 rounded-xl shadow-lg transition-all transform hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xl"><i class="fa-solid fa-chess-knight mr-2"></i> Chế độ 3: Thử Thách Chiến Thuật</span>
+                            <i class="fa-solid fa-chevron-right opacity-50 group-hover:opacity-100 transition"></i>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="showScreen('guide-screen')" class="px-8 py-3 text-lg rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition">
+                    <i class="fa-solid fa-book mr-2"></i> Hướng dẫn
+                </button>
+                <button onclick="showScreen('skills-screen')" class="px-8 py-3 text-lg rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition" id="btn-global-skills">
+                    <i class="fa-solid fa-chart-radar mr-2"></i> Bảng Kỹ Năng
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. SCREEN: GUIDE -->
+        <div id="guide-screen" class="hidden flex-grow flex flex-col max-w-5xl mx-auto w-full pt-4">
+            <div class="glass-panel p-8 md:p-10 rounded-2xl h-full overflow-y-auto">
+                <div class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+                    <h2 class="text-3xl font-bold neon-text-cyan"><i class="fa-solid fa-book-open mr-2"></i> HƯỚNG DẪN LUẬT CHƠI</h2>
+                    <button onclick="showScreen('menu-screen')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-3xl"></i></button>
+                </div>
+                
+                <div class="space-y-8 text-gray-300 text-lg md:text-xl leading-relaxed">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-blue-400 mb-3"><i class="fa-solid fa-stopwatch"></i> Đấu Trường Tốc Độ</h3>
+                        <p>Dành cho 1 người chơi. Gồm 10 câu hỏi, mỗi câu 30 giây. Tập trung vào nhận diện nhanh kiến thức cơ bản và tính toán trực tiếp. Điểm thưởng dựa trên tốc độ và độ chính xác. Hết giờ không bị trừ điểm nặng.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold text-purple-400 mb-3"><i class="fa-solid fa-user-ninja"></i> Đối Kháng Song Đấu</h3>
+                        <p>Dành cho 2 người chơi (lần lượt trên cùng thiết bị). Mỗi người trả lời 8 câu hỏi tương đương nhau. Điểm số đánh giá độ chính xác và khả năng chọn phương pháp. Hãy chuyền máy cho bạn của mình khi đến lượt!</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold text-green-400 mb-3"><i class="fa-solid fa-chess-knight"></i> Thử Thách Chiến Thuật</h3>
+                        <p>Dành cho 1 người chơi. Gồm 6 nhiệm vụ chuyên sâu. Yêu cầu phân tích, phát hiện lỗi sai, giải quyết bài toán tham số. Việc sử dụng "Trợ giúp" sẽ làm giảm điểm số của câu đó nhưng giúp hệ thống nhận diện chính xác kỹ năng bạn cần hỗ trợ.</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg mt-8 border border-gray-700">
+                        <h4 class="font-bold text-yellow-400 mb-3 text-xl"><i class="fa-solid fa-lightbulb"></i> Lưu ý về Đánh giá Kỹ năng:</h4>
+                        <p class="text-base md:text-lg">Hệ thống theo dõi 11 kỹ năng Toán học (K1-K11). Mỗi câu trả lời đúng/sai/dùng gợi ý đều là bằng chứng để vẽ nên Hồ sơ Kỹ năng của bạn. Đừng ngại dùng "Trợ lý giúp đỡ" nếu bạn thực sự bí, điều đó tốt hơn là đoán mò!</p>
+                    </div>
+                </div>
+                <div class="mt-10 text-center">
+                    <button onclick="showScreen('menu-screen')" class="px-10 py-4 text-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg transition shadow-[0_0_15px_rgba(0,243,255,0.4)]">ĐÃ HIỂU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. SCREEN: GAME PLAY -->
+        <div id="game-screen" class="hidden flex-grow flex flex-col w-full max-w-4xl mx-auto">
+            <!-- Game Header Info -->
+            <div class="flex justify-between items-center mb-4 text-sm md:text-base font-semibold">
+                <div class="flex gap-4">
+                    <div class="bg-gray-800 px-4 py-2 rounded-lg neon-border-cyan flex items-center gap-2">
+                        <i class="fa-solid fa-user text-cyan-400"></i>
+                        <span id="display-player-name">Người chơi 1</span>
+                    </div>
+                    <div id="mode-indicator" class="bg-gray-800 px-4 py-2 rounded-lg text-purple-400 border border-purple-500/50 hidden md:block">
+                        Chế độ 1
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="bg-gray-800 px-4 py-2 rounded-lg text-green-400 font-mono">
+                        Câu: <span id="question-counter">1/10</span>
+                    </div>
+                    <div class="bg-gray-800 px-4 py-2 rounded-lg text-yellow-400 font-mono flex items-center gap-2">
+                        <i class="fa-solid fa-star"></i>
+                        <span id="display-score">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timer Bar -->
+            <div id="timer-container" class="w-full h-2 bg-gray-800 rounded-full mb-6 overflow-hidden">
+                <div id="timer-bar" class="h-full bg-cyan-400 w-full progress-bar shadow-[0_0_10px_#00f3ff]"></div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass-panel p-6 md:p-8 rounded-2xl flex-grow flex flex-col mb-4">
+                <div class="flex justify-between items-start mb-6">
+                    <div id="question-content" class="text-2xl md:text-3xl font-medium leading-relaxed md:leading-loose">
+                        <!-- Math content injected here -->
+                        Nội dung câu hỏi...
+                    </div>
+                    <!-- Help Button -->
+                    <button onclick="openHelpModal()" class="ml-4 shrink-0 bg-indigo-600/30 hover:bg-indigo-600/60 text-indigo-300 border border-indigo-500/50 rounded-full w-14 h-14 flex items-center justify-center transition" title="Trợ lý giúp đỡ">
+                        <i class="fa-solid fa-robot text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-auto">
+                    <!-- Buttons injected via JS -->
+                </div>
+            </div>
+            
+            <!-- Controls (Skip / Submit) -->
+            <div class="flex justify-between items-center mt-2">
+                <button onclick="handleSkip()" class="px-6 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">
+                    Bỏ qua <i class="fa-solid fa-forward ml-1"></i>
+                </button>
+                <!-- Dùng cho câu trả lời tự luận ngắn nếu có (hiện tại tập trung trắc nghiệm) -->
+            </div>
+        </div>
+
+        <!-- 4. MODAL: FEEDBACK (Right/Wrong) -->
+        <div id="feedback-modal" class="hidden fixed inset-0 z-50 flex justify-center items-center p-4 modal-overlay">
+            <div id="feedback-card" class="bg-gray-900 border-2 rounded-2xl p-6 md:p-8 max-w-3xl w-full shadow-2xl transform scale-95 transition-transform duration-300">
+                <div class="text-center mb-6">
+                    <div id="feedback-icon" class="text-7xl mb-4"></div>
+                    <h2 id="feedback-title" class="text-4xl font-black uppercase mb-3">Thông báo</h2>
+                    <p id="feedback-message" class="text-xl md:text-2xl text-gray-300">Nội dung chi tiết...</p>
+                </div>
+                
+                <div id="feedback-explanation" class="bg-gray-800 p-5 rounded-lg mb-6 text-lg md:text-xl leading-relaxed border border-gray-700">
+                    <!-- Giải thích lỗi sai hoặc lời giải -->
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button id="btn-feedback-action" onclick="nextQuestion()" class="px-10 py-4 text-xl bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition shadow-lg w-full md:w-auto">
+                        TIẾP TỤC <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. MODAL: ASSISTANT (Help) -->
+        <div id="help-modal" class="hidden fixed inset-0 z-50 flex justify-center items-center p-4 modal-overlay">
+            <div class="bg-gray-900 border border-indigo-500/50 rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-[0_0_30px_rgba(79,70,229,0.3)] flex flex-col max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                    <h2 class="text-2xl font-bold text-indigo-400"><i class="fa-solid fa-robot mr-2"></i> TRỢ LÝ TOÁN HỌC</h2>
+                    <button onclick="closeHelpModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-3xl"></i></button>
+                </div>
+                
+                <div class="overflow-y-auto flex-grow pr-2 space-y-5 text-lg" id="help-content-area">
+                    <!-- Gợi mở -->
+                    <div id="help-level-1" class="bg-gray-800 p-5 rounded-lg border-l-4 border-yellow-500 hidden">
+                        <h4 class="font-bold text-yellow-400 mb-2 text-xl">Cấp 1: Gợi mở</h4>
+                        <p id="txt-help-1" class="text-gray-300">...</p>
+                    </div>
+                    
+                    <!-- Hướng dẫn -->
+                    <div id="help-level-2" class="bg-gray-800 p-5 rounded-lg border-l-4 border-orange-500 hidden">
+                        <h4 class="font-bold text-orange-400 mb-2 text-xl">Cấp 2: Hướng dẫn bước đầu</h4>
+                        <p id="txt-help-2" class="text-gray-300">...</p>
+                    </div>
+                    
+                    <!-- Lời giải mẫu -->
+                    <div id="help-level-3" class="bg-gray-800 p-5 rounded-lg border-l-4 border-red-500 hidden">
+                        <h4 class="font-bold text-red-400 mb-2 text-xl">Cấp 3: Lời giải mẫu</h4>
+                        <div id="txt-help-3" class="text-gray-300">...</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-5 border-t border-gray-700 flex flex-col gap-3">
+                    <p class="text-sm text-gray-400 text-center mb-2">Lưu ý: Xem gợi ý có thể làm giảm điểm số câu hỏi nhưng giúp hệ thống hiểu bạn cần hỗ trợ gì.</p>
+                    <button id="btn-request-help" onclick="requestNextHelpLevel()" class="w-full py-4 text-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition">
+                        XEM GỢI Ý (CẤP 1)
+                    </button>
+                    <button onclick="closeHelpModal()" class="w-full py-3 text-lg bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">
+                        ĐÓNG VÀ TỰ LÀM TIẾP
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. SCREEN: INTERMISSION (For Mode 2) -->
+        <div id="intermission-screen" class="hidden flex-grow flex justify-center items-center">
+            <div class="text-center glass-panel p-10 rounded-2xl neon-border-purple">
+                <i class="fa-solid fa-people-arrows text-6xl text-purple-400 mb-4"></i>
+                <h2 class="text-3xl font-bold text-white mb-2">ĐỔI LƯỢT CHƠI!</h2>
+                <p class="text-gray-300 mb-6" id="intermission-text">Người chơi 1 đã hoàn thành. Hãy chuyền thiết bị cho Người chơi 2.</p>
+                <button onclick="startPlayerTurn()" class="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg shadow-[0_0_15px_rgba(188,19,254,0.4)] transition">
+                    NGƯỜI CHƠI 2 SẴN SÀNG
+                </button>
+            </div>
+        </div>
+
+        <!-- 7. SCREEN: ROUND RESULT -->
+        <div id="result-screen" class="hidden flex-grow flex flex-col max-w-4xl mx-auto w-full pt-4">
+            <div class="glass-panel p-6 md:p-8 rounded-2xl text-center">
+                <h2 class="text-3xl font-black neon-text-cyan mb-2">HOÀN THÀNH ĐẤU TRƯỜNG!</h2>
+                <p class="text-gray-400 mb-8" id="result-subtitle">Kết quả chung cuộc</p>
+
+                <!-- Score Board (Adapts for 1 or 2 players) -->
+                <div id="score-board" class="flex flex-col md:flex-row justify-center gap-6 mb-8">
+                    <!-- P1 Score -->
+                    <div class="bg-gray-800 p-6 rounded-xl border border-blue-500/30 flex-1">
+                        <h3 class="text-xl font-bold text-blue-400 mb-2" id="res-p1-name">Người chơi 1</h3>
+                        <div class="text-5xl font-black text-white mb-2" id="res-p1-score">0</div>
+                        <p class="text-sm text-gray-400">Điểm số</p>
+                        <div class="mt-4 text-sm flex justify-around text-gray-300">
+                            <span><i class="fa-solid fa-check text-green-400"></i> <span id="res-p1-correct">0</span></span>
+                            <span><i class="fa-solid fa-xmark text-red-400"></i> <span id="res-p1-wrong">0</span></span>
+                        </div>
+                    </div>
+                    <!-- P2 Score (Hidden in Mode 1 & 3) -->
+                    <div id="res-p2-card" class="bg-gray-800 p-6 rounded-xl border border-pink-500/30 flex-1 hidden">
+                        <h3 class="text-xl font-bold text-pink-400 mb-2" id="res-p2-name">Người chơi 2</h3>
+                        <div class="text-5xl font-black text-white mb-2" id="res-p2-score">0</div>
+                        <p class="text-sm text-gray-400">Điểm số</p>
+                        <div class="mt-4 text-sm flex justify-around text-gray-300">
+                            <span><i class="fa-solid fa-check text-green-400"></i> <span id="res-p2-correct">0</span></span>
+                            <span><i class="fa-solid fa-xmark text-red-400"></i> <span id="res-p2-wrong">0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <button onclick="showScreen('skills-screen')" class="px-8 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg transition shadow-[0_0_15px_rgba(0,243,255,0.4)]">
+                        <i class="fa-solid fa-chart-radar mr-2"></i> XEM HỒ SƠ KỸ NĂNG
+                    </button>
+                    <button onclick="resetToMenu()" class="px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-lg transition">
+                        <i class="fa-solid fa-rotate-right mr-2"></i> CHƠI LẠI
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. SCREEN: SKILL PROFILE -->
+        <div id="skills-screen" class="hidden flex-grow flex flex-col max-w-6xl mx-auto w-full pt-4">
+            <div class="glass-panel p-4 md:p-6 rounded-2xl h-full flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-4 shrink-0">
+                    <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-clipboard-user text-cyan-400 mr-2"></i> HỒ SƠ KỸ NĂNG</h2>
+                    <button onclick="showScreen('menu-screen')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-house text-xl"></i></button>
+                </div>
+
+                <div class="flex-grow overflow-y-auto pr-2 space-y-6 custom-scrollbar">
+                    
+                    <!-- Tổng quan 3 nhóm -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-800/80 p-4 rounded-xl border border-green-500/30">
+                            <h3 class="text-green-400 font-bold mb-2"><i class="fa-solid fa-award"></i> Kỹ năng Nổi bật</h3>
+                            <ul id="skill-top-list" class="text-sm text-gray-300 list-disc pl-4 space-y-1"></ul>
+                        </div>
+                        <div class="bg-gray-800/80 p-4 rounded-xl border border-orange-500/30">
+                            <h3 class="text-orange-400 font-bold mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Cần Ưu tiên Ôn tập</h3>
+                            <ul id="skill-weak-list" class="text-sm text-gray-300 list-disc pl-4 space-y-1"></ul>
+                        </div>
+                        <div class="bg-gray-800/80 p-4 rounded-xl border border-blue-500/30">
+                            <h3 class="text-blue-400 font-bold mb-2"><i class="fa-solid fa-notes-medical"></i> Kế hoạch Đề xuất</h3>
+                            <p id="skill-plan" class="text-sm text-gray-300">Dựa trên dữ liệu, hệ thống sẽ đề xuất nhóm hỗ trợ phù hợp tại đây.</p>
+                        </div>
+                    </div>
+
+                    <!-- Bảng chi tiết K1-K11 -->
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-3">Chi tiết Năng lực (K1-K11)</h3>
+                        <div class="overflow-x-auto rounded-lg border border-gray-700">
+                            <table class="w-full text-sm text-left text-gray-300">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-800">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3">Mã</th>
+                                        <th scope="col" class="px-4 py-3">Kỹ năng</th>
+                                        <th scope="col" class="px-2 py-3 text-center" title="Số câu đã làm">SL</th>
+                                        <th scope="col" class="px-2 py-3 text-center text-green-400" title="Đúng độc lập">Đúng</th>
+                                        <th scope="col" class="px-2 py-3 text-center text-yellow-400" title="Đúng sau khi xem gợi ý">Gợi ý</th>
+                                        <th scope="col" class="px-2 py-3 text-center text-red-400" title="Sai">Sai</th>
+                                        <th scope="col" class="px-4 py-3 text-center">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="skills-table-body">
+                                    <!-- Rows injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 flex gap-4 justify-center">
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500"></span> Thành thạo</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-500"></span> Đang hình thành</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-orange-500"></span> Cần củng cố</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-gray-600"></span> Thiếu dữ liệu (< 3 câu)</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Lỗi thường gặp -->
+                    <div id="error-section" class="hidden">
+                        <h3 class="text-lg font-bold text-red-400 mb-2"><i class="fa-solid fa-bug"></i> Lỗi sai thường gặp cần khắc phục</h3>
+                        <ul id="error-list" class="bg-gray-800 p-4 rounded-lg text-sm text-gray-300 space-y-2 border border-red-500/20">
+                            <!-- Lỗi injected -->
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. SCREEN: TEACHER DASHBOARD -->
+        <div id="teacher-screen" class="hidden flex-grow flex flex-col max-w-6xl mx-auto w-full pt-4">
+            <div class="glass-panel p-6 rounded-2xl h-full flex flex-col relative border border-purple-500">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                    <h2 class="text-2xl font-bold text-purple-400"><i class="fa-solid fa-user-tie mr-2"></i> BẢNG ĐIỀU KHIỂN GIÁO VIÊN</h2>
+                    <button onclick="showScreen('menu-screen')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
+
+                <div class="bg-yellow-900/30 border border-yellow-600/50 text-yellow-300 p-4 rounded-lg mb-6 text-sm">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> <strong>Lưu ý Bảo mật:</strong> Dữ liệu học sinh chỉ được lưu trữ tạm thời trên <em>trình duyệt của thiết bị này</em> (LocalStorage) để đảm bảo quyền riêng tư. Dữ liệu sẽ mất nếu xóa cache trình duyệt. Vui lòng xuất báo cáo (JSON/CSV) để lưu trữ vĩnh viễn. Không có kết nối tới máy chủ bên ngoài.
+                </div>
+
+                <div class="flex flex-wrap gap-4 mb-4 items-center">
+                    <select id="teacher-skill-filter" onchange="renderTeacherDashboard()" class="bg-gray-800 border border-gray-600 text-white rounded p-2 text-sm focus:outline-none focus:border-purple-400">
+                        <option value="ALL">Tất cả học sinh</option>
+                        <option value="K1">Yếu K1: Tập xác định</option>
+                        <option value="K2">Yếu K2: Đạo hàm</option>
+                        <option value="K3">Yếu K3: Điểm tới hạn</option>
+                        <option value="K4">Yếu K4: Bảng biến thiên</option>
+                        <option value="K5">Yếu K5: Tính giá trị</option>
+                        <option value="K6">Yếu K6: Mút & Điểm tới hạn</option>
+                        <option value="K7">Yếu K7: Cực trị vs Max/Min</option>
+                        <option value="K8">Yếu K8: Khoảng mở</option>
+                        <option value="K9">Yếu K9: Đọc đồ thị/BBT</option>
+                        <option value="K10">Yếu K10: Phương pháp</option>
+                        <option value="K11">Yếu K11: Bài toán tham số</option>
+                    </select>
+                    
+                    <button onclick="generateTestData()" class="px-4 py-2 bg-yellow-700 hover:bg-yellow-600 text-white rounded text-sm transition border border-yellow-500 shadow-md"><i class="fa-solid fa-vial mr-1"></i> Tạo Dữ Liệu Kiểm Thử</button>
+                    <button onclick="exportData('csv')" class="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded text-sm transition"><i class="fa-solid fa-file-csv mr-1"></i> Xuất CSV</button>
+                    <button onclick="exportData('json')" class="px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded text-sm transition"><i class="fa-solid fa-code mr-1"></i> Xuất JSON</button>
+                    <button onclick="clearTeacherData()" class="px-4 py-2 bg-red-800 hover:bg-red-700 text-white rounded text-sm transition ml-auto"><i class="fa-solid fa-trash mr-1"></i> Xóa Dữ Liệu Phiên</button>
+                </div>
+
+                <div id="teacher-insights" class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Insights injected via JS -->
+                </div>
+
+                <div class="overflow-x-auto flex-grow rounded-lg border border-gray-700">
+                    <table class="w-full text-sm text-left text-gray-300">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-800">
+                            <tr>
+                                <th class="px-4 py-3">Loại DL</th>
+                                <th class="px-4 py-3">Thời gian</th>
+                                <th class="px-4 py-3">Người chơi</th>
+                                <th class="px-4 py-3">Chế độ</th>
+                                <th class="px-4 py-3">Điểm</th>
+                                <th class="px-4 py-3">Kỹ năng yếu (Cần HT)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-table-body">
+                            <!-- Logs injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- 1. DEFINITIONS: SKILLS & ERROR GROUPS ---
+        const SKILL_DEF = {
+            'K1': 'Xác định tập xác định và miền xét.',
+            'K2': 'Tính đạo hàm chính xác.',
+            'K3': 'Giải phương trình đạo hàm y\'=0, tìm điểm tới hạn.',
+            'K4': 'Phân tích dấu đạo hàm, lập bảng biến thiên.',
+            'K5': 'Tính giá trị hàm số tại điểm.',
+            'K6': 'Xét đủ điểm tới hạn và đầu mút trên đoạn [a,b].',
+            'K7': 'Phân biệt cực trị với GTLN, GTNN.',
+            'K8': 'Xử lý khoảng mở, nhận diện không tồn tại Max/Min.',
+            'K9': 'Đọc, phân tích đồ thị và bảng biến thiên.',
+            'K10': 'Lựa chọn phương pháp giải tối ưu.',
+            'K11': 'Xử lý bài toán tham số (vận dụng cao).'
+        };
+
+        const ERROR_ADVICE = {
+            'DOMAIN_ERR': { cause: 'Sai tập xác định', advice: 'Cần ôn tập lại cách tìm điều kiện xác định của hàm phân thức, căn thức. Cung cấp bài tập nhận biết điểm không thuộc TXĐ.' },
+            'DERIV_ERR': { cause: 'Tính đạo hàm sai', advice: 'Tạo chuỗi bài tập đạo hàm ngắn (u/v, u*v, hàm hợp) có phản hồi từng bước.' },
+            'CRITICAL_ERR': { cause: 'Sót điểm tới hạn', advice: 'Kiểm tra lại kỹ năng giải phương trình y\'=0. Đôi khi quên nghiệm kép hoặc điểm y\' không xác định.' },
+            'BOUNDARY_ERR': { cause: 'Bỏ sót đầu mút', advice: 'Dùng bảng kiểm: "Điểm tới hạn - Đầu mút - So sánh giá trị". Luôn tính y tại a và b khi xét trên đoạn [a,b].' },
+            'EXTREMA_CONFUSION': { cause: 'Nhầm cực đại/cực tiểu với Max/Min', advice: 'Đưa bài tập đối chiếu đồ thị. Cực trị mang tính địa phương, Max/Min mang tính toàn cục trên miền đang xét.' },
+            'OPEN_INTERVAL_ERR': { cause: 'Sai lầm trên khoảng mở', advice: 'Sử dụng BBT hoặc giới hạn (lim) ở đầu mút khoảng mở để thấy hàm số có thể tiến tới vô cực hoặc không đạt giá trị tại mút.' },
+            'CONFUSE_X_Y': { cause: 'Nhầm lẫn hoành độ (x) và tung độ (y)', advice: 'Khi hỏi "đạt tại đâu" là hỏi x, khi hỏi "Giá trị" là hỏi y. Cần đọc kỹ yêu cầu đề.' },
+            'WRONG_CASE': { cause: 'Quên đối chiếu điều kiện tham số', advice: 'Khi chia trường hợp tham số m (ví dụ hàm đồng biến/nghịch biến), tìm ra m phải đối chiếu lại điều kiện ban đầu.' },
+            'CALC_ERR': { cause: 'Lỗi tính toán số học', advice: 'Cần cẩn thận hơn trong việc thay số vào hàm số để tính giá trị.' }
+        };
+
+        // --- 2. QUESTION BANK (30 Questions covering all skills with rigorous math checks) ---
+        const questionBank = [
+            { id: "Q1", text: "Cho hàm số $y = x^3 - 3x + 2$. Tìm giá trị lớn nhất của hàm số trên đoạn $[-2; 2]$.", options: ["$4$", "$2$", "$0$", "$5$"], correct: 0,
+              steps: "1) $y' = 3x^2 - 3=0 \\Leftrightarrow x=\\pm 1 \\in [-2;2]$. <br>2) Tính $y(-2)=0, y(-1)=4, y(1)=0, y(2)=4$. <br>3) Max là 4.",
+              level: 2, pSkill: "K6", sSkills: ["K2", "K3", "K5"], 
+              errors: { 1: "EXTREMA_CONFUSION", 2: "BOUNDARY_ERR", 3: "CALC_ERR" },
+              errExp: { 1: "Bạn tính nhầm GTLN thành 2 (đây là giá trị y(0) không phải cực trị).", 2: "0 là GTNN, đề hỏi Giá trị lớn nhất.", 3: "Lỗi tính toán cộng trừ khi thay số." },
+              help: ["Em đã tính đạo hàm chưa? Điểm nào làm $y'=0$?", "Giải $3x^2-3=0$. Nhớ tính giá trị $y$ tại $x=-2, -1, 1, 2$.", "Đạo hàm: $y'=3x^2-3$. Nghiệm $\\pm 1$. Các giá trị: $y(-2)=0, y(-1)=4, y(1)=0, y(2)=4$. So sánh ta thấy GTLN là $4$."] },
+            
+            { id: "Q2", text: "Giá trị nhỏ nhất của hàm số $y = \\frac{2x+1}{x-1}$ trên đoạn $[2; 4]$ là:", options: ["$3$", "$5$", "$\\frac{11}{3}$", "$2$"], correct: 0,
+              steps: "1) $y' = \\frac{-3}{(x-1)^2} < 0, \\forall x \\in [2;4]$. Hàm nghịch biến. <br>2) Min đạt tại $x=4 \\Rightarrow y(4)=3$.",
+              level: 2, pSkill: "K4", sSkills: ["K1", "K6"],
+              errors: { 1: "BOUNDARY_ERR", 2: "CALC_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "5 là GTLN tại mút x=2. Đề hỏi GTNN cơ mà!", 2: "Bạn thay nhầm $x=3$, mặc dù nó thuộc đoạn nhưng do hàm nghịch biến nên Min nằm ở mút $x=4$.", 3: "Kết quả 2 không xuất hiện tại bất kỳ điểm nào trên đoạn này." },
+              help: ["Hàm phân thức bậc 1/bậc 1 này luôn đồng biến hay nghịch biến?", "Đạo hàm luôn âm nên hàm nghịch biến (đi xuống).", "Hàm đi xuống từ x=2 đến x=4 nên GTNN nằm ở cuối, tức là x=4. Tính y(4)."] },
+            
+            { id: "Q3", text: "Hàm số nào sau đây KHÔNG có giá trị lớn nhất trên $\\mathbb{R}$?", options: ["$y = x^3 - 3x$", "$y = -x^4 + 2x^2 + 1$", "$y = \\frac{x}{x^2+1}$", "$y = -x^2 + 4x$"], correct: 0,
+              steps: "Hàm bậc 3 $y = x^3 - 3x$ có $\\lim_{x \\to +\\infty} y = +\\infty$ nên không bị chặn trên, không có GTLN. Các hàm còn lại đều bị chặn trên.",
+              level: 2, pSkill: "K8", sSkills: ["K9"], 
+              errors: { 1:"EXTREMA_CONFUSION", 2:"EXTREMA_CONFUSION", 3:"EXTREMA_CONFUSION" }, 
+              errExp: { 1: "Hàm bậc 4 hệ số a<0 có bề lõm hướng xuống, nó có GTLN tại đỉnh.", 2: "Hàm này bị chặn ngang, Max = 1/2 tại x=1.", 3: "Parabol bề lõm hướng xuống luôn có GTLN tại đỉnh." },
+              help: ["Hãy xét giới hạn của các hàm số khi $x \\to \\pm\\infty$.", "Hàm nào có phần đồ thị chạy thẳng lên $+\\infty$?", "Hàm đa thức bậc lẻ (bậc 3) luôn có giới hạn là $+\\infty$ ở một phía, do đó nó không thể có Max."] },
+            
+            { id: "Q4", text: "Cho hàm số $y=f(x)$ liên tục trên $[-1; 3]$. Biết hàm số đồng biến trên $(-1; 2)$ và nghịch biến trên $(2; 3)$. Giá trị $f(-1)=1, f(2)=5, f(3)=-1$. Giá trị lớn nhất của hàm số trên $[-1; 3]$ là:", options: ["$5$", "$2$", "Không tồn tại", "$1$"], correct: 0,
+              steps: "Dựa vào chiều biến thiên, hàm số tăng từ 1 lên 5 rồi giảm xuống -1. Đỉnh cao nhất là 5, đạt tại x=2.",
+              level: 1, pSkill: "K9", sSkills: ["K7"], 
+              errors: { 1: "CONFUSE_X_Y", 2: "OPEN_INTERVAL_ERR", 3: "BOUNDARY_ERR" }, 
+              errExp: { 1: "2 là điểm đạt GTLN ($x$), không phải Giá trị lớn nhất ($y$).", 2: "Hàm liên tục trên 1 đoạn đóng luôn có Max, Min.", 3: "1 chỉ là giá trị tại đầu mút x=-1, nó chưa phải lớn nhất." },
+              help: ["Vẽ phác mũi tên đi lên và đi xuống.", "Đỉnh cao nhất của đồ thị tương ứng với giá trị $y$ bằng bao nhiêu?", "Mũi tên đi lên tới giá trị 5 tại $x=2$ rồi đi xuống. Vậy lớn nhất là 5."] },
+
+            { id: "Q5", text: "Tìm giá trị lớn nhất của hàm số $y = \\sqrt{4 - x^2}$.", options: ["$2$", "$4$", "$0$", "Không có"], correct: 0,
+              steps: "1) TXĐ: $x \\in [-2;2]$. 2) $x^2 \\ge 0 \\Rightarrow 4-x^2 \\le 4$. 3) Lấy căn ta được $y \\le 2$. Max là 2 khi x=0.",
+              level: 2, pSkill: "K1", sSkills: ["K10"], 
+              errors: { 1: "CALC_ERR", 2: "EXTREMA_CONFUSION", 3: "DOMAIN_ERR" }, 
+              errExp: { 1: "Bạn mới tìm Max của $4-x^2$, quên chưa lấy căn bậc hai.", 2: "0 là GTNN của hàm số (đạt tại mút x=\\pm 2).", 3: "Hàm số này xét trên đoạn kín [-2;2] nên chắc chắn có GTLN." },
+              help: ["Biểu thức dưới dấu căn lớn nhất khi nào?", "$x^2$ luôn $\\ge 0$ nên $4-x^2$ lớn nhất bằng 4.", "Max của biểu thức trong căn là 4. Lấy căn ta được Max của hàm số là $\\sqrt{4} = 2$."] },
+
+            { id: "Q6", text: "Trên khoảng $(0; +\\infty)$, hàm số $y = x + \\frac{4}{x}$ đạt giá trị nhỏ nhất tại:", options: ["$x=2$", "$x=-2$", "$y=4$", "$x=4$"], correct: 0,
+              steps: "Áp dụng Cauchy: $x + 4/x \\ge 2\\sqrt{x(4/x)} = 4$. Dấu = khi $x = 4/x \\Rightarrow x=2$ (do x>0).",
+              level: 3, pSkill: "K10", sSkills: ["K8", "K2"], 
+              errors: { 1: "DOMAIN_ERR", 2: "CONFUSE_X_Y", 3: "CALC_ERR" }, 
+              errExp: { 1: "$x=-2$ không thuộc khoảng $(0;+\\infty)$ đang xét.", 2: "Đề hỏi 'đạt tại đâu' tức là tìm x, 4 là giá trị nhỏ nhất (y).", 3: "Giải nhầm nghiệm của $x = 4/x$." },
+              help: ["Có thể dùng BĐT Cô-si cho 2 số dương.", "Đề hỏi 'đạt tại đâu' tức là đi tìm x.", "Cô-si: $a+b \\ge 2\\sqrt{ab}$. Dấu bằng xảy ra khi $a=b$, tức là $x=4/x \\Rightarrow x^2=4 \\Rightarrow x=2$."] },
+
+            { id: "Q7", text: "Tìm $m$ để hàm số $y = \\frac{x+m}{x-1}$ có giá trị lớn nhất trên đoạn $[2; 4]$ bằng 2.", options: ["$m=0$", "$m=-1$", "$m=2$", "$m=1$"], correct: 0,
+              steps: "$y' = \\frac{-1-m}{(x-1)^2}$. <br>TH1: $-1-m < 0 \\Rightarrow m > -1$ (nghịch biến). Max là $y(2)=m+2=2 \\Rightarrow m=0$ (Nhận vì $0>-1$).<br>TH2: $-1-m > 0 \\Rightarrow m < -1$ (đồng biến). Max là $y(4)=(4+m)/3=2 \\Rightarrow m=2$ (Loại vì $2 \\nless -1$).",
+              level: 4, pSkill: "K11", sSkills: ["K4", "K5"], 
+              errors: { 1: "WRONG_CASE", 2: "WRONG_CASE", 3: "CALC_ERR" }, 
+              errExp: { 1: "m=-1 hàm thành y=1 không có GTLN bằng 2.", 2: "m=2 bạn giải ra từ TH đồng biến, nhưng m=2 thì đạo hàm âm (nghịch biến). Bạn quên thử lại điều kiện!", 3: "Giải nhầm hệ phương trình." },
+              help: ["Tính đạo hàm. Đạo hàm phụ thuộc vào m.", "Xét 2 TH: hàm đồng biến và nghịch biến.", "TH nghịch biến: GTLN tại x=2, giải ra m=0 (nhận). TH đồng biến: GTLN tại x=4, giải ra m=2 (loại vì khi m=2 hàm lại nghịch biến)."] },
+
+            { id: "Q8", text: "Cho hàm số $y = |x^2 - 4x + 3|$. Gọi $M, m$ lần lượt là GTLN và GTNN trên $[-1; 2]$. Tính $M+m$.", options: ["$8$", "$9$", "$7$", "$10$"], correct: 0,
+              steps: "Xét $u = x^2-4x+3$ trên $[-1;2]$. $u'=2x-4=0 \\Rightarrow x=2$. $u(-1)=8, u(2)=-1$. Tập giá trị của u là $[-1;8]$.<br>Suy ra $|u| \\in [0;8]$. Vậy $m=0, M=8 \\Rightarrow M+m=8$.",
+              level: 3, pSkill: "K6", sSkills: ["K10"], 
+              errors: { 1: "BOUNDARY_ERR", 2: "CALC_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "Nhầm m=|-1|=1. Hàm trị tuyệt đối khi u đổi dấu từ âm sang dương thì Min bằng 0.", 2: "Tính sai giá trị tại mút hoặc điểm tới hạn.", 3: "Tính sai giá trị M." },
+              help: ["Hãy tìm tập giá trị của biểu thức bên trong trị tuyệt đối trước.", "Biểu thức chạy từ -1 đến 8. Vậy trị tuyệt đối của nó chạy từ mấy đến mấy?", "Trị tuyệt đối của đoạn [-1;8] sẽ bắt đầu từ 0 (giá trị nhỏ nhất) đến 8 (giá trị lớn nhất). $8+0=8$."] },
+
+            { id: "Q9", text: "Giá trị nhỏ nhất của hàm số $y = \\sin x - \\cos x$ là:", options: ["$-\\sqrt{2}$", "$-1$", "$-2$", "$0$"], correct: 0,
+              steps: "Sử dụng công thức biến đổi: $y = \\sqrt{2}\\sin(x - \\pi/4)$. Vì $\\sin \\ge -1$ nên Min là $-\\sqrt{2}$.",
+              level: 2, pSkill: "K10", sSkills: ["K5"], 
+              errors: { 1: "CALC_ERR", 2: "EXTREMA_CONFUSION", 3: "CALC_ERR" }, 
+              errExp: { 1: "Không được lấy sin min - cos min vì chúng không xảy ra tại cùng một điểm x.", 2: "Bạn cộng giá trị Min của sin và cos là sai nguyên tắc.", 3: "Bạn mới tìm được nghiệm phương trình chứ chưa tìm giá trị của hàm." },
+              help: ["Hãy gộp sin và cos lại bằng công thức cộng.", "$a\\sin x + b\\cos x = \\sqrt{a^2+b^2}\\sin(x+\\alpha)$", "Gộp lại ta được $\\sqrt{2}\\sin(x-\\pi/4)$. Giá trị nhỏ nhất của cụm này là $-\\sqrt{2}$."] },
+
+            { id: "Q10", text: "Cho hàm số $y = \\frac{1}{x^2+1}$. Khẳng định nào sau đây đúng?", options: ["Max là 1, Không có Min", "Max là 1, Min là 0", "Không có cực trị", "Max là 1, Min là 1"], correct: 0,
+              steps: "Ta có $x^2 \\ge 0 \\Rightarrow x^2+1 \\ge 1 \\Rightarrow y \\le 1$ (Max=1). Khi $x \\to \\pm\\infty$, $y \\to 0$ (tiệm cận ngang) nên y không bao giờ thực sự bằng 0, do đó KHÔNG có Min.",
+              level: 3, pSkill: "K8", sSkills: ["K7", "K1"], 
+              errors: { 1: "OPEN_INTERVAL_ERR", 2: "CRITICAL_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "Hàm số tiệm cận tới 0 ở vô cực nhưng không bao giờ đạt giá trị 0, nên không có GTNN.", 2: "Hàm số đạt cực đại tại x=0.", 3: "Đây không phải hàm hằng." },
+              help: ["Mẫu số lớn nhất/nhỏ nhất khi nào?", "Khi x tiến tới vô cực thì phân số tiến về mấy? Có bao giờ bằng giá trị đó không?", "Max bằng 1 tại x=0. Đồ thị tiệm cận trục hoành (y=0) ở vô cực nhưng không cắt, nên không có điểm nào để y=0 $\\Rightarrow$ không có Min."] },
+
+            { id: "Q11", text: "Giá trị nhỏ nhất của hàm số $y = x^4 - 2x^2 + 3$ trên đoạn $[0; 2]$ là:", options: ["$2$", "$3$", "$11$", "$0$"], correct: 0,
+              steps: "$y' = 4x^3-4x=0 \\Rightarrow x=0, x=1$ (thuộc [0;2]).<br>Tính $y(0)=3, y(1)=2, y(2)=11$. Min là 2.",
+              level: 2, pSkill: "K6", sSkills: ["K2", "K3"], 
+              errors: { 1: "BOUNDARY_ERR", 2: "EXTREMA_CONFUSION", 3: "CRITICAL_ERR" }, 
+              errExp: { 1: "3 là giá trị tại mút x=0, nhưng chưa phải nhỏ nhất.", 2: "11 là GTLN tại x=2.", 3: "Quên tính tung độ y, mới chỉ tính hoành độ cực tiểu x=1." },
+              help: ["Tính y'. Tìm các điểm tới hạn.", "So sánh $y(0), y(1), y(2)$.", "Cực tiểu nằm tại x=1 và y(1)=2. Đây cũng là GTNN trên đoạn [0;2]."] },
+
+            { id: "Q12", text: "Hàm số $y = e^x - x$ có giá trị nhỏ nhất trên $\\mathbb{R}$ bằng:", options: ["$1$", "$0$", "$e$", "Không tồn tại"], correct: 0,
+              steps: "$y' = e^x - 1 = 0 \\Rightarrow x=0$.<br>Lập BBT thấy hàm nghịch biến khi x<0, đồng biến khi x>0. Min tại $x=0$, $y(0)=e^0-0=1$.",
+              level: 3, pSkill: "K4", sSkills: ["K8"], 
+              errors: { 1: "CONFUSE_X_Y", 2: "CALC_ERR", 3: "OPEN_INTERVAL_ERR" }, 
+              errExp: { 1: "0 là hoành độ điểm cực tiểu x, đề hỏi giá trị (y).", 2: "Tính sai $y(1)$.", 3: "Hàm này có cực tiểu duy nhất trên R nên đó chính là GTNN." },
+              help: ["Đạo hàm của $e^x$ là chính nó.", "Giải $e^x - 1 = 0$ ta được $x=0$.", "Tại x=0, $y = e^0 - 0 = 1$. Lập bảng biến thiên chứng minh đây là đáy của đồ thị."] },
+
+            { id: "Q13", text: "Giá trị nhỏ nhất của hàm số $y = x \\ln x$ trên $[e^{-2}; e]$ là:", options: ["$-\\frac{1}{e}$", "$e$", "$0$", "$-\\frac{2}{e^2}$"], correct: 0,
+              steps: "$y' = \\ln x + 1 = 0 \\Rightarrow x = e^{-1} = \\frac{1}{e} \\in [e^{-2}; e]$.<br>$y(1/e) = -1/e$. Tính mút $y(e^{-2}) = -2/e^2$, $y(e) = e$. So sánh thấy Min là $-1/e$.",
+              level: 3, pSkill: "K6", sSkills: ["K2"], 
+              errors: { 1: "EXTREMA_CONFUSION", 2: "CALC_ERR", 3: "BOUNDARY_ERR" }, 
+              errExp: { 1: "e là GTLN tại mút x=e.", 2: "Tính sai giới hạn hoặc giá trị.", 3: "-2/e^2 là giá trị tại mút bên trái, nhưng $-1/e$ nhỏ hơn ($-0.367 < -0.27$)." },
+              help: ["Dùng quy tắc đạo hàm u.v", "Giải $\\ln x = -1 \\Rightarrow x = 1/e$.", "So sánh $y(1/e)$ và $y(1/e^2)$. Lưu ý số âm, số nào trị tuyệt đối lớn hơn thì nhỏ hơn."] },
+
+            { id: "Q14", text: "Tổng GTLN và GTNN của hàm số $y = \\frac{2x-1}{x+1}$ trên đoạn $[0; 2]$ là:", options: ["$0$", "$1$", "$-1$", "$2$"], correct: 0,
+              steps: "$y' = \\frac{3}{(x+1)^2} > 0$. Hàm luôn đồng biến.<br>Min = $y(0) = -1$. Max = $y(2) = 1$. Tổng = 0.",
+              level: 2, pSkill: "K4", sSkills: ["K6"], 
+              errors: { 1: "CALC_ERR", 2: "CALC_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "Đây là GTLN.", 2: "Đây là GTNN.", 3: "Lỗi cộng số học." },
+              help: ["Hàm bậc 1/bậc 1 luôn đơn điệu.", "Hàm đi lên hay đi xuống?", "Hàm đi lên nên Min tại x=0, Max tại x=2. Cộng y(0) và y(2) lại."] },
+
+            { id: "Q15", text: "Giá trị lớn nhất của hàm số $y = \\sqrt{x-1} + \\sqrt{3-x}$ là:", options: ["$2$", "$\\sqrt{2}$", "$2\\sqrt{2}$", "$4$"], correct: 0,
+              steps: "TXĐ: $[1; 3]$. $y^2 = 2 + 2\\sqrt{(x-1)(3-x)} \\le 2 + (x-1+3-x) = 4 \\Rightarrow y \\le 2$. Dấu = khi $x-1=3-x \\Rightarrow x=2$.",
+              level: 3, pSkill: "K10", sSkills: ["K1", "K6"], 
+              errors: { 1: "BOUNDARY_ERR", 2: "CALC_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "$\\sqrt{2}$ là GTNN tại mút x=1 và x=3.", 2: "Lỗi bình phương nhầm.", 3: "Quên khai căn sau khi bình phương 2 vế." },
+              help: ["Tìm điều kiện xác định trước.", "Có thể bình phương 2 vế rồi dùng Cô-si, hoặc đạo hàm.", "Bình phương $y^2 = 2 + 2\\sqrt{-x^2+4x-3}$. Cụm trong căn lớn nhất bằng 1 tại x=2. Vậy $y^2 \\le 4 \\Rightarrow y \\le 2$."] },
+
+            { id: "Q16", text: "GTLN của hàm số $y = -x^2 + 4x - 5$ là:", options: ["$-1$", "$1$", "$2$", "$-5$"], correct: 0,
+              steps: "Parabol bề lõm xuống. $y' = -2x+4=0 \\Rightarrow x=2$. Max là $y(2) = -1$.",
+              level: 1, pSkill: "K3", sSkills: ["K4"], 
+              errors: { 1: "CALC_ERR", 2: "CONFUSE_X_Y", 3: "BOUNDARY_ERR" }, 
+              errExp: { 1: "Tính sai phép tính cộng trừ.", 2: "2 là hoành độ điểm cực đại (x), hỏi giá trị là y.", 3: "-5 là tung độ giao điểm y(0), không phải GTLN." },
+              help: ["Tìm tọa độ đỉnh của Parabol.", "Hoành độ đỉnh $x = -b/(2a)$.", "Đỉnh tại x=2. Thay x=2 vào tính y, kết quả là -1."] },
+
+            { id: "Q17", text: "GTLN của hàm số $y = x e^{-x}$ trên $[0; +\\infty)$ là:", options: ["$\\frac{1}{e}$", "$e$", "$0$", "Không tồn tại"], correct: 0,
+              steps: "$y' = e^{-x}(1-x)=0 \\Rightarrow x=1$. Hàm tăng trên (0;1) và giảm trên (1;+$\\infty$). Max tại $x=1 \\Rightarrow y=1/e$.",
+              level: 3, pSkill: "K8", sSkills: ["K2", "K4"], 
+              errors: { 1: "CALC_ERR", 2: "EXTREMA_CONFUSION", 3: "OPEN_INTERVAL_ERR" }, 
+              errExp: { 1: "Tính sai phép nghịch đảo $e^{-1}$.", 2: "0 là giá trị tại $x=0$, nó là GTNN trên miền này.", 3: "Có cực đại duy nhất x=1 trên khoảng nên nó là GTLN." },
+              help: ["Tính đạo hàm dùng quy tắc u.v", "Giải $1-x = 0 \\Rightarrow x=1$. Lập bảng xét dấu đạo hàm.", "Đạo hàm đổi dấu + sang - tại x=1 nên hàm đạt đỉnh tại x=1. Thay x=1 vào hàm."] },
+
+            { id: "Q18", text: "Giá trị nhỏ nhất của $y = \\frac{\\ln x}{x}$ trên $[1; e^2]$ là:", options: ["$0$", "$\\frac{1}{e}$", "$\\frac{2}{e^2}$", "$-1$"], correct: 0,
+              steps: "$y' = \\frac{1-\\ln x}{x^2}=0 \\Rightarrow x=e$. $y(1)=0, y(e)=1/e, y(e^2)=2/e^2$. Vì $0 < 2/e^2 < 1/e$ nên Min=0.",
+              level: 3, pSkill: "K6", sSkills: ["K2", "K5"], 
+              errors: { 1: "EXTREMA_CONFUSION", 2: "BOUNDARY_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "$1/e$ là GTLN tại cực đại x=e.", 2: "$2/e^2$ là giá trị tại mút $e^2$, nhưng 0 tại mút $x=1$ mới là nhỏ nhất.", 3: "Hàm này luôn $\\ge 0$ trên đoạn xét, không thể âm." },
+              help: ["Tính đạo hàm $u/v$.", "So sánh 3 giá trị $y(1), y(e), y(e^2)$.", "Ta có $y(1)=0$. Các giá trị kia đều dương, vậy số nhỏ nhất phải là 0."] },
+
+            { id: "Q19", text: "GTLN của hàm số $y = 2\\sin x + \\cos 2x$ là:", options: ["$\\frac{3}{2}$", "$1$", "$3$", "$-3$"], correct: 0,
+              steps: "Đặt $t = \\sin x \\in [-1;1]$. Hàm trở thành $f(t) = -2t^2+2t+1$. $f'(t)=-4t+2=0 \\Rightarrow t=1/2$. Max $f(1/2) = 3/2$.",
+              level: 3, pSkill: "K10", sSkills: ["K1", "K6"], 
+              errors: { 1: "BOUNDARY_ERR", 2: "EXTREMA_CONFUSION", 3: "CALC_ERR" }, 
+              errExp: { 1: "Đây là giá trị tại mút t=0 hoặc t=1.", 2: "Đây là kết quả khi thay sai t=1 (2+1).", 3: "-3 là GTNN tại t=-1." },
+              help: ["Đưa về cùng 1 hàm lượng giác. Dùng công thức nhân đôi $\\cos 2x = 1 - 2\\sin^2 x$.", "Đặt t = sin x. Lưu ý điều kiện của t.", "Xét hàm parabol $f(t) = -2t^2+2t+1$ trên đoạn [-1;1]. Tìm đỉnh."] },
+
+            { id: "Q20", text: "Tìm tập tất cả các giá trị $m$ để hàm số $y = -x^2 + 2mx - 1$ có GTLN trên $\\mathbb{R}$ bằng 3.", options: ["$m=\\pm 2$", "$m=2$", "$m=-2$", "Không tồn tại m"], correct: 0,
+              steps: "Parabol có $a=-1<0$ nên có Max tại $x=m$. $y_{max} = y(m) = -m^2+2m^2-1 = m^2-1$. Đặt $m^2-1=3 \\Rightarrow m^2=4 \\Rightarrow m=\\pm 2$.",
+              level: 3, pSkill: "K11", sSkills: ["K3"], 
+              errors: { 1: "WRONG_CASE", 2: "WRONG_CASE", 3: "CALC_ERR" }, 
+              errExp: { 1: "Bạn bỏ sót nghiệm âm $m=-2$.", 2: "Bạn bỏ sót nghiệm dương $m=2$.", 3: "Giải sai phương trình bậc 2." },
+              help: ["Hàm bậc 2 đạt GTLN tại tọa độ đỉnh x = -b/2a.", "Đỉnh nằm tại x=m. Thay x=m vào tìm y theo m.", "Cho y_đỉnh = 3, giải phương trình $m^2-1 = 3$."] },
+
+            { id: "Q21", text: "Biết hàm số $y = x^3 - 3x^2 + m$ có GTLN trên $[0;3]$ là 5. Tính GTNN của hàm số trên đoạn đó.", options: ["$1$", "$5$", "$0$", "$9$"], correct: 0,
+              steps: "$y' = 3x^2-6x=0 \\Rightarrow x=0, 2$. $y(0)=m, y(2)=m-4, y(3)=m$. Max là m, Min là m-4. $m=5 \\Rightarrow Min = 1$.",
+              level: 3, pSkill: "K11", sSkills: ["K6"], 
+              errors: { 1: "CONFUSE_X_Y", 2: "CALC_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "5 là GTLN m. Đề hỏi GTNN cơ mà.", 2: "Bạn lấy m=4 ở đâu ra?", 3: "Bạn tính m+4 thay vì m-4." },
+              help: ["Khảo sát tìm GTLN, GTNN theo tham số m.", "Max là số lớn nhất trong {m, m-4}. Rõ ràng Max=m, Min=m-4.", "Giải m=5, sau đó tính Min = m-4 = 1."] },
+
+            { id: "Q22", text: "Cho $y = |x^3 - 3x|$. GTLN của hàm số trên $[0;2]$ là:", options: ["$2$", "$0$", "$4$", "$3$"], correct: 0,
+              steps: "Xét $u=x^3-3x$. $u'=3x^2-3=0 \\Rightarrow x=1$. $u(0)=0, u(1)=-2, u(2)=2$. Vậy $u \\in [-2;2] \\Rightarrow |u| \\in [0;2]$. Max=2.",
+              level: 3, pSkill: "K6", sSkills: ["K10"], 
+              errors: { 1: "EXTREMA_CONFUSION", 2: "CALC_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "0 là GTNN, không phải GTLN.", 2: "Tính nhầm giá trị.", 3: "Lỗi cộng số." },
+              help: ["Khảo sát lõi bên trong trước.", "Giá trị lõi chạy từ -2 đến 2. Vậy trị tuyệt đối của nó chạy từ mấy đến mấy?", "Trị tuyệt đối của đoạn [-2;2] là đoạn [0;2]. Max là 2."] },
+
+            { id: "Q23", text: "Giá trị nhỏ nhất của $y = \\sqrt{x^2 - 2x + 5}$ là:", options: ["$2$", "$\\sqrt{5}$", "$0$", "Không có"], correct: 0,
+              steps: "$x^2-2x+5 = (x-1)^2+4 \\ge 4$. Vậy $y \\ge \\sqrt{4} = 2$. Min=2 tại x=1.",
+              level: 1, pSkill: "K10", sSkills: ["K1"], 
+              errors: { 1: "BOUNDARY_ERR", 2: "DOMAIN_ERR", 3: "EXTREMA_CONFUSION" }, 
+              errExp: { 1: "$\\sqrt{5}$ là giá trị tại x=0, không phải điểm đáy.", 2: "Căn thức luôn $\\ge 0$ nhưng Min ở đây lớn hơn 0 do biểu thức trong căn $\\ge 4$.", 3: "Hàm này có Min tại x=1." },
+              help: ["Dùng hằng đẳng thức cho biểu thức trong căn.", "$x^2-2x+5 = (x-1)^2 + 4$.", "Trong căn $\\ge 4$, vậy căn $\\ge 2$. Min = 2."] },
+
+            { id: "Q24", text: "Khẳng định nào sai về hàm số $y=f(x)$ liên tục trên một tập xác định?", options: ["Liên tục trên khoảng (a;b) luôn có Max, Min.", "Liên tục trên đoạn [a;b] luôn có Max, Min.", "Hàm liên tục trên $\\mathbb{R}$ có thể không có Max.", "Hàm số bị chặn chưa chắc đạt Max."], correct: 0,
+              steps: "Định lý chỉ khẳng định hàm liên tục trên ĐOẠN kín [a;b] thì luôn có GTLN, GTNN. Trên KHOẢNG mở (a;b) thì có thể không có.",
+              level: 2, pSkill: "K8", sSkills: ["K7"], 
+              errors: { 1: "CONCEPT_ERR", 2: "CONCEPT_ERR", 3: "CONCEPT_ERR" }, 
+              errExp: { 1: "Mệnh đề này đúng (theo SGK). Đề yêu cầu tìm mệnh đề SAI.", 2: "Mệnh đề này đúng, ví dụ y=x không có Max trên R.", 3: "Mệnh đề này đúng, bị chặn trên nhưng tiệm cận ngang thì không chạm tới Max." },
+              help: ["Nhớ lại định lý cơ bản về GTLN, GTNN trong SGK.", "Định lý nói về khoảng (a;b) hay đoạn [a;b]?", "Định lý Weierstrass: Chỉ chắc chắn có Max, Min khi hàm liên tục trên 1 đoạn ĐÓNG [a;b]."] },
+            
+            { id: "Q25", text: "Tổng GTLN và GTNN của hàm số $y = x^4 - 4x^2 + 1$ trên $[-1; 2]$ là:", options: ["$-1$", "$1$", "$-2$", "$0$"], correct: 0,
+              steps: "$y'=4x^3-8x=0 \\Rightarrow x=0, x=\\pm \\sqrt{2}$. Trên $[-1;2]$ xét $0, \\sqrt{2}$. $y(-1)=-2, y(0)=1, y(\\sqrt{2})=-3, y(2)=1$. Max=1, Min=-3. Tổng = -2. (Tùy chọn A bị lỗi thứ tự, đúng là -2 nằm ở idx 2). Sửa lại options: -2, -1, 1, 0. Đúng là -2.",
+              options: ["$-2$", "$-1$", "$1$", "$0$"], // Overwritten options to make Correct=0 valid.
+              level: 2, pSkill: "K6", sSkills: ["K3", "K5"], 
+              errors: { 1: "CALC_ERR", 2: "BOUNDARY_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "Bạn cộng nhầm.", 2: "Bạn quên xét $x=\\sqrt{2}$ (Min=-3).", 3: "Lỗi số học." },
+              help: ["Tìm các điểm cực trị nằm trong đoạn [-1;2]. Chú ý $\\sqrt{2} \\approx 1.41$.", "Tính các y(-1), y(0), y(\\sqrt{2}), y(2).", "Max = 1, Min = -3. Lấy 1 + (-3)."] },
+            
+            { id: "Q26", text: "GTLN của $y = x + \\sqrt{2-x^2}$ là:", options: ["$2$", "$\\sqrt{2}$", "$0$", "$-2$"], correct: 0,
+              steps: "TXĐ: $[-\\sqrt{2};\\sqrt{2}]$. $y' = 1 - \\frac{x}{\\sqrt{2-x^2}}=0 \\Rightarrow \\sqrt{2-x^2}=x \\Rightarrow x=1$. $y(-\\sqrt{2})=-\\sqrt{2}, y(1)=2, y(\\sqrt{2})=\\sqrt{2}$. Max=2.",
+              level: 3, pSkill: "K10", sSkills: ["K2", "K1"], 
+              errors: { 1: "BOUNDARY_ERR", 2: "EXTREMA_CONFUSION", 3: "EXTREMA_CONFUSION" }, 
+              errExp: { 1: "$\\sqrt{2}$ là giá trị tại mút phải, đỉnh cao hơn ở x=1.", 2: "0 không phải là điểm lớn nhất.", 3: "Đây là giới hạn dưới." },
+              help: ["Điều kiện căn thức. Giải y'=0 cẩn thận dấu của x.", "$\\sqrt{2-x^2}=x$ yêu cầu $x \\ge 0$. Giải ra $x=1$.", "So sánh y(1) và y tại 2 mút."] },
+
+            { id: "Q27", text: "Cho $y = \\frac{m x + 1}{x + m}$. Tìm $m>0$ để hàm số có GTNN trên $[1;2]$ bằng 2.", options: ["Không có m", "$m=1$", "$m=2$", "$m=3$"], correct: 0,
+              steps: "$y'= (m^2-1)/(x+m)^2$. Nếu m=1 y=1(loại). Nếu m>1 đồng biến, Min=$y(1)=(m+1)/(m+1)=1 \\neq 2$. Nếu $0<m<1$ nghịch biến, Min=$y(2)=(2m+1)/(m+2)=2 \\Rightarrow 2m+1=2m+4$ (Vô nghiệm). Kết luận: Không có m.",
+              level: 4, pSkill: "K11", sSkills: ["K4"], 
+              errors: { 1: "WRONG_CASE", 2: "WRONG_CASE", 3: "CALC_ERR" }, 
+              errExp: { 1: "Nếu m=1 hàm là hằng số y=1, không thể bằng 2.", 2: "Bạn tính sai phương trình đại số.", 3: "Chưa thử lại." },
+              help: ["Tính đạo hàm. Xét 2 TH $m>1$ và $0<m<1$.", "Với mỗi TH, xác định hàm tăng hay giảm để biết Min nằm ở đầu nào.", "Ở cả 2 TH, giải phương trình Min = 2 đều vô nghiệm."] },
+
+            { id: "Q28", text: "Hàm số $y=f(x)$ liên tục trên $\\mathbb{R}$ và đồ thị chỉ có một đỉnh cực đại tại $A(1; 3)$, hai bên hướng xuống $-\\infty$. GTLN của hàm số là:", options: ["$3$", "$1$", "Không có", "$0$"], correct: 0,
+              steps: "Đỉnh duy nhất quay xuống đồng nghĩa với cực đại toàn cục. Max=3.",
+              level: 1, pSkill: "K9", sSkills: ["K7"], 
+              errors: { 1: "CONFUSE_X_Y", 2: "OPEN_INTERVAL_ERR", 3: "CALC_ERR" }, 
+              errExp: { 1: "1 là hoành độ (x). GTLN là tung độ (y).", 2: "Dù miền xét là vô cực nhưng đồ thị có đỉnh cao nhất nên vẫn có GTLN.", 3: "Không có căn cứ để chọn 0." },
+              help: ["Nhìn vào tung độ của điểm cao nhất trên đồ thị.", "Điểm cao nhất có tọa độ y bằng mấy?", "y = 3 là giá trị cao nhất đồ thị chạm được."] },
+
+            { id: "Q29", text: "Hàm số $y = x^3 - 3x$ đạt GTNN trên khoảng $(0; +\\infty)$ tại:", options: ["$x=1$", "$x=-1$", "$y=-2$", "Không đạt GTNN"], correct: 0,
+              steps: "$y'=3x^2-3=0 \\Rightarrow x=1 \\in (0;+\\infty)$. BBT lõm xuống tại x=1. Do là cực tiểu duy nhất trên khoảng nên Min đạt tại x=1.",
+              level: 2, pSkill: "K4", sSkills: ["K8"], 
+              errors: { 1: "DOMAIN_ERR", 2: "CONFUSE_X_Y", 3: "OPEN_INTERVAL_ERR" }, 
+              errExp: { 1: "$x=-1$ bị loại do không nằm trong khoảng $(0;+\\infty)$.", 2: "Đề hỏi 'đạt tại đâu' tức là tìm x.", 3: "Hàm có đáy Parabol cục bộ trên khoảng này nên CÓ GTNN." },
+              help: ["Tính y', lập bảng xét dấu trên $(0;+\\infty)$.", "Có cực tiểu duy nhất trên khoảng đang xét, đó chính là GTNN.", "x=1 là điểm cực tiểu."] },
+
+            { id: "Q30", text: "Hàm số $y=f(x)$ liên tục trên $[a;b]$. Nếu đạo hàm $f'(x)>0, \\forall x \\in (a;b)$ thì:", options: ["GTLN là $f(b)$", "GTLN là $f(a)$", "Không có GTLN", "GTLN tại cực đại"], correct: 0,
+              steps: "Hàm luôn đồng biến (đi lên) từ a đến b. Đỉnh cao nhất nằm ở mút bên phải là $f(b)$.",
+              level: 1, pSkill: "K7", sSkills: ["K4"], 
+              errors: { 1: "EXTREMA_CONFUSION", 2: "OPEN_INTERVAL_ERR", 3: "CRITICAL_ERR" }, 
+              errExp: { 1: "$f(a)$ là điểm thấp nhất (GTNN).", 2: "Hàm trên đoạn đóng chắc chắn có GTLN.", 3: "Hàm không có điểm tới hạn bên trong khoảng (do f'>0) nên không có cực trị." },
+              help: ["Đạo hàm luôn dương thì hàm số có tính chất gì?", "Hàm luôn đồng biến (đồ thị luôn đi lên).", "Đi từ trái qua phải đồ thị đi lên, vậy điểm cao nhất nằm ở cuối đoạn."] }
+        ];
+
+        // --- 3. STATE MANAGEMENT ---
+        let gameState = {
+            mode: 1,
+            players: [], // { name: '', score: 0, answers: [], correct:0, wrong:0 }
+            currentPlayerIdx: 0,
+            currentQuestions: [],
+            qIndex: 0,
+            timer: null,
+            timeLeft: 0,
+            audioEnabled: true,
+            skills: {}, // { K1: { attempted:0, correct:0, correctHint:0, wrong:0, errors:[] } }
+            teacherLogs: []
+        };
+        
+        const TIME_LIMIT = 30; // seconds
+
+        // --- 4. AUDIO SYSTEM (Web Audio API) ---
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        function toggleAudio() {
+            gameState.audioEnabled = !gameState.audioEnabled;
+            const icon = document.getElementById('audio-icon');
+            icon.className = gameState.audioEnabled ? "fa-solid fa-volume-high text-xl" : "fa-solid fa-volume-xmark text-xl text-red-500";
+        }
+
+        function playSound(type) {
+            if (!gameState.audioEnabled) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'wrong') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'tick') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            }
+        }
+
+        // --- 5. CORE LOGIC & NAVIGATION ---
+        function showScreen(screenId) {
+            ['intro-screen', 'menu-screen', 'guide-screen', 'game-screen', 'result-screen', 'skills-screen', 'teacher-screen', 'intermission-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+            
+            if(screenId === 'skills-screen') renderSkillProfile();
+            if(screenId === 'teacher-screen') renderTeacherDashboard();
+            
+            // Re-render math globally if needed
+            renderMathInElement(document.body, {delimiters: [{left: "$", right: "$", display: false}, {left: "$$", right: "$$", display: true}]});
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function selectMode(mode) {
+            const pName = document.getElementById('player-name').value.trim() || 'Người chơi ẩn danh';
+            gameState.mode = mode;
+            gameState.players = [ { id: 'P1', name: pName, score: 0, answers: [], correct:0, wrong:0 } ];
+            
+            if (mode === 2) {
+                gameState.players.push({ id: 'P2', name: 'Người chơi 2', score: 0, answers: [], correct:0, wrong:0 });
+            }
+            
+            startGame();
+        }
+
+        function startGame() {
+            initAudio(); // Require user gesture
+            gameState.currentPlayerIdx = 0;
+            
+            // Generate questions for this session based on mode
+            let pool = shuffleArray([...questionBank]);
+            let qCount = gameState.mode === 1 ? 10 : (gameState.mode === 2 ? 8 : 6);
+            
+            // Mode 2 needs same questions for fairness if possible, but here we just give 8 random each
+            // Mode 3 needs hard questions (level >= 3)
+            if(gameState.mode === 3) {
+                pool = pool.filter(q => q.level >= 2); 
+            }
+            
+            gameState.currentQuestions = pool.slice(0, qCount);
+            
+            startPlayerTurn();
+        }
+
+        function startPlayerTurn() {
+            gameState.qIndex = 0;
+            showScreen('game-screen');
+            updateGameHeader();
+            renderQuestion();
+        }
+
+        function updateGameHeader() {
+            const p = gameState.players[gameState.currentPlayerIdx];
+            document.getElementById('display-player-name').textContent = p.name;
+            document.getElementById('display-score').textContent = p.score;
+            document.getElementById('mode-indicator').textContent = `Chế độ ${gameState.mode}`;
+        }
+
+        function renderQuestion() {
+            const q = gameState.currentQuestions[gameState.qIndex];
+            const p = gameState.players[gameState.currentPlayerIdx];
+            
+            document.getElementById('question-counter').textContent = `${gameState.qIndex + 1}/${gameState.currentQuestions.length}`;
+            document.getElementById('question-content').innerHTML = q.text;
+            
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            
+            // Reset help state for this question
+            gameState.currentHelpLevel = 0;
+            
+            // Shuffle options visually
+            let optIndices = [0,1,2,3];
+            // If it's not a 4-option question, adjust
+            if(q.options.length < 4) optIndices = Array.from(Array(q.options.length).keys());
+            optIndices = shuffleArray(optIndices);
+            
+            optIndices.forEach(idx => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn bg-gray-800 border border-gray-600 rounded-xl p-5 md:p-6 text-left w-full text-xl md:text-2xl shadow-md';
+                btn.innerHTML = `<span class="font-bold text-gray-400 mr-3">${String.fromCharCode(65 + optIndices.indexOf(idx))}.</span> ${q.options[idx]}`;
+                btn.onclick = () => handleAnswer(idx, btn);
+                optsContainer.appendChild(btn);
+            });
+
+            renderMathInElement(document.getElementById('question-content'), {delimiters: [{left: "$", right: "$", display: false}]});
+            renderMathInElement(optsContainer, {delimiters: [{left: "$", right: "$", display: false}]});
+            
+            startTimer();
+        }
+
+        // --- 6. GAME MECHANICS (Timer, Answers, Evaluation) ---
+        function startTimer() {
+            clearInterval(gameState.timer);
+            if(gameState.mode === 3) {
+                document.getElementById('timer-container').classList.add('hidden'); // Tactical: no strict timer pressure
+                return; 
+            }
+            document.getElementById('timer-container').classList.remove('hidden');
+            
+            gameState.timeLeft = TIME_LIMIT;
+            const bar = document.getElementById('timer-bar');
+            bar.style.width = '100%';
+            bar.className = 'h-full bg-cyan-400 w-full progress-bar shadow-[0_0_10px_#00f3ff]';
+            
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                const pct = (gameState.timeLeft / TIME_LIMIT) * 100;
+                bar.style.width = `${pct}%`;
+                
+                if (gameState.timeLeft <= 10) {
+                    bar.classList.replace('bg-cyan-400', 'bg-red-500');
+                    bar.classList.replace('shadow-[0_0_10px_#00f3ff]', 'shadow-[0_0_10px_#ff003c]');
+                    if(gameState.timeLeft > 0) playSound('tick');
+                }
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function handleTimeout() {
+            // Track skipped/timeout
+            trackSkill(gameState.currentQuestions[gameState.qIndex], 'timeout');
+            showFeedback(false, "HẾT GIỜ!", "Bạn chưa đưa ra câu trả lời.", true);
+        }
+
+        function handleSkip() {
+            clearInterval(gameState.timer);
+            trackSkill(gameState.currentQuestions[gameState.qIndex], 'skipped');
+            nextQuestion();
+        }
+
+        function handleAnswer(selectedIdx, btnElement) {
+            clearInterval(gameState.timer);
+            const q = gameState.currentQuestions[gameState.qIndex];
+            const p = gameState.players[gameState.currentPlayerIdx];
+            const isCorrect = (selectedIdx === q.correct);
+            
+            // Disable all buttons
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+            
+            // Visual feedback on button
+            btnElement.classList.add(isCorrect ? 'correct' : 'wrong');
+            
+            // Track skill
+            trackSkill(q, isCorrect ? 'correct' : 'wrong', isCorrect ? null : selectedIdx);
+            
+            // Calculate Score
+            if(isCorrect) {
+                p.correct++;
+                let points = 100 * q.level;
+                // Speed bonus (Mode 1)
+                if(gameState.mode === 1) points += Math.floor(gameState.timeLeft * 2);
+                // Help penalty
+                if(gameState.currentHelpLevel > 0) points = Math.floor(points * (1 - 0.25 * gameState.currentHelpLevel));
+                p.score += points;
+                document.getElementById('display-score').textContent = p.score;
+            } else {
+                p.wrong++;
+            }
+            
+            // Show Feedback Modal
+            showFeedback(isCorrect, isCorrect ? "CHÍNH XÁC!" : "CHƯA ĐÚNG", q, false, selectedIdx);
+        }
+
+        function trackSkill(q, status, errorIdx = null) {
+            if(!gameState.skills[q.pSkill]) {
+                gameState.skills[q.pSkill] = { attempted:0, correct:0, correctHint:0, wrong:0, errors:[] };
+            }
+            const s = gameState.skills[q.pSkill];
+            s.attempted++;
+            
+            if(status === 'correct') {
+                if(gameState.currentHelpLevel > 0) s.correctHint++;
+                else s.correct++;
+            } else if(status === 'wrong') {
+                s.wrong++;
+                // Record specific error
+                if(q.errors && q.errors[errorIdx]) {
+                    s.errors.push(q.errors[errorIdx]);
+                }
+            }
+            // Ignore timeout/skip for accuracy calculations to not penalize unfairly
+        }
+
+        function showFeedback(isCorrect, title, q, isTimeout=false, selectedIdx=null) {
+            if(isCorrect) playSound('correct');
+            else playSound('wrong');
+
+            document.getElementById('feedback-modal').classList.remove('hidden');
+            const card = document.getElementById('feedback-card');
+            const icon = document.getElementById('feedback-icon');
+            const titleEl = document.getElementById('feedback-title');
+            const msgEl = document.getElementById('feedback-message');
+            const expEl = document.getElementById('feedback-explanation');
+            
+            // Reset styles
+            card.className = "bg-gray-900 border-2 rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl transform scale-100 transition-transform duration-300";
+            
+            if(isCorrect) {
+                card.classList.add('border-green-500', 'shadow-[0_0_30px_rgba(0,255,102,0.3)]');
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-green-400"></i>';
+                titleEl.className = "text-3xl font-black uppercase mb-2 neon-text-green text-green-400";
+                titleEl.innerText = title;
+                msgEl.innerText = `Kỹ năng được cộng nhận: ${SKILL_DEF[q.pSkill]}`;
+                expEl.innerHTML = `<span class="text-green-300 font-bold">Giải thích:</span> ${q.steps}`;
+            } else {
+                card.classList.add('border-red-500', 'shadow-[0_0_30px_rgba(255,0,60,0.3)]');
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+                titleEl.className = "text-3xl font-black uppercase mb-2 text-red-500";
+                titleEl.innerText = title;
+                
+                if(isTimeout) {
+                    msgEl.innerText = "Hãy phản xạ nhanh hơn ở câu sau nhé!";
+                    expEl.innerHTML = "";
+                } else {
+                    let errMsg = "Sai lầm thường gặp.";
+                    if(q.errExp && q.errExp[selectedIdx]) errMsg = q.errExp[selectedIdx];
+                    
+                    msgEl.innerText = `Đáp án đúng là: ${q.options[q.correct]}`;
+                    expEl.innerHTML = `
+                        <div class="mb-2"><span class="text-red-400 font-bold">Nhận xét lỗi:</span> ${errMsg}</div>
+                        <div class="text-sm mt-3 pt-3 border-t border-gray-600"><span class="text-blue-300 font-bold">Lời giải:</span> ${q.steps}</div>
+                    `;
+                }
+            }
+            renderMathInElement(expEl, {delimiters: [{left: "$", right: "$", display: false}]});
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            gameState.qIndex++;
+            
+            if(gameState.qIndex < gameState.currentQuestions.length) {
+                renderQuestion();
+            } else {
+                // Finish player turn
+                if(gameState.mode === 2 && gameState.currentPlayerIdx === 0) {
+                    gameState.currentPlayerIdx = 1;
+                    showScreen('intermission-screen');
+                    // Regenerate new questions for P2
+                    gameState.currentQuestions = shuffleArray([...questionBank]).slice(0, 8);
+                } else {
+                    finishGame();
+                }
+            }
+        }
+
+        // --- 7. HELP SYSTEM ---
+        function openHelpModal() {
+            document.getElementById('help-modal').classList.remove('hidden');
+            const q = gameState.currentQuestions[gameState.qIndex];
+            
+            // Setup content based on current level
+            document.getElementById('txt-help-1').innerHTML = q.help[0] || "Chú ý tập xác định.";
+            document.getElementById('txt-help-2').innerHTML = q.help[1] || "Tính đạo hàm và giải y'=0.";
+            document.getElementById('txt-help-3').innerHTML = q.steps;
+            
+            updateHelpUI();
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-modal').classList.add('hidden');
+        }
+
+        function requestNextHelpLevel() {
+            if(gameState.currentHelpLevel < 3) {
+                gameState.currentHelpLevel++;
+                updateHelpUI();
+            }
+        }
+
+        function updateHelpUI() {
+            for(let i=1; i<=3; i++) {
+                document.getElementById(`help-level-${i}`).classList.toggle('hidden', gameState.currentHelpLevel < i);
+            }
+            
+            const btn = document.getElementById('btn-request-help');
+            if(gameState.currentHelpLevel === 0) btn.innerText = "XEM GỢI MỞ (CẤP 1)";
+            else if(gameState.currentHelpLevel === 1) btn.innerText = "XEM HƯỚNG DẪN (CẤP 2)";
+            else if(gameState.currentHelpLevel === 2) btn.innerText = "XEM LỜI GIẢI (CẤP 3)";
+            else btn.classList.add('hidden'); // max level reached
+            
+            renderMathInElement(document.getElementById('help-content-area'), {delimiters: [{left: "$", right: "$", display: false}]});
+        }
+
+        // --- 8. END GAME & SKILL EVALUATION ---
+        function finishGame() {
+            // Save log for teacher
+            gameState.players.forEach(p => {
+                gameState.teacherLogs.push({
+                    time: new Date().toLocaleString(),
+                    name: p.name,
+                    mode: gameState.mode,
+                    score: p.score,
+                    skills: analyzePlayerSkills(), // Analyze global skills state
+                    isTest: false
+                });
+            });
+            saveTeacherData();
+
+            // Setup Result Screen
+            showScreen('result-screen');
+            
+            const p1 = gameState.players[0];
+            document.getElementById('res-p1-name').innerText = p1.name;
+            document.getElementById('res-p1-score').innerText = p1.score;
+            document.getElementById('res-p1-correct').innerText = p1.correct;
+            document.getElementById('res-p1-wrong').innerText = p1.wrong;
+
+            if(gameState.mode === 2) {
+                const p2 = gameState.players[1];
+                document.getElementById('res-p2-card').classList.remove('hidden');
+                document.getElementById('res-p2-name').innerText = p2.name;
+                document.getElementById('res-p2-score').innerText = p2.score;
+                document.getElementById('res-p2-correct').innerText = p2.correct;
+                document.getElementById('res-p2-wrong').innerText = p2.wrong;
+                
+                let sub = p1.score > p2.score ? `${p1.name} chiến thắng!` : (p2.score > p1.score ? `${p2.name} chiến thắng!` : "Hòa nhau!");
+                document.getElementById('result-subtitle').innerText = sub;
+            } else {
+                document.getElementById('res-p2-card').classList.add('hidden');
+                document.getElementById('result-subtitle').innerText = "Thử thách hoàn tất! Hãy xem hồ sơ kỹ năng của bạn.";
+            }
+        }
+
+        function analyzePlayerSkills() {
+            let analysis = { top: [], weak: [], needs: [], errors: [] };
+            for(let key in gameState.skills) {
+                let s = gameState.skills[key];
+                if(s.attempted >= 3) {
+                    let acc = (s.correct + s.correctHint * 0.5) / s.attempted;
+                    if(acc >= 0.75) analysis.top.push(key);
+                    else if(acc < 0.4) analysis.weak.push(key);
+                }
+                if(s.errors && s.errors.length > 0) {
+                    analysis.errors.push(...s.errors);
+                }
+            }
+            return analysis;
+        }
+
+        function renderSkillProfile() {
+            const tbody = document.getElementById('skills-table-body');
+            tbody.innerHTML = '';
+            
+            let topSkills = [];
+            let weakSkills = [];
+            let errorSet = new Set();
+
+            Object.keys(SKILL_DEF).forEach(k => {
+                let s = gameState.skills[k] || { attempted:0, correct:0, correctHint:0, wrong:0, errors:[] };
+                let status = "Thiếu dữ liệu";
+                let color = "bg-gray-600";
+                
+                if(s.attempted >= 3) {
+                    let score = (s.correct * 1 + s.correctHint * 0.5 - s.wrong * 0.5) / s.attempted; // simple heuristic
+                    if(score >= 0.6) { status = "Thành thạo"; color = "bg-green-500"; topSkills.push(k); }
+                    else if(score >= 0.2) { status = "Đang hình thành"; color = "bg-yellow-500"; }
+                    else { status = "Cần củng cố"; color = "bg-orange-500"; weakSkills.push(k); }
+                }
+
+                s.errors.forEach(err => errorSet.add(err));
+
+                tbody.innerHTML += `
+                    <tr class="bg-gray-800/50 border-b border-gray-700 hover:bg-gray-700/50">
+                        <td class="px-4 py-3 font-bold text-cyan-400">${k}</td>
+                        <td class="px-4 py-3">${SKILL_DEF[k]}</td>
+                        <td class="px-2 py-3 text-center">${s.attempted}</td>
+                        <td class="px-2 py-3 text-center text-green-400">${s.correct}</td>
+                        <td class="px-2 py-3 text-center text-yellow-400">${s.correctHint}</td>
+                        <td class="px-2 py-3 text-center text-red-400">${s.wrong}</td>
+                        <td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-xs text-white ${color}">${status}</span></td>
+                    </tr>
+                `;
+            });
+
+            // Update Summaries
+            document.getElementById('skill-top-list').innerHTML = topSkills.length > 0 
+                ? topSkills.slice(0,3).map(k => `<li>${SKILL_DEF[k]}</li>`).join('') 
+                : "<li>Chưa đủ dữ liệu hoặc chưa có kỹ năng nào vượt trội. Cố gắng thêm nhé!</li>";
+                
+            document.getElementById('skill-weak-list').innerHTML = weakSkills.length > 0 
+                ? weakSkills.slice(0,3).map(k => `<li>${SKILL_DEF[k]}</li>`).join('') 
+                : "<li>Tạm thời chưa phát hiện lỗ hổng nghiêm trọng.</li>";
+
+            // Support Plan based on weaknesses
+            let planText = "Tiếp tục làm các đề tổng hợp để củng cố mọi mặt.";
+            if(weakSkills.includes('K1') || weakSkills.includes('K8')) planText = "Nhóm A: Cần ôn tập vững phần Tập xác định và giới hạn (lim) ở đầu mút.";
+            else if(weakSkills.includes('K2') || weakSkills.includes('K3')) planText = "Nhóm B: Luyện tập chuỗi bài đạo hàm cơ bản và giải phương trình y'=0.";
+            else if(weakSkills.includes('K6') || weakSkills.includes('K7')) planText = "Nhóm D: Cần phân biệt rõ Cực trị (địa phương) và GTLN/GTNN trên đoạn (toàn cục).";
+            document.getElementById('skill-plan').innerText = planText;
+
+            // Errors
+            const errDiv = document.getElementById('error-section');
+            const errList = document.getElementById('error-list');
+            errList.innerHTML = '';
+            if(errorSet.size > 0) {
+                errDiv.classList.remove('hidden');
+                errorSet.forEach(errCode => {
+                    if(ERROR_ADVICE[errCode]) {
+                        errList.innerHTML += `<li><strong class="text-red-300">${ERROR_ADVICE[errCode].cause}:</strong> <span class="text-gray-400">${ERROR_ADVICE[errCode].advice}</span></li>`;
+                    }
+                });
+            } else {
+                errDiv.classList.add('hidden');
+            }
+        }
+
+        // --- 9. TEACHER DASHBOARD & STORAGE ---
+        function loadTeacherData() {
+            let d = localStorage.getItem('dtct_teacher_logs');
+            if(d) gameState.teacherLogs = JSON.parse(d);
+        }
+
+        function saveTeacherData() {
+            localStorage.setItem('dtct_teacher_logs', JSON.stringify(gameState.teacherLogs));
+        }
+
+        function generateTestData() {
+            const testLogs = [
+                {
+                    time: new Date().toLocaleString(),
+                    name: "Học sinh A (Test)",
+                    mode: 1,
+                    score: 850,
+                    skills: { top: ["K2", "K3"], weak: ["K6", "K8"], errors: ["BOUNDARY_ERR", "OPEN_INTERVAL_ERR", "BOUNDARY_ERR"] },
+                    isTest: true
+                },
+                {
+                    time: new Date().toLocaleString(),
+                    name: "Học sinh B (Test)",
+                    mode: 2,
+                    score: 620,
+                    skills: { top: ["K1"], weak: ["K2", "K7"], errors: ["DERIV_ERR", "EXTREMA_CONFUSION"] },
+                    isTest: true
+                },
+                {
+                    time: new Date().toLocaleString(),
+                    name: "Học sinh C (Test)",
+                    mode: 1,
+                    score: 410,
+                    skills: { top: [], weak: ["K6", "K8"], errors: ["BOUNDARY_ERR", "OPEN_INTERVAL_ERR", "CALC_ERR"] },
+                    isTest: true
+                }
+            ];
+            gameState.teacherLogs.push(...testLogs);
+            saveTeacherData();
+            renderTeacherDashboard();
+            alert("Đã tạo dữ liệu kiểm thử mẫu.");
+        }
+
+        function renderTeacherDashboard() {
+            loadTeacherData();
+            const tbody = document.getElementById('teacher-table-body');
+            const filterVal = document.getElementById('teacher-skill-filter').value;
+            const insightsDiv = document.getElementById('teacher-insights');
+            
+            tbody.innerHTML = '';
+            
+            // Lọc dữ liệu
+            let filteredLogs = gameState.teacherLogs;
+            if (filterVal !== "ALL") {
+                filteredLogs = gameState.teacherLogs.filter(log => log.skills.weak && log.skills.weak.includes(filterVal));
+            }
+            
+            // Phân tích tổng hợp từ logs đang hiển thị
+            let errorCounts = {};
+            let weakSkillCounts = {};
+            
+            filteredLogs.forEach(log => {
+                if(log.skills.errors) {
+                    log.skills.errors.forEach(err => {
+                        errorCounts[err] = (errorCounts[err] || 0) + 1;
+                    });
+                }
+                if(log.skills.weak) {
+                    log.skills.weak.forEach(ws => {
+                        weakSkillCounts[ws] = (weakSkillCounts[ws] || 0) + 1;
+                    });
+                }
+            });
+
+            // Tìm lỗi phổ biến nhất
+            let sortedErrors = Object.keys(errorCounts).sort((a,b) => errorCounts[b] - errorCounts[a]).slice(0, 3);
+            let sortedWeakSkills = Object.keys(weakSkillCounts).sort((a,b) => weakSkillCounts[b] - weakSkillCounts[a]).slice(0, 3);
+
+            let insightHTML = `
+                <div class="bg-gray-800 p-4 rounded-xl border border-red-500/30">
+                    <h3 class="text-red-400 font-bold mb-2"><i class="fa-solid fa-bug"></i> Lỗi Sai Phổ Biến Nhất</h3>
+                    <ul class="text-sm text-gray-300 space-y-2">
+                        ${sortedErrors.length > 0 ? sortedErrors.map(err => {
+                            return `<li><span class="font-bold text-red-300">${err} (${errorCounts[err]} lần):</span> ${ERROR_ADVICE[err] ? ERROR_ADVICE[err].cause : 'Lỗi không xác định'}</li>`;
+                        }).join('') : '<li>Chưa có đủ dữ liệu lỗi.</li>'}
+                    </ul>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-xl border border-blue-500/30">
+                    <h3 class="text-blue-400 font-bold mb-2"><i class="fa-solid fa-users"></i> Đề Xuất Hoạt Động Hỗ Trợ Nhóm</h3>
+                    <ul class="text-sm text-gray-300 space-y-2">
+                        ${sortedWeakSkills.length > 0 ? sortedWeakSkills.map(sk => {
+                            let action = "Cần cho học sinh làm thêm bài tập chuyên đề tương ứng.";
+                            if(['K1','K8'].includes(sk)) action = "Tổ chức thảo luận nhóm về tập xác định và tiệm cận ở mút mở.";
+                            if(['K2','K3'].includes(sk)) action = "Giao chuỗi bài tập đạo hàm cơ bản, kiểm tra chéo.";
+                            if(['K6','K7'].includes(sk)) action = "Sử dụng bảng kiểm: 'Điểm tới hạn - Đầu mút' khi giải toán trên đoạn.";
+                            return `<li><strong class="text-cyan-300">Yếu ${sk} (${weakSkillCounts[sk]} HS):</strong> ${action}</li>`;
+                        }).join('') : '<li>Chưa có đề xuất (Lớp đang làm tốt hoặc thiếu dữ liệu).</li>'}
+                    </ul>
+                </div>
+            `;
+            insightsDiv.innerHTML = insightHTML;
+
+            // Render bảng
+            [...filteredLogs].reverse().forEach(log => {
+                let weaks = log.skills.weak && log.skills.weak.length > 0 ? log.skills.weak.join(', ') : '-';
+                let dataTypeLabel = log.isTest ? '<span class="px-2 py-1 bg-yellow-600 rounded text-xs text-white">Kiểm thử</span>' : '<span class="px-2 py-1 bg-green-600 rounded text-xs text-white">Thực tế</span>';
+                
+                tbody.innerHTML += `
+                    <tr class="bg-gray-800/50 border-b border-gray-700">
+                        <td class="px-4 py-3">${dataTypeLabel}</td>
+                        <td class="px-4 py-3 text-xs text-gray-500">${log.time}</td>
+                        <td class="px-4 py-3 font-bold text-white">${log.name}</td>
+                        <td class="px-4 py-3">CĐ ${log.mode}</td>
+                        <td class="px-4 py-3 text-yellow-400 font-bold">${log.score}</td>
+                        <td class="px-4 py-3 text-red-400 text-xs">${weaks}</td>
+                    </tr>
+                `;
+            });
+            
+            if(filteredLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">Không có dữ liệu phù hợp.</td></tr>`;
+            }
+        }
+
+        function clearTeacherData() {
+            if(confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử chơi trên thiết bị này?")) {
+                gameState.teacherLogs = [];
+                saveTeacherData();
+                renderTeacherDashboard();
+            }
+        }
+
+        function exportData(type) {
+            loadTeacherData();
+            if(gameState.teacherLogs.length === 0) return alert("Không có dữ liệu để xuất.");
+            
+            let content, filename, mime;
+            if(type === 'json') {
+                content = JSON.stringify(gameState.teacherLogs, null, 2);
+                filename = 'dtct_data.json';
+                mime = 'application/json';
+            } else {
+                // CSV
+                content = "LoaiDL,ThoiGian,NguoiChoi,CheDo,Diem,KyNangYeu,LoiSai\n";
+                gameState.teacherLogs.forEach(l => {
+                    let dlType = l.isTest ? "KiemThu" : "ThucTe";
+                    let weaks = l.skills.weak ? l.skills.weak.join(';') : '';
+                    let errs = l.skills.errors ? l.skills.errors.join(';') : '';
+                    content += `"${dlType}","${l.time}","${l.name}",${l.mode},${l.score},"${weaks}","${errs}"\n`;
+                });
+                filename = 'dtct_data.csv';
+                mime = 'text/csv';
+            }
+
+            const blob = new Blob([content], {type: mime});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetToMenu() {
+            showScreen('menu-screen');
+        }
+
+        // Initialize App
+        window.onload = () => {
+            loadTeacherData();
+            // Optional: generate the full 30 questions on load internally. Done above.
+        };
+
+    </script>
+</body>
+</html>

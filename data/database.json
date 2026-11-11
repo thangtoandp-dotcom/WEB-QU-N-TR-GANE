@@ -2847,10 +2847,10 @@
       "description": "Bài giảng trò chơi PowerPoint tương tác chuyên đề Đạo hàm & Hàm số lớp 12 do Thầy Bùi Ngọc Thắng biên soạn. Hỗ trợ phóng to hết màn hình để trình chiếu và trả lời câu hỏi trực quan.",
       "color": "#E11D48",
       "bgCard": "#FFE4E6",
-      "fileUrl": "/uploads/games/demo_game_toan_powerpoint.html",
-      "fileName": "Game_Toan_DaoHam_HamSo.pptx",
-      "fileType": "powerpoint",
-      "fileSize": "3.8 MB",
+      "fileUrl": "/uploads/games/g-uploaded-powerpoint-ham-so_game_powerpoint_khao_sat_ham_so_ao_ham_thpt.html",
+      "fileName": "g-uploaded-powerpoint-ham-so_game_powerpoint_khao_sat_ham_so_ao_ham_thpt.html",
+      "fileType": "html",
+      "fileSize": "17.9 KB",
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-11-04T07:10:00.000Z",
@@ -2901,7 +2901,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T07:09:24.563403+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792825762248_game_hoc_tap_au_truong_cuc_tri.html",
+      "fileName": "game_custom_1792825762248_game_hoc_tap_au_truong_cuc_tri.html",
+      "fileSize": "96.4 KB"
     },
     {
       "id": "game_custom_1792826001341",
@@ -2923,7 +2926,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T07:13:22.577572+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792826001341_loai_tru_tat_xau.html",
+      "fileName": "game_custom_1792826001341_loai_tru_tat_xau.html",
+      "fileSize": "25.8 KB"
     },
     {
       "id": "game_custom_1792826073398",
@@ -2945,7 +2951,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T07:14:35.212301+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792826073398_choi_co_caro.html",
+      "fileName": "game_custom_1792826073398_choi_co_caro.html",
+      "fileSize": "22.4 KB"
     },
     {
       "id": "game_custom_1792826120880",
@@ -2967,7 +2976,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T07:15:22.108838+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792826120880_hung_qua.html",
+      "fileName": "game_custom_1792826120880_hung_qua.html",
+      "fileSize": "30.1 KB"
     },
     {
       "id": "game_custom_1792826162454",
@@ -2989,7 +3001,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T07:16:03.599795+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792826162454_giai_cuu_ai_duong.html",
+      "fileName": "game_custom_1792826162454_giai_cuu_ai_duong.html",
+      "fileSize": "26.3 KB"
     },
     {
       "id": "game_custom_1792826195231",
@@ -3011,7 +3026,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T07:16:36.629653+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792826195231_ong_tim_mat.html",
+      "fileName": "game_custom_1792826195231_ong_tim_mat.html",
+      "fileSize": "20.8 KB"
     },
     {
       "id": "game_custom_1792826380974",
@@ -3033,7 +3051,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T07:19:43.550592+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792826380974_ai_la_trieu_phu_on_tap.html",
+      "fileName": "game_custom_1792826380974_ai_la_trieu_phu_on_tap.html",
+      "fileSize": "36.4 KB"
     },
     {
       "id": "game_custom_1792826597558",
@@ -3055,7 +3076,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T07:23:19.565442+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792826597558_h_tn_chia_se_cam_xuc_4_oi_choi_.html",
+      "fileName": "game_custom_1792826597558_h_tn_chia_se_cam_xuc_4_oi_choi_.html",
+      "fileSize": "54.5 KB"
     },
     {
       "id": "game_custom_1792858079195",
@@ -3077,7 +3101,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:07:59.705291+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858079195_loai_tru_tat_xau.html",
+      "fileName": "game_custom_1792858079195_loai_tru_tat_xau.html",
+      "fileSize": "25.8 KB"
     },
     {
       "id": "game_custom_1792858124039",
@@ -3099,7 +3126,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:08:44.327255+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858124039_giai_cuu_ai_duong.html",
+      "fileName": "game_custom_1792858124039_giai_cuu_ai_duong.html",
+      "fileSize": "26.3 KB"
     },
     {
       "id": "game_custom_1792858168027",
@@ -3121,7 +3151,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:09:28.307225+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858168027_hung_qua_rung.html",
+      "fileName": "game_custom_1792858168027_hung_qua_rung.html",
+      "fileSize": "30.1 KB"
     },
     {
       "id": "game_custom_1792858348693",
@@ -3143,7 +3176,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:12:29.009595+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858348693_cau_ca_vec_to.html",
+      "fileName": "game_custom_1792858348693_cau_ca_vec_to.html",
+      "fileSize": "45.7 KB"
     },
     {
       "id": "game_custom_1792858428559",
@@ -3165,7 +3201,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:13:49.245832+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858428559_h_tn_chia_se_cam_xuc_4_oi_.html",
+      "fileName": "game_custom_1792858428559_h_tn_chia_se_cam_xuc_4_oi_.html",
+      "fileSize": "54.5 KB"
     },
     {
       "id": "game_custom_1792858503927",
@@ -3187,7 +3226,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:15:04.27268+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858503927_h_tn_su_truong_thanh_4_oi_.html",
+      "fileName": "game_custom_1792858503927_h_tn_su_truong_thanh_4_oi_.html",
+      "fileSize": "56.8 KB"
     },
     {
       "id": "game_custom_1792858570776",
@@ -3209,7 +3251,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:16:11.440993+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858570776_h_tn_tu_duy_oc_lap_4_oi_.html",
+      "fileName": "game_custom_1792858570776_h_tn_tu_duy_oc_lap_4_oi_.html",
+      "fileSize": "67.9 KB"
     },
     {
       "id": "game_custom_1792858690911",
@@ -3231,7 +3276,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:18:11.778118+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858690911_game_ai_la_trieu_phu.html",
+      "fileName": "game_custom_1792858690911_game_ai_la_trieu_phu.html",
+      "fileSize": "69.9 KB"
     },
     {
       "id": "game_custom_1792858776164",
@@ -3253,7 +3301,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-24T16:19:36.529201+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1792858776164_ai_la_trieu_phu_10_tap_hop_.html",
+      "fileName": "game_custom_1792858776164_ai_la_trieu_phu_10_tap_hop_.html",
+      "fileSize": "51.9 KB"
     },
     {
       "id": "game_custom_1793013035323",
@@ -3275,7 +3326,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-26T11:10:37.396295+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793013035323__ao_vang.html",
+      "fileName": "game_custom_1793013035323__ao_vang.html",
+      "fileSize": "35.3 KB"
     },
     {
       "id": "game_custom_1793112781336",
@@ -3297,7 +3351,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-27T14:53:02.236933+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793112781336_ai_la_trieu_phu_chuong_i.html",
+      "fileName": "game_custom_1793112781336_ai_la_trieu_phu_chuong_i.html",
+      "fileSize": "64.3 KB"
     },
     {
       "id": "game_custom_1793202857039",
@@ -3319,7 +3376,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-28T15:54:18.199695+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793202857039_cau_ca.html",
+      "fileName": "game_custom_1793202857039_cau_ca.html",
+      "fileSize": "38.4 KB"
     },
     {
       "id": "game_custom_1793202946969",
@@ -3341,7 +3401,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-28T15:55:48.134055+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793202946969_be_len_bac_thang.html",
+      "fileName": "game_custom_1793202946969_be_len_bac_thang.html",
+      "fileSize": "24.9 KB"
     },
     {
       "id": "game_custom_1793203069175",
@@ -3363,7 +3426,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-28T15:57:50.338544+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793203069175_game_hoc_tap_au_truong_ham_so_bac_nhat.html",
+      "fileName": "game_custom_1793203069175_game_hoc_tap_au_truong_ham_so_bac_nhat.html",
+      "fileSize": "92.0 KB"
     },
     {
       "id": "game_custom_1793346115626",
@@ -3385,7 +3451,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-30T07:41:56.097869+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793346115626__ap_nieu_toa_o.html",
+      "fileName": "game_custom_1793346115626__ap_nieu_toa_o.html",
+      "fileSize": "41.0 KB"
     },
     {
       "id": "game_custom_1793346228409",
@@ -3407,7 +3476,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-30T07:43:48.857921+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793346228409_ban_ia_bay.html",
+      "fileName": "game_custom_1793346228409_ban_ia_bay.html",
+      "fileSize": "38.8 KB"
     },
     {
       "id": "game_custom_1793358075126",
@@ -3429,7 +3501,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-30T11:01:15.63958+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793358075126_hai_qua.html",
+      "fileName": "game_custom_1793358075126_hai_qua.html",
+      "fileSize": "32.9 KB"
     },
     {
       "id": "game_custom_1793368359328",
@@ -3451,7 +3526,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-30T13:52:40.666885+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793368359328_ai_la_trieu_phu_12c1.html",
+      "fileName": "game_custom_1793368359328_ai_la_trieu_phu_12c1.html",
+      "fileSize": "64.3 KB"
     },
     {
       "id": "game_custom_1793369908657",
@@ -3473,7 +3551,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-30T14:18:30.67936+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793369908657_giai_ma_khoa.html",
+      "fileName": "game_custom_1793369908657_giai_ma_khoa.html",
+      "fileSize": "29.4 KB"
     },
     {
       "id": "game_custom_1793399048451",
@@ -3495,7 +3576,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-30T22:24:10.781901+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793399048451_diet_hanh_vi_xau.html",
+      "fileName": "game_custom_1793399048451_diet_hanh_vi_xau.html",
+      "fileSize": "27.6 KB"
     },
     {
       "id": "game_custom_1793402970744",
@@ -3517,7 +3601,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-10-30T23:29:32.085006+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793402970744_ai_la_trieu_phu_ham_bac_3_.html",
+      "fileName": "game_custom_1793402970744_ai_la_trieu_phu_ham_bac_3_.html",
+      "fileSize": "45.4 KB"
     },
     {
       "id": "game_custom_1793580391460",
@@ -3539,7 +3626,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-11-02T00:46:33.219033+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793580391460_co_tuong.html",
+      "fileName": "game_custom_1793580391460_co_tuong.html",
+      "fileSize": "28.5 KB"
     },
     {
       "id": "game_custom_1793694320553",
@@ -3561,7 +3651,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-11-03T08:25:21.72113+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793694320553_boc_bai.html",
+      "fileName": "game_custom_1793694320553_boc_bai.html",
+      "fileSize": "27.5 KB"
     },
     {
       "id": "game_custom_1793694336185",
@@ -3583,7 +3676,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-11-03T08:25:37.213836+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793694336185__ua_toi_50.html",
+      "fileName": "game_custom_1793694336185__ua_toi_50.html",
+      "fileSize": "23.8 KB"
     },
     {
       "id": "game_custom_1793697236075",
@@ -3605,7 +3701,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-11-03T09:13:57.113443+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793697236075__ua_toi_so_100.html",
+      "fileName": "game_custom_1793697236075__ua_toi_so_100.html",
+      "fileSize": "29.8 KB"
     },
     {
       "id": "game_custom_1793718628069",
@@ -3627,7 +3726,10 @@
       "isUploaded": true,
       "authorName": "Thầy Bùi Ngọc Thắng",
       "uploadedAt": "2026-11-03T15:10:28.96746+00:00",
-      "isDefault": false
+      "isDefault": false,
+      "fileUrl": "/uploads/games/game_custom_1793718628069_ran_san_moi.html",
+      "fileName": "game_custom_1793718628069_ran_san_moi.html",
+      "fileSize": "31.4 KB"
     }
   ],
   "rooms": [

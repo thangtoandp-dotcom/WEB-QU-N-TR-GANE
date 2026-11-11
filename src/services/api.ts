@@ -575,9 +575,9 @@ export const api = {
             ? '/uploads/games/game_rung_chuong_vang_2026.html'
             : (lg.id === 'g-uploaded-powerpoint-ham-so' || (lg.title && lg.title.includes('Khảo Sát')))
             ? '/uploads/games/demo_game_toan_powerpoint.html'
-            : lg.fileUrl,
+            : (lg.fileUrl || (lg.embedCode ? `/api/games/${lg.id}/play` : undefined)),
           fileType: isVid ? 'video' : isPpt ? 'powerpoint' : (lg.fileType || 'html'),
-          fileName: lg.fileName || (isVid ? 'Hộp_quà_Ảo_thuật.mp4' : isPpt ? 'Rung_Chuông_Vàng_Toán_Tin_2026.pptx' : (lg.fileUrl ? lg.fileUrl.split('/').pop() : undefined)),
+          fileName: lg.fileName || (isVid ? 'Hộp_quà_Ảo_thuật.mp4' : isPpt ? 'Rung_Chuông_Vàng_Toán_Tin_2026.pptx' : (lg.fileUrl ? lg.fileUrl.split('/').pop() : `${lg.title}.html`)),
           isDefault: defaultIds.has(lg.id),
           isUploaded: !defaultIds.has(lg.id)
         };

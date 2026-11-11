@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bắn Đĩa Bay - Trắc Nghiệm Toán 12</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax for rendering Mathematical formulas -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            startup: { typeset: false } // We will typeset manually when showing questions
+        };
+    </script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a2e; 
+            font-family: 'Inter', sans-serif;
+            touch-action: none; 
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .glass-panel {
+            background: rgba(25, 30, 50, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.8), 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+        #ui-layer { pointer-events: none; }
+        .interactive { pointer-events: auto; }
+        
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        .modal-enter { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .option-btn {
+            background: linear-gradient(145deg, #2a2d43, #1c1f30);
+            border: 2px solid #3f4460;
+            transition: all 0.2s;
+        }
+        .option-btn:hover {
+            border-color: #00ffcc;
+            background: linear-gradient(145deg, #323755, #222538);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.3);
+        }
+        /* Override MathJax styles for better scaling in buttons */
+        .MathJax { font-size: 1.4em !important; }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer" class="absolute top-0 left-0 w-full h-full flex flex-col justify-between p-4 z-10">
+        
+        <!-- Author Screen -->
+        <div id="authorScreen" class="interactive absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center bg-[#070913] z-50">
+            
+            <!-- Biểu tượng Cung Tên Phát Sáng -->
+            <svg width="120" height="120" viewBox="0 0 120 120" class="mb-6 z-10 animate-float" style="overflow: visible;">
+                <defs>
+                    <filter id="glowGold" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="5" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                    <filter id="glowBlue" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <!-- Dây cung -->
+                <path d="M 15,50 L 60,110 L 105,50" stroke="rgba(255,255,255,0.6)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <!-- Mũi tên -->
+                <g filter="url(#glowBlue)">
+                    <line x1="60" y1="115" x2="60" y2="15" stroke="#00e5ff" stroke-width="5" stroke-linecap="round" />
+                    <polygon points="60,0 48,20 60,15 72,20" fill="#00e5ff" />
+                    <path d="M 60,105 L 45,120 M 60,105 L 75,120 M 60,95 L 45,110 M 60,95 L 75,110" stroke="#00e5ff" stroke-width="3" stroke-linecap="round"/>
+                </g>
+                <!-- Thân cung -->
+                <path d="M 15,50 Q 60,-15 105,50" stroke="#ffce00" stroke-width="8" fill="none" stroke-linecap="round" filter="url(#glowGold)"/>
+            </svg>
+
+            <p class="text-white text-xl sm:text-2xl mb-4 tracking-widest font-normal">TÁC GIẢ GAME</p>
+            <h1 class="text-[#ffce00] text-2xl sm:text-5xl lg:text-6xl font-black mb-4 text-center uppercase whitespace-nowrap" style="text-shadow: 0 0 15px rgba(255,206,0,0.8), 0 0 30px rgba(255,206,0,0.5);">Thầy giáo BÙI NGỌC THẮNG</h1>
+            <h2 class="text-[#00e5ff] text-xl sm:text-3xl font-bold mb-12 text-center" style="text-shadow: 0 0 10px rgba(0,229,255,0.8), 0 0 20px rgba(0,229,255,0.5);">Trường THPT Đan Phượng</h2>
+            <button id="continueBtn" class="bg-transparent border-2 border-[#00e5ff] text-white px-10 py-2 rounded-[30px] hover:bg-[#00e5ff] hover:text-[#070913] font-medium transition-all duration-300 text-lg hover:shadow-[0_0_15px_#00e5ff]">
+                Tiếp Tục
+            </button>
+        </div>
+
+        <!-- Player Info Screen -->
+        <div id="playerInfoScreen" class="hidden interactive absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center bg-[#070913] z-40">
+            <div class="glass-panel p-8 rounded-3xl text-center min-w-[320px] max-w-md w-[90%] flex flex-col items-center">
+                <h2 class="text-2xl sm:text-3xl font-black text-[#00ffcc] mb-8 neon-text uppercase">Thông tin người chơi</h2>
+                
+                <input type="text" id="playerName" placeholder="Nhập Họ và Tên..." class="w-full mb-4 px-5 py-3 rounded-xl bg-[#1c1f30] text-white border-2 border-[#3f4460] focus:border-[#00ffcc] focus:outline-none transition-colors text-lg text-center placeholder-gray-400">
+                
+                <input type="text" id="playerClass" placeholder="Nhập Lớp (VD: 12A1)..." class="w-full mb-2 px-5 py-3 rounded-xl bg-[#1c1f30] text-white border-2 border-[#3f4460] focus:border-[#00ffcc] focus:outline-none transition-colors text-lg text-center placeholder-gray-400">
+                
+                <p id="infoError" class="text-[#ff007f] text-sm font-medium h-6 mb-4 opacity-0 transition-opacity duration-300">Vui lòng nhập đầy đủ thông tin!</p>
+                
+                <button id="submitInfoBtn" class="bg-gradient-to-r from-[#00ffcc] to-[#00b3ff] hover:from-[#00b3ff] hover:to-[#00ffcc] text-[#070913] font-bold py-3 px-10 rounded-full shadow-[0_0_15px_rgba(0,255,204,0.4)] transform transition hover:scale-105 active:scale-95 text-xl w-full">
+                    Vào Game
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-start w-full max-w-4xl mx-auto interactive">
+            <div class="glass-panel rounded-2xl px-6 py-3">
+                <h2 class="text-white text-sm uppercase tracking-widest opacity-80">Điểm số</h2>
+                <div id="scoreDisplay" class="text-4xl font-black text-[#00ffcc] neon-text">0</div>
+            </div>
+            <div class="glass-panel rounded-2xl px-4 py-2 flex flex-col items-end">
+                <span class="text-white text-xs opacity-70">Câu hỏi</span>
+                <span id="questionCountDisplay" class="text-xl font-bold text-[#ff007f]">0/30</span>
+            </div>
+        </div>
+
+        <!-- Menu Screen -->
+        <div id="menuScreen" class="interactive absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center glass-panel p-8 rounded-3xl text-center min-w-[320px] max-w-md">
+            <h1 class="text-4xl font-black text-white mb-2" style="text-shadow: 0 4px 15px rgba(0,0,0,0.5);">Bắn Đĩa<br><span class="text-[#00ffcc]">Toán Học</span></h1>
+            <p id="finalScore" class="text-lg text-gray-200 mb-4 hidden">Điểm của bạn: <span class="font-bold text-[#00ffcc] text-2xl"></span></p>
+            <p class="text-sm text-gray-300 mb-8">Bắn trúng đĩa bay để mở khóa câu hỏi.<br>Trả lời đúng để nhận điểm và xem pháo hoa!</p>
+            <button id="startBtn" class="bg-gradient-to-r from-[#ff007f] to-[#ff5e00] hover:from-[#ff5e00] hover:to-[#ff007f] text-white font-bold py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95 text-xl w-full">
+                Bắt Đầu
+            </button>
+        </div>
+        
+        <!-- Quiz Modal -->
+        <div id="quizModal" class="hidden interactive absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass-panel p-6 sm:p-8 rounded-3xl w-[90%] max-w-2xl flex flex-col items-center text-center">
+            <div class="text-[#00ffcc] font-bold tracking-widest uppercase mb-4 text-sm bg-[#1a1a2e] px-4 py-1 rounded-full border border-[#00ffcc]">Câu hỏi <span id="qNumber">1</span></div>
+            <div id="questionText" class="text-white text-2xl sm:text-3xl font-medium mb-8 leading-relaxed w-full">
+                <!-- Nội dung câu hỏi -->
+            </div>
+            <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                <!-- Các nút đáp án sẽ được tạo bằng JS -->
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    /** --- NGÂN HÀNG CÂU HỎI TOÁN 12 - VECTƠ KHÔNG GIAN (30 Câu, Độ khó tăng dần) --- */
+    const questionsBank = [
+        { q: "Trong không gian $Oxyz$, cho vectơ $\\vec{a} = 2\\vec{i} - 3\\vec{j} + \\vec{k}$. Tọa độ của vectơ $\\vec{a}$ là:", options: ["$(2; -3; 1)$", "$(2; 3; 1)$", "$(-2; 3; -1)$", "$(2; -3; 0)$"], correct: 0 },
+        { q: "Cho hai điểm $A(1; 2; 3)$ và $B(3; -1; 5)$. Tọa độ của vectơ $\\vec{AB}$ là:", options: ["$(4; 1; 8)$", "$(2; -3; 2)$", "$(-2; 3; -2)$", "$(2; 1; 2)$"], correct: 1 },
+        { q: "Cho $\\vec{u} = (1; -2; 3)$ và $\\vec{v} = (0; 1; -1)$. Tọa độ vectơ $\\vec{u} + \\vec{v}$ là:", options: ["$(1; -1; 2)$", "$(1; -3; 4)$", "$(1; 1; 2)$", "$(0; -2; -3)$"], correct: 0 },
+        { q: "Trong không gian $Oxyz$, độ dài của vectơ $\\vec{a} = (2; 1; -2)$ bằng:", options: ["$3$", "$5$", "$\\sqrt{5}$", "$9$"], correct: 0 },
+        { q: "Tọa độ trung điểm $M$ của đoạn thẳng $AB$ với $A(2; 4; -6)$ và $B(-4; 0; 2)$ là:", options: ["$(-1; 2; -2)$", "$(-2; 4; -4)$", "$(3; 2; -4)$", "$(-1; 2; 2)$"], correct: 0 },
+        { q: "Tích vô hướng của hai vectơ $\\vec{a}=(1; 2; 3)$ và $\\vec{b}=(-1; 1; 2)$ bằng:", options: ["$7$", "$6$", "$8$", "$5$"], correct: 0 },
+        { q: "Cho $\\vec{a}=(2; m; -1)$ và $\\vec{b}=(1; 3; 2)$. Hai vectơ vuông góc với nhau khi $m$ bằng:", options: ["$0$", "$1$", "$-1$", "$2$"], correct: 0 },
+        { q: "Mặt cầu $(S)$ có tâm $I(1; -2; 3)$ và bán kính $R=5$ có phương trình là:", options: ["$(x-1)^2 + (y+2)^2 + (z-3)^2 = 25$", "$(x+1)^2 + (y-2)^2 + (z+3)^2 = 25$", "$(x-1)^2 + (y+2)^2 + (z-3)^2 = 5$", "$(x-1)^2 + (y-2)^2 + (z-3)^2 = 25$"], correct: 0 },
+        { q: "Điểm nào sau đây thuộc mặt phẳng tọa độ $(Oxy)$?", options: ["$(1; 2; 0)$", "$(1; 0; 2)$", "$(0; 1; 2)$", "$(0; 0; 3)$"], correct: 0 },
+        { q: "Trọng tâm $G$ của tam giác $ABC$ với $A(1;0;0), B(0;1;0), C(0;0;1)$ có tọa độ là:", options: ["$\\left(\\frac{1}{3}; \\frac{1}{3}; \\frac{1}{3}\\right)$", "$(1; 1; 1)$", "$(3; 3; 3)$", "$\\left(\\frac{1}{2}; \\frac{1}{2}; \\frac{1}{2}\\right)$"], correct: 0 },
+        { q: "Tích có hướng của hai vectơ $\\vec{u}=(1; 0; -1)$ và $\\vec{v}=(0; 1; 2)$ là vectơ có tọa độ:", options: ["$(1; -2; 1)$", "$(-1; -2; 1)$", "$(1; 2; 1)$", "$(1; -2; -1)$"], correct: 0 },
+        { q: "Khoảng cách từ điểm $M(1; -2; 3)$ đến mặt phẳng tọa độ $(Oyz)$ bằng:", options: ["$1$", "$2$", "$3$", "$\\sqrt{14}$"], correct: 0 },
+        { q: "Phương trình mặt phẳng đi qua ba điểm $A(1;0;0), B(0;2;0), C(0;0;3)$ là:", options: ["$\\frac{x}{1} + \\frac{y}{2} + \\frac{z}{3} = 1$", "$\\frac{x}{1} + \\frac{y}{2} + \\frac{z}{3} = 0$", "$x + 2y + 3z = 1$", "$6x + 3y + 2z = 0$"], correct: 0 },
+        { q: "Vectơ pháp tuyến của mặt phẳng $(P): 2x - 3y + z - 5 = 0$ là:", options: ["$\\vec{n} = (2; -3; 1)$", "$\\vec{n} = (2; 3; 1)$", "$\\vec{n} = (-2; -3; 1)$", "$\\vec{n} = (2; -3; -5)$"], correct: 0 },
+        { q: "Góc giữa hai vectơ $\\vec{i}$ (thuộc trục Ox) và $\\vec{u}=(1; 1; 0)$ bằng:", options: ["$45^\\circ$", "$90^\\circ$", "$60^\\circ$", "$30^\\circ$"], correct: 0 },
+        { q: "Cho $\\vec{a}=(1; -2; 2)$ và $\\vec{b}=(-2; 4; -4)$. Khẳng định nào sau đây là **đúng**?", options: ["Hai vectơ ngược hướng", "Hai vectơ cùng hướng", "Hai vectơ vuông góc", "Độ dài $\\vec{a}$ bằng độ dài $\\vec{b}$"], correct: 0 },
+        { q: "Vectơ chỉ phương của đường thẳng $d: \\frac{x-1}{2} = \\frac{y+2}{-1} = \\frac{z}{3}$ là:", options: ["$\\vec{u} = (2; -1; 3)$", "$\\vec{u} = (1; -2; 0)$", "$\\vec{u} = (-2; 1; -3)$", "$\\vec{u} = (2; 1; 3)$"], correct: 0 },
+        { q: "Phương trình tham số của đường thẳng đi qua $A(1; 2; -1)$ và có VTCP $\\vec{u}=(2; 0; -3)$ là:", options: ["$\\begin{cases} x = 1 + 2t \\\\ y = 2 \\\\ z = -1 - 3t \\end{cases}$", "$\\begin{cases} x = 2 + t \\\\ y = 2t \\\\ z = -3 - t \\end{cases}$", "$\\begin{cases} x = 1 - 2t \\\\ y = 2 \\\\ z = -1 - 3t \\end{cases}$", "$\\begin{cases} x = 1 + 2t \\\\ y = 2 + t \\\\ z = -1 - 3t \\end{cases}$"], correct: 0 },
+        { q: "Khoảng cách từ $A(1; -2; 3)$ đến mặt phẳng $(P): 2x + y - 2z + 1 = 0$ bằng:", options: ["$\\frac{5}{3}$", "$\\frac{11}{3}$", "$5$", "$\\frac{5}{9}$"], correct: 0 },
+        { q: "Diện tích tam giác $ABC$ với $A(1; 0; 0), B(0; 1; 0), C(0; 0; 1)$ bằng:", options: ["$\\frac{\\sqrt{3}}{2}$", "$\\sqrt{3}$", "$\\frac{1}{2}$", "$\\frac{1}{6}$"], correct: 0 },
+        { q: "Khoảng cách giữa hai mặt phẳng song song $(P): x-2y+2z-3=0$ và $(Q): x-2y+2z+6=0$ bằng:", options: ["$3$", "$9$", "$\\frac{1}{3}$", "$1$"], correct: 0 },
+        { q: "Thể tích khối tứ diện $OABC$ với $O$ là gốc tọa độ, $A(2;0;0), B(0;3;0), C(0;0;4)$ là:", options: ["$4$", "$24$", "$8$", "$12$"], correct: 0 },
+        { q: "Phương trình mặt phẳng trung trực của đoạn thẳng $AB$ với $A(1; 2; 3)$ và $B(3; 0; 1)$ là:", options: ["$x - y - z + 1 = 0$", "$x + y + z - 5 = 0$", "$x - y - z - 1 = 0$", "$2x - 2y - 2z + 1 = 0$"], correct: 0 },
+        { q: "Mặt cầu $(S): x^2+y^2+z^2-2x+4y-6z-2=0$ có bán kính bằng:", options: ["$4$", "$\\sqrt{14}$", "$16$", "$2$"], correct: 0 },
+        { q: "Giao điểm của $d: \\frac{x-1}{2} = \\frac{y}{-1} = \\frac{z+2}{1}$ và $(P): x + 2y - z - 5 = 0$ có tọa độ là:", options: ["$(-3; 2; -4)$", "$(3; -1; -1)$", "$(1; 0; -2)$", "$(-1; 1; -3)$"], correct: 0 },
+        { q: "Góc giữa hai mặt phẳng $(P): x+y-z+1=0$ và $(Q): x-y+z-3=0$ là:", options: ["$109.5^\\circ$ (hoặc $\\arccos(-\\frac{1}{3})$)", "$90^\\circ$", "$60^\\circ$", "$\\arccos\\left(\\frac{1}{3}\\right)$"], correct: 3 },
+        { q: "Phương trình hình chiếu vuông góc của đường thẳng $d: \\begin{cases} x = t \\\\ y = 1 - t \\\\ z = 2 + t \\end{cases}$ lên mặt phẳng $(Oxy)$ là:", options: ["$\\begin{cases} x = t \\\\ y = 1 - t \\\\ z = 0 \\end{cases}$", "$\\begin{cases} x = 0 \\\\ y = 1 - t \\\\ z = 2 + t \\end{cases}$", "$\\begin{cases} x = t \\\\ y = 0 \\\\ z = 2 + t \\end{cases}$", "$\\begin{cases} x = t \\\\ y = 1 + t \\\\ z = 0 \\end{cases}$"], correct: 0 },
+        { q: "Cho mặt cầu $(S): x^2+y^2+z^2 = 9$ và mặt phẳng $(P): 2x+2y-z+6 = 0$. Bán kính đường tròn giao tuyến của $(S)$ và $(P)$ bằng:", options: ["$\\sqrt{5}$", "$2$", "$5$", "$\\sqrt{13}$"], correct: 0 },
+        { q: "Phương trình tiếp diện của mặt cầu $(S): x^2+y^2+z^2=14$ tại điểm $M(1; 2; -3)$ thuộc mặt cầu là:", options: ["$x + 2y - 3z - 14 = 0$", "$x + 2y - 3z + 14 = 0$", "$x + y + z = 0$", "$x - 2y + 3z - 14 = 0$"], correct: 0 },
+        { q: "Điểm $M$ thuộc mặt phẳng $(Oxy)$ sao cho $MA^2 + MB^2$ nhỏ nhất, với $A(1;2;-1), B(3;0;1)$. Tọa độ điểm $M$ là:", options: ["$(2; 1; 0)$", "$(1; 2; 0)$", "$(3; 0; 0)$", "$(2; 1; 1)$"], correct: 0 }
+    ];
+
+    /** Xáo trộn các lựa chọn để đáp án đúng không phải lúc nào cũng là A (index 0) */
+    function shuffleOptions(question) {
+        let options = question.options.map((text, index) => ({ text, isCorrect: index === question.correct }));
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
+        return options;
+    }
+
+    /** --- HỆ THỐNG ÂM THANH --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playShootSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function playHitSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playCorrectSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, index) => {
+            setTimeout(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }, index * 100);
+        });
+    }
+
+    function playWrongSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playFireworksSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        for(let i=0; i<3; i++) {
+            setTimeout(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square'; // Noise-like
+                osc.frequency.setValueAtTime(100 + Math.random()*200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            }, i * 150 + Math.random()*50);
+        }
+    }
+
+
+    /** --- ENGINE GAME --- */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    
+    // UI Elements
+    const menuScreen = document.getElementById('menuScreen');
+    const startBtn = document.getElementById('startBtn');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const questionCountDisplay = document.getElementById('questionCountDisplay');
+    const finalScoreDisplay = document.getElementById('finalScore');
+    const quizModal = document.getElementById('quizModal');
+    const qNumberLabel = document.getElementById('qNumber');
+    const qTextLabel = document.getElementById('questionText');
+    const optionsContainer = document.getElementById('optionsContainer');
+
+    const authorScreen = document.getElementById('authorScreen');
+    const continueBtn = document.getElementById('continueBtn');
+    
+    const playerInfoScreen = document.getElementById('playerInfoScreen');
+    const submitInfoBtn = document.getElementById('submitInfoBtn');
+    const playerNameInput = document.getElementById('playerName');
+    const playerClassInput = document.getElementById('playerClass');
+    const infoError = document.getElementById('infoError');
+
+    // Trạng thái Game
+    let gameState = "AUTHOR"; // AUTHOR, PLAYER_INFO, MENU, PLAYING, QUIZ, GAMEOVER
+    let width, height;
+    let score = 0;
+    let currentQuestionIndex = 0;
+    let currentPlayer = { name: "", class: "" };
+    
+    let archerPos = { x: 0, y: 0 };
+    let bowAngle = -Math.PI / 4;
+    let arrows = [];
+    let discs = [];
+    let particles = [];
+    let floatingTexts = [];
+
+    const GRAVITY = 0.25;
+    const ARROW_SPEED = 28;
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        archerPos = { x: Math.min(width * 0.15, 150), y: height - Math.min(height * 0.15, 150) };
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Input Handling
+    function updateAim(clientX, clientY) {
+        if (gameState !== "PLAYING") return;
+        const dx = clientX - archerPos.x;
+        const dy = clientY - archerPos.y;
+        bowAngle = Math.atan2(dy, dx);
+        if (bowAngle > 0 && bowAngle < Math.PI / 2) bowAngle = 0;
+        if (bowAngle > Math.PI / 2) bowAngle = -Math.PI;
+    }
+
+    function shoot() {
+        if (gameState !== "PLAYING") return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        playShootSound();
+        arrows.push({
+            x: archerPos.x, y: archerPos.y,
+            vx: Math.cos(bowAngle) * ARROW_SPEED,
+            vy: Math.sin(bowAngle) * ARROW_SPEED,
+            angle: bowAngle
+        });
+    }
+
+    canvas.addEventListener('mousemove', (e) => updateAim(e.clientX, e.clientY));
+    canvas.addEventListener('mousedown', (e) => { updateAim(e.clientX, e.clientY); shoot(); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); updateAim(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); updateAim(e.touches[0].clientX, e.touches[0].clientY); shoot(); }, { passive: false });
+
+    startBtn.addEventListener('click', startGame);
+
+    continueBtn.addEventListener('click', () => {
+        // Cho phép audio nếu chưa được tương tác
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        authorScreen.classList.add('hidden');
+        playerInfoScreen.classList.remove('hidden');
+        gameState = "PLAYER_INFO";
+    });
+
+    submitInfoBtn.addEventListener('click', () => {
+        const name = playerNameInput.value.trim();
+        const pClass = playerClassInput.value.trim();
+        
+        if (name === "" || pClass === "") {
+            infoError.classList.remove('opacity-0');
+            return;
+        }
+        
+        infoError.classList.add('opacity-0');
+        currentPlayer.name = name;
+        currentPlayer.class = pClass;
+        
+        playerInfoScreen.classList.add('hidden');
+        gameState = "MENU";
+        
+        // Cập nhật tên người chơi vào Menu chính (tùy chọn)
+        const menuTitle = document.querySelector('#menuScreen h1');
+        menuTitle.innerHTML = `Xin chào,<br><span class="text-[#00ffcc] text-3xl">${name}</span>`;
+    });
+
+    // Hệ thống Particle & Text
+    function spawnDisc() {
+        if (gameState !== "PLAYING") return;
+        if (discs.length > 0) return; // Chỉ cho phép 1 đĩa bay cùng lúc để dễ bắn hơn cho câu hỏi
+        
+        discs.push({
+            x: width + 50,
+            y: height - Math.random() * (height * 0.4) - 150,
+            vx: - (Math.random() * 4 + 7), // Tốc độ bay vừa phải
+            vy: - (Math.random() * 6 + 10),
+            radius: width < 600 ? 25 : 35,
+            color: '#00ffcc',
+            rotation: 0
+        });
+    }
+
+    function createParticles(x, y, color, isFireworks = false) {
+        let count = isFireworks ? 60 : 20;
+        let spdMultiplier = isFireworks ? 3 : 1;
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = (Math.random() * 5 + 2) * spdMultiplier;
+            particles.push({
+                x: x, y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                radius: Math.random() * 4 + 2,
+                color: isFireworks ? `hsl(${Math.random()*360}, 100%, 60%)` : color,
+                alpha: 1,
+                decay: isFireworks ? (Math.random() * 0.01 + 0.005) : (Math.random() * 0.02 + 0.02),
+                gravity: isFireworks ? 0.05 : 0
+            });
+        }
+    }
+
+    function createFireworks() {
+        playFireworksSound();
+        for(let i=0; i<4; i++) {
+            setTimeout(() => {
+                createParticles(width/4 + Math.random()*width/2, height/4 + Math.random()*height/4, '#fff', true);
+            }, i * 300);
+        }
+    }
+
+    function addFloatingText(text, color) {
+        floatingTexts.push({
+            text: text,
+            x: width / 2,
+            y: height / 2,
+            vy: -2,
+            alpha: 1,
+            color: color,
+            scale: 0.5
+        });
+    }
+
+    // Xử lý Quiz
+    function openQuiz() {
+        if(currentQuestionIndex >= questionsBank.length) {
+            endGame();
+            return;
+        }
+        
+        gameState = "QUIZ";
+        quizModal.classList.remove('hidden');
+        quizModal.classList.add('modal-enter');
+        
+        const q = questionsBank[currentQuestionIndex];
+        qNumberLabel.innerText = currentQuestionIndex + 1;
+        qTextLabel.innerHTML = q.q;
+        
+        const shuffled = shuffleOptions(q);
+        optionsContainer.innerHTML = '';
+        
+        shuffled.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn text-white font-medium py-4 px-6 rounded-xl w-full text-left text-xl sm:text-2xl cursor-pointer';
+            btn.innerHTML = `<span class="font-bold text-[#ff007f] mr-2">${['A','B','C','D'][index]}.</span> ${opt.text}`;
+            btn.onclick = () => handleAnswer(opt.isCorrect);
+            optionsContainer.appendChild(btn);
+        });
+
+        // Kích hoạt render công thức Toán học
+        if (window.MathJax) {
+            MathJax.typesetPromise([quizModal]).catch((err) => console.log('MathJax error:', err));
+        }
+    }
+
+    function handleAnswer(isCorrect) {
+        quizModal.classList.add('hidden');
+        quizModal.classList.remove('modal-enter');
+        
+        if (isCorrect) {
+            playCorrectSound();
+            createFireworks();
+            addFloatingText("CHÍNH XÁC!", "#00ffcc");
+            score += 10;
+            scoreDisplay.innerText = score;
+        } else {
+            playWrongSound();
+            addFloatingText("SAI RỒI!", "#ff007f");
+        }
+        
+        currentQuestionIndex++;
+        questionCountDisplay.innerText = `${currentQuestionIndex}/30`;
+        
+        // Nghỉ một chút trước khi bắn tiếp
+        setTimeout(() => {
+            if(currentQuestionIndex >= questionsBank.length) {
+                endGame();
+            } else {
+                gameState = "PLAYING";
+                arrows = []; // Xóa tên cũ
+                setTimeout(spawnDisc, 500);
+            }
+        }, 2000);
+    }
+
+    function update() {
+        // Luôn cập nhật particles và floating text (ngay cả khi Pause/Quiz)
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.vy += p.gravity || 0;
+            p.x += p.vx; p.y += p.vy;
+            p.alpha -= p.decay;
+            if (p.alpha <= 0) particles.splice(i, 1);
+        }
+
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            let t = floatingTexts[i];
+            t.y += t.vy;
+            t.alpha -= 0.015;
+            t.scale += 0.02;
+            if (t.alpha <= 0) floatingTexts.splice(i, 1);
+        }
+
+        if (gameState !== "PLAYING") return;
+
+        // Cập nhật mũi tên
+        for (let i = arrows.length - 1; i >= 0; i--) {
+            let a = arrows[i];
+            a.vy += GRAVITY * 0.4; 
+            a.x += a.vx; a.y += a.vy;
+            a.angle = Math.atan2(a.vy, a.vx);
+            if (a.x > width || a.y > height || a.x < -100) arrows.splice(i, 1);
+        }
+
+        // Cập nhật đĩa
+        for (let i = discs.length - 1; i >= 0; i--) {
+            let d = discs[i];
+            d.vy += GRAVITY * 0.5;
+            d.x += d.vx; d.y += d.vy;
+            d.rotation += 0.1;
+            
+            // Nếu rớt thì tự spawn đĩa mới
+            if (d.y > height + 100) {
+                discs.splice(i, 1);
+                setTimeout(spawnDisc, 500);
+            }
+        }
+
+        // Va chạm
+        for (let i = arrows.length - 1; i >= 0; i--) {
+            for (let j = discs.length - 1; j >= 0; j--) {
+                let a = arrows[i]; let d = discs[j];
+                if (!a || !d) continue;
+
+                const dx = a.x - d.x; const dy = a.y - d.y;
+                if (Math.sqrt(dx * dx + dy * dy) < d.radius + 15) {
+                    playHitSound();
+                    createParticles(d.x, d.y, d.color);
+                    arrows.splice(i, 1);
+                    discs.splice(j, 1);
+                    
+                    // Kích hoạt hỏi bài
+                    setTimeout(openQuiz, 300);
+                    break;
+                }
+            }
+        }
+    }
+
+    function draw() {
+        // Nền
+        const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+        bgGradient.addColorStop(0, "#0b0c10");
+        bgGradient.addColorStop(0.5, "#1f2833");
+        bgGradient.addColorStop(1, "#45a29e");
+        ctx.fillStyle = bgGradient;
+        ctx.fillRect(0, 0, width, height);
+
+        // Mặt trăng / Mặt trời
+        ctx.fillStyle = "rgba(102, 252, 241, 0.1)";
+        ctx.beginPath(); ctx.arc(width * 0.8, height * 0.3, Math.max(width * 0.1, 80), 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(102, 252, 241, 0.2)";
+        ctx.beginPath(); ctx.arc(width * 0.8, height * 0.3, Math.max(width * 0.08, 60), 0, Math.PI * 2); ctx.fill();
+
+        // Vẽ Cung thủ 3D Minion
+        drawArcher();
+
+        // Vẽ Mũi tên
+        ctx.lineWidth = 3;
+        for (let a of arrows) {
+            ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.angle); ctx.scale(1.6, 1.6);
+            ctx.strokeStyle = "#ffffff"; ctx.beginPath(); ctx.moveTo(-40, 0); ctx.lineTo(0, 0); ctx.stroke();
+            ctx.fillStyle = "#ff007f"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -5); ctx.lineTo(-10, 5); ctx.fill();
+            ctx.strokeStyle = "#00ffcc"; ctx.beginPath(); ctx.moveTo(-40, 0); ctx.lineTo(-45, -4); ctx.moveTo(-40, 0); ctx.lineTo(-45, 4); ctx.stroke();
+            ctx.restore();
+        }
+
+        // Vẽ Đĩa
+        for (let d of discs) {
+            ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.rotation);
+            ctx.shadowBlur = 20; ctx.shadowColor = d.color;
+            ctx.fillStyle = d.color; ctx.beginPath(); ctx.ellipse(0, 0, d.radius, d.radius * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "#1a1a2e"; ctx.shadowBlur = 0; ctx.beginPath(); ctx.ellipse(0, 0, d.radius * 0.6, d.radius * 0.24, 0, 0, Math.PI * 2); ctx.fill();
+            
+            // Biểu tượng toán học trên đĩa
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("∑", 0, 0);
+            ctx.restore();
+        }
+
+        // Vẽ Hạt (Particles)
+        for (let p of particles) {
+            ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 10; ctx.shadowColor = p.color; ctx.restore();
+        }
+
+        // Vẽ Mặt đất
+        ctx.fillStyle = "#040506";
+        ctx.beginPath(); ctx.moveTo(0, height); ctx.lineTo(0, height - 30);
+        ctx.quadraticCurveTo(width / 2, height - 80, width, height - 30); ctx.lineTo(width, height); ctx.fill();
+
+        // Vẽ Text bay (Chính xác/Sai rồi)
+        for (let t of floatingTexts) {
+            ctx.save();
+            ctx.globalAlpha = t.alpha;
+            ctx.translate(t.x, t.y);
+            ctx.scale(t.scale, t.scale);
+            ctx.font = "900 60px Inter, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = t.color;
+            ctx.fillStyle = t.color;
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 2;
+            
+            ctx.fillText(t.text, 0, 0);
+            ctx.strokeText(t.text, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    function drawArcher() {
+        ctx.save(); ctx.translate(archerPos.x, archerPos.y); ctx.scale(1.6, 1.6);
+        ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.beginPath(); ctx.ellipse(0, 50, 45, 12, 0, 0, Math.PI * 2); ctx.fill();
+
+        ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.strokeStyle = "#2c3e50"; 
+        ctx.beginPath(); ctx.moveTo(-12, 10); ctx.lineTo(-12, 40); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(12, 10); ctx.lineTo(12, 40); ctx.stroke();
+        ctx.fillStyle = "#1a252f";
+        ctx.beginPath(); ctx.ellipse(-8, 45, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(16, 45, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
+
+        const bodyY = -10, bodyRadius = 32;
+        let bodyGrad = ctx.createRadialGradient(-10, bodyY - 10, 10, 0, bodyY, bodyRadius);
+        bodyGrad.addColorStop(0, "#ffeb3b"); bodyGrad.addColorStop(0.8, "#fbc02d"); bodyGrad.addColorStop(1, "#e65100");
+        ctx.fillStyle = bodyGrad; ctx.beginPath(); ctx.arc(0, bodyY, bodyRadius, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = "#424242"; ctx.fillRect(-bodyRadius, bodyY - 15, bodyRadius * 2, 12);
+        let rimGrad = ctx.createRadialGradient(15, bodyY - 9, 5, 15, bodyY - 9, 18);
+        rimGrad.addColorStop(0, "#e0e0e0"); rimGrad.addColorStop(1, "#757575");
+        ctx.fillStyle = rimGrad; ctx.beginPath(); ctx.arc(15, bodyY - 9, 18, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(15, bodyY - 9, 13, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#3e2723"; ctx.beginPath(); ctx.arc(22, bodyY - 9, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(24, bodyY - 11, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#bf360c"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(15, bodyY + 12, 8, 0.2, Math.PI - 0.2); ctx.stroke();
+
+        ctx.save(); ctx.translate(0, bodyY + 5); ctx.rotate(bowAngle);
+        let bowGrad = ctx.createLinearGradient(0, -45, 0, 45);
+        bowGrad.addColorStop(0, "#5d4037"); bowGrad.addColorStop(0.5, "#8d6e63"); bowGrad.addColorStop(1, "#5d4037");
+        ctx.strokeStyle = bowGrad; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(0, 0, 45, -Math.PI / 2.2, Math.PI / 2.2); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255,0.9)"; ctx.lineWidth = 2;
+        const stringY = Math.sin(Math.PI / 2.2) * 45, stringX = Math.cos(Math.PI / 2.2) * 45;
+        ctx.beginPath(); ctx.moveTo(stringX, -stringY); ctx.lineTo(-20, 0); ctx.lineTo(stringX, stringY); ctx.stroke();
+        ctx.strokeStyle = "#e0e0e0"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(50, 0); ctx.stroke();
+        ctx.fillStyle = "#ff007f"; ctx.beginPath(); ctx.moveTo(50, 0); ctx.lineTo(38, -7); ctx.lineTo(38, 7); ctx.fill();
+        ctx.strokeStyle = "#fbc02d"; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(30, 0); ctx.stroke();
+        ctx.fillStyle = "#424242"; ctx.beginPath(); ctx.arc(30, 0, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#fbc02d"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-20, 0); ctx.stroke();
+        ctx.fillStyle = "#424242"; ctx.beginPath(); ctx.arc(-20, 0, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.restore(); ctx.restore();
+    }
+
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function startGame() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        score = 0;
+        currentQuestionIndex = 0;
+        arrows = []; discs = []; particles = []; floatingTexts = [];
+        gameState = "PLAYING";
+        
+        scoreDisplay.innerText = score;
+        questionCountDisplay.innerText = `0/30`;
+        menuScreen.classList.add('hidden');
+        finalScoreDisplay.classList.add('hidden');
+        startBtn.innerText = "Chơi Lại";
+        
+        setTimeout(spawnDisc, 1000);
+    }
+
+    function endGame() {
+        gameState = "GAMEOVER";
+        menuScreen.classList.remove('hidden');
+        finalScoreDisplay.classList.remove('hidden');
+        finalScoreDisplay.querySelector('span').innerText = score + "/300 Điểm";
+        document.querySelector('#menuScreen h1').innerHTML = "HOÀN THÀNH<br><span class='text-[#00ffcc]'>THỬ THÁCH</span>";
+    }
+
+    requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>

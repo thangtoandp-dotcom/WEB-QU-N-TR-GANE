@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giải Mã Hộp Kho Báu - Toán 12</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            startup: { typeset: false } // Tự render bằng JS
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        treasure: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        },
+                        darkbrown: '#451a03'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: radial-gradient(circle at center, #78350f 0%, #451a03 50%, #171717 100%); 
+            color: #fef3c7; 
+            min-height: 100vh; 
+            overflow: hidden;
+        }
+        
+        .screen { display: none; opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .screen.active { display: flex; opacity: 1; }
+
+        .treasure-box {
+            background: linear-gradient(145deg, #b45309, #78350f);
+            border: 4px solid #fcd34d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,215,0,0.3);
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .lock-slot {
+            width: 80px;
+            height: 100px;
+            background: #27272a;
+            border: 3px solid #713f12;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-family: 'Playfair Display', serif;
+            font-weight: bold;
+            color: #fbbf24;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+        }
+        
+        .lock-slot.active {
+            border-color: #fef08a;
+            box-shadow: 0 0 15px #fef08a, inset 0 5px 10px rgba(0,0,0,0.8);
+            transform: scale(1.1);
+        }
+        
+        .lock-slot.solved {
+            background: #166534;
+            border-color: #4ade80;
+            color: #4ade80;
+            text-shadow: 0 0 10px #4ade80;
+        }
+
+        .keypad-btn {
+            background: linear-gradient(to bottom, #d97706, #92400e);
+            border: 2px solid #fcd34d;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
+        .keypad-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px rgba(0,0,0,0.5);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake-animation { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+        @keyframes unlockFlash {
+            0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+            50% { box-shadow: 0 0 50px 20px rgba(250, 204, 21, 0.9); background: #fef08a; }
+            100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+        }
+        .unlock-animation { animation: unlockFlash 1.5s ease-out forwards; }
+
+        @keyframes flyUpAndFade {
+            0% { transform: translate(-50%, -50%) scale(0.1) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.5) rotate(var(--rot)); opacity: 0; }
+        }
+        
+        .flying-ten {
+            position: fixed;
+            font-size: 5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            color: #ff2a2a; /* Màu đỏ thắm của điểm 10 */
+            -webkit-text-stroke: 2px #ffffff;
+            text-shadow: 0 0 15px #ff2a2a, 0 0 30px #fbbf24;
+            pointer-events: none;
+            animation: flyUpAndFade 5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            z-index: 100;
+        }
+
+        @keyframes boxPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.4) translateY(-10px); }
+            100% { transform: scale(1) translateY(0); }
+        }
+        .box-pop-animation { animation: boxPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center relative">
+
+    <button onclick="toggleMute()" class="absolute top-4 right-4 z-50 bg-black/40 hover:bg-black/60 border border-gold-500 rounded-full p-3 backdrop-blur transition">
+        <svg id="icon-unmute" class="w-6 h-6 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 19h4.586a1 1 0 00.707-.293l5.414-5.414A1 1 0 0016 12.586V11.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 009.586 5H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+        <svg id="icon-mute" class="w-6 h-6 text-gray-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.807L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+    </button>
+
+    <!-- Màn hình giới thiệu tác giả -->
+    <div id="authorScreen" class="screen active flex-col items-center justify-center w-full max-w-4xl px-4 z-10 text-center">
+        <h2 class="text-2xl md:text-3xl text-white font-medium mb-4 tracking-widest uppercase">TÁC GIẢ GAME</h2>
+        <h1 class="text-[clamp(1.5rem,5vw,4.5rem)] font-black text-yellow-300 whitespace-nowrap drop-shadow-[0_0_20px_rgba(253,224,71,0.9)] mb-6">
+            Thầy giáo BÙI NGỌC THẮNG
+        </h1>
+        <h3 class="text-2xl md:text-4xl text-cyan-400 font-bold mb-12 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]">
+            Trường THPT Đan Phượng
+        </h3>
+        
+        <button onclick="goToWelcome()" class="px-10 py-3 rounded-full bg-transparent border-2 border-cyan-500 text-white font-bold text-xl hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_15px_rgba(34,211,238,0.6)]">
+            Tiếp Tục
+        </button>
+    </div>
+
+    <div id="welcomeScreen" class="screen flex-col items-center justify-center w-full max-w-2xl px-4 z-10">
+        <div class="treasure-box p-10 text-center w-full">
+            <div class="text-gold-400 text-6xl mb-4">💎</div>
+            <h1 class="text-4xl md:text-5xl font-treasure mb-4 text-gold-400 drop-shadow-lg">
+                Giải Mã Hộp Kho Báu
+            </h1>
+            <p class="text-lg text-amber-200 mb-8 max-w-md mx-auto">Vượt qua 4 thử thách Nguyên hàm & Tích phân để tìm ra 4 chữ số bí mật mở khóa kho báu Toán học.</p>
+            
+            <div class="space-y-4 max-w-sm mx-auto">
+                <input type="text" id="playerName" placeholder="Nhập tên người giải mã..." class="w-full px-5 py-4 rounded-xl bg-black/50 border-2 border-gold-600 text-white placeholder-amber-700 focus:outline-none focus:border-gold-400 text-2xl text-center font-semibold transition" autocomplete="off">
+                <button onclick="startGame()" class="w-full py-4 rounded-xl bg-gradient-to-r from-gold-500 to-yellow-400 text-darkbrown font-extrabold text-2xl shadow-[0_0_15px_rgba(251,191,36,0.5)] hover:scale-105 transition-transform">
+                    BẮT ĐẦU MỞ KHÓA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="screen flex-col w-full max-w-4xl px-4 h-screen py-8 z-10">
+        <!-- Bảng điều khiển trên cùng -->
+        <div class="flex justify-between items-center mb-8 text-gold-400 font-bold text-2xl">
+            <div class="bg-black/40 px-4 py-2 rounded-lg border border-gold-700">
+                Mã bảo mật: <span id="currentLevelDisplay">1</span>/4
+            </div>
+            <div class="bg-black/40 px-4 py-2 rounded-lg border border-gold-700">
+                Điểm: <span id="scoreDisplay">0</span>
+            </div>
+        </div>
+
+        <!-- Khu vực Ổ khóa 4 số -->
+        <div class="treasure-box p-6 mb-6 flex justify-center gap-4">
+            <div id="slot-0" class="lock-slot active">?</div>
+            <div id="slot-1" class="lock-slot">?</div>
+            <div id="slot-2" class="lock-slot">?</div>
+            <div id="slot-3" class="lock-slot">?</div>
+        </div>
+
+        <!-- Khu vực Câu hỏi và Bàn phím số -->
+        <div class="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+            <!-- Đề bài -->
+            <div class="flex-1 bg-black/40 border border-gold-700 rounded-2xl p-6 flex flex-col justify-center overflow-auto shadow-inner shadow-black">
+                <h2 class="text-[clamp(1rem,4vw,2.25rem)] md:text-3xl lg:text-4xl font-black text-yellow-300 tracking-wide uppercase mb-6 text-center whitespace-nowrap drop-shadow-[0_0_12px_rgba(253,224,71,0.8)]">GIẢI BÀI TOÁN SAU ĐỂ TÌM Ô CHỮ</h2>
+                <div id="questionText" class="text-3xl md:text-4xl text-center font-medium leading-relaxed">Đang tải cấu trúc bảo mật...</div>
+            </div>
+            
+            <!-- Bàn phím số -->
+            <div class="w-full md:w-64 grid grid-cols-3 gap-3">
+                <button onclick="handleAnswer(1)" class="keypad-btn py-4">1</button>
+                <button onclick="handleAnswer(2)" class="keypad-btn py-4">2</button>
+                <button onclick="handleAnswer(3)" class="keypad-btn py-4">3</button>
+                <button onclick="handleAnswer(4)" class="keypad-btn py-4">4</button>
+                <button onclick="handleAnswer(5)" class="keypad-btn py-4">5</button>
+                <button onclick="handleAnswer(6)" class="keypad-btn py-4">6</button>
+                <button onclick="handleAnswer(7)" class="keypad-btn py-4">7</button>
+                <button onclick="handleAnswer(8)" class="keypad-btn py-4">8</button>
+                <button onclick="handleAnswer(9)" class="keypad-btn py-4">9</button>
+                <button class="keypad-btn py-4 opacity-50 cursor-not-allowed">*</button>
+                <button onclick="handleAnswer(0)" class="keypad-btn py-4">0</button>
+                <button class="keypad-btn py-4 opacity-50 cursor-not-allowed">#</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultScreen" class="screen flex-col items-center justify-center w-full max-w-2xl px-4 z-10">
+        <div id="finalTreasureBox" class="treasure-box p-10 text-center w-full">
+            <div id="resultIcon" class="text-7xl mb-4">🔓</div>
+            <h1 class="text-4xl md:text-5xl font-treasure mb-2 text-gold-400 uppercase">KHO BÁU ĐÃ MỞ!</h1>
+            <p class="text-xl text-amber-200 mb-6">Chúc mừng <span id="resultName" class="text-white font-bold"></span> đã giải mã thành công.</p>
+            
+            <div class="text-5xl font-bold tracking-[1em] text-white mb-8 ml-[0.5em]" id="finalPinDisplay">
+                3 8 4 5
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-black/50 p-4 rounded-xl border border-gold-800">
+                    <p class="text-base text-gray-400 uppercase tracking-wide">Điểm Khám Phá</p>
+                    <p class="text-6xl font-bold text-gold-400" id="finalScore">0</p>
+                </div>
+                <div class="bg-black/50 p-4 rounded-xl border border-gold-800">
+                    <p class="text-base text-gray-400 uppercase tracking-wide">Thời Gian</p>
+                    <p class="text-6xl font-bold text-green-400"><span id="finalTime">0</span>s</p>
+                </div>
+            </div>
+
+            <div id="savingStatus" class="text-sm text-amber-500 mb-6 animate-pulse">Đang ghi danh bảng vàng...</div>
+
+            <button onclick="initGame()" class="w-full py-4 rounded-xl bg-white text-darkbrown font-bold text-xl shadow-lg hover:bg-gray-200 transition">
+                ĐÓNG LẠI & CHƠI LƯỢT MỚI
+            </button>
+        </div>
+    </div>
+
+    <!-- Hiệu ứng ánh sáng nền -->
+    <div class="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gold-600/20 blur-[120px] -z-10 pointer-events-none"></div>
+
+    <canvas id="fireworksCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50 hidden"></canvas>
+
+    <script>
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        const sounds = {
+            click: () => playTone(600, 'sine', 0.1, 0.5, 0.01),
+            wrong: () => {
+                playTone(150, 'sawtooth', 0.3, 0.5, 0);
+                setTimeout(() => playTone(100, 'sawtooth', 0.4, 0.5, 0), 100);
+            },
+            correct: () => {
+                // Âm thanh "leng keng" ma thuật khi giải đúng 1 ô số (3 nốt ngân vang)
+                playTone(880, 'sine', 0.1, 0.3, 0); // Nốt La
+                setTimeout(() => playTone(1108.73, 'sine', 0.1, 0.3, 0), 100); // Nốt Đô thăng
+                setTimeout(() => playTone(1318.51, 'sine', 0.3, 0.4, 0), 200); // Nốt Mi ngân dài
+            },
+            win: () => {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    setTimeout(() => playTone(freq, 'sine', 0.4, 0.3, 0), i * 150);
+                });
+            },
+            firework: () => {
+                // Tiếng pháo hoa nổ như tiếng trống (Kick Drum) trầm, dứt khoát
+                if (state.isMuted || !audioCtx) return;
+                
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                // Dùng sóng sine và giảm tần số cực nhanh để tạo tiếng "Thùm/Bùm" của mặt trống
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+                
+                // Âm lượng lớn ở đầu và tắt nhanh
+                gainNode.gain.setValueAtTime(3.0, now); // Lực đánh mạnh
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        };
+
+        function playTone(freq, type, duration, volStart, volEnd) {
+            if (state.isMuted) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, now);
+            
+            gain.gain.setValueAtTime(volStart, now);
+            gain.gain.exponentialRampToValueAtTime(Math.max(volEnd, 0.01), now + duration);
+            
+            osc.start(now);
+            osc.stop(now + duration);
+        }
+
+        function toggleMute() {
+            state.isMuted = !state.isMuted;
+            document.getElementById('icon-unmute').classList.toggle('hidden');
+            document.getElementById('icon-mute').classList.toggle('hidden');
+            if(!state.isMuted) sounds.click();
+        }
+
+        const questions = [
+            {
+                text: "Biết họ nguyên hàm $F(x)$ của hàm số $f(x) = 3x^2 - 2x + 1$ đi qua điểm $M(0; 2)$. Hãy tính giá trị của $F(1)$.",
+                answer: 3
+            },
+            {
+                text: "Tính giá trị của tích phân sau:<br><br> $$I = \\int_{0}^{2} 3x^2 dx$$",
+                answer: 8
+            },
+            {
+                text: "Tính diện tích hình phẳng $S$ giới hạn bởi đồ thị hàm số $y = 2x$, trục $Ox$ và hai đường thẳng $x = 0$, $x = 2$.",
+                answer: 4
+            },
+            {
+                text: "Thể tích khối tròn xoay khi quay hình phẳng giới hạn bởi $y = 1$, trục $Ox$, $x = 0$, $x = K$ ($K > 0$) quanh trục $Ox$ bằng $5\\pi$. Hỏi $K$ bằng bao nhiêu?",
+                answer: 5
+            }
+        ];
+
+        let state = {
+            playerName: "",
+            currentQ: 0,
+            score: 0,
+            totalTimeElapsed: 0,
+            elapsedTimerId: null,
+            isMuted: false,
+            isProcessing: false,
+            pinCodes: []
+        };
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function initGame() {
+            state = { ...state, playerName: "", currentQ: 0, score: 0, totalTimeElapsed: 0, isProcessing: false, pinCodes: [] };
+            document.getElementById('playerName').value = "";
+            document.getElementById('scoreDisplay').innerText = "0";
+            document.getElementById('finalTreasureBox').classList.remove('unlock-animation');
+            
+            // Reset giao diện ổ khóa
+            for(let i=0; i<4; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.innerText = "?";
+                slot.className = "lock-slot";
+            }
+            
+            if(typeof stopCelebration === 'function') stopCelebration(); 
+            
+            showScreen('welcomeScreen');
+        }
+
+        function goToWelcome() {
+            sounds.click();
+            initAudio();
+            showScreen('welcomeScreen');
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('playerName').value.trim();
+            if (!nameInput) {
+                alert("Hãy nhập tên người giải mã để bắt đầu!");
+                return;
+            }
+            
+            sounds.click();
+            initAudio(); 
+            
+            state.playerName = nameInput;
+            state.score = 0;
+            state.currentQ = 0;
+            state.totalTimeElapsed = 0;
+            
+            clearInterval(state.elapsedTimerId);
+            state.elapsedTimerId = setInterval(() => { state.totalTimeElapsed++; }, 1000);
+
+            showScreen('gameScreen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            state.isProcessing = false;
+            const q = questions[state.currentQ];
+            
+            document.getElementById('currentLevelDisplay').innerText = state.currentQ + 1;
+            document.getElementById('questionText').innerHTML = q.text;
+            
+            // Render MathJax
+            if (window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('questionText')])
+                .catch((err) => console.log('MathJax error:', err));
+            }
+
+            // Cập nhật UI ổ khóa
+            for(let i=0; i<4; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                if (i === state.currentQ) {
+                    slot.classList.add('active');
+                } else if (i > state.currentQ) {
+                    slot.classList.remove('active');
+                }
+            }
+        }
+
+        function handleAnswer(num) {
+            if (state.isProcessing) return;
+            sounds.click();
+
+            const q = questions[state.currentQ];
+            if (num === q.answer) {
+                // Trả lời đúng
+                state.isProcessing = true;
+                sounds.correct();
+                
+                // Cố định 100 điểm mỗi câu trả lời đúng
+                const earned = 100;
+                state.score += earned;
+                document.getElementById('scoreDisplay').innerText = state.score;
+                
+                fillSlot(state.currentQ, num, true);
+                setTimeout(nextQuestion, 1500);
+            } else {
+                // Trả lời sai (Bị rung lắc, không trừ thời gian)
+                sounds.wrong();
+                const gameContainer = document.querySelector('.treasure-box');
+                gameContainer.classList.add('shake-animation');
+                setTimeout(() => gameContainer.classList.remove('shake-animation'), 400);
+            }
+        }
+
+        function fillSlot(index, value, isCorrect) {
+            state.pinCodes.push(value);
+            const slot = document.getElementById(`slot-${index}`);
+            slot.innerText = value;
+            slot.classList.remove('active');
+            slot.classList.add('solved');
+            if(!isCorrect) slot.style.color = '#f87171'; // Màu đỏ nhẹ nếu hết giờ
+        }
+
+        function nextQuestion() {
+            state.currentQ++;
+            if (state.currentQ < questions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            clearInterval(state.elapsedTimerId);
+            
+            sounds.win(); 
+            
+            document.getElementById('resultName').innerText = state.playerName;
+            document.getElementById('finalScore').innerText = state.score;
+            document.getElementById('finalTime').innerText = state.totalTimeElapsed;
+            document.getElementById('finalPinDisplay').innerText = state.pinCodes.join(' ');
+            
+            showScreen('resultScreen');
+            document.getElementById('finalTreasureBox').classList.add('unlock-animation');
+
+            if(typeof startCelebration === 'function') startCelebration(); 
+
+            submitToGoogleSheets();
+        }
+
+        function submitToGoogleSheets() {
+            // URL MẪU - Thầy giáo thay thế bằng Web App URL của mình để lưu điểm
+            const GOOGLE_APP_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
+            
+            const statusEl = document.getElementById('savingStatus');
+
+            if (GOOGLE_APP_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+                statusEl.innerText = "Chế độ chơi Offline (Chưa kết nối Google Sheets).";
+                statusEl.classList.remove('animate-pulse');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("name", state.playerName);
+            formData.append("score", state.score);
+            formData.append("time", state.totalTimeElapsed);
+            formData.append("game", "Giải Mã Hộp Kho Báu");
+
+            fetch(GOOGLE_APP_SCRIPT_URL, {
+                method: "POST",
+                mode: 'no-cors',
+                body: formData
+            }).then(() => {
+                statusEl.innerText = "✅ Thành tích đã được ghi vào Bảng Vàng.";
+                statusEl.classList.remove('animate-pulse');
+                statusEl.classList.replace('text-amber-500', 'text-green-400');
+            }).catch(err => {
+                statusEl.innerText = "❌ Lỗi: Không thể lưu kết quả.";
+                statusEl.classList.remove('animate-pulse');
+                statusEl.classList.replace('text-amber-500', 'text-red-400');
+            });
+        }
+
+        let fwCanvas, fwCtx, fwParticles = [], fwAnimationId, fwSpawnerId;
+
+        function initCelebration() {
+            fwCanvas = document.getElementById('fireworksCanvas');
+            fwCtx = fwCanvas.getContext('2d');
+            const resizeCanvas = () => {
+                if(fwCanvas) {
+                    fwCanvas.width = window.innerWidth;
+                    fwCanvas.height = window.innerHeight;
+                }
+            };
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        }
+
+        function startCelebration() {
+            if(!fwCanvas) initCelebration();
+            fwCanvas.classList.remove('hidden');
+            fwParticles = [];
+            
+            cancelAnimationFrame(fwAnimationId);
+            clearInterval(fwSpawnerId);
+            
+            animateFireworks();
+            
+            // Bắn pháo hoa liên tục (khoảng cách thưa hơn)
+            fwSpawnerId = setInterval(() => {
+                createFirework(Math.random() * fwCanvas.width, Math.random() * (fwCanvas.height / 2));
+            }, 1200); // Tăng giãn cách từ 500ms lên 1200ms
+
+            // Bắn pháo hoa đồng loạt tại trung tâm (giãn cách thưa hơn)
+            createFirework(fwCanvas.width / 2, fwCanvas.height / 3);
+            setTimeout(() => createFirework(fwCanvas.width / 2 + 150, fwCanvas.height / 3 + 50), 600);
+            setTimeout(() => createFirework(fwCanvas.width / 2 - 150, fwCanvas.height / 3 + 50), 1200);
+
+            // Hiệu ứng giật nắp hộp kho báu
+            const box = document.getElementById('resultIcon');
+            box.classList.remove('box-pop-animation');
+            void box.offsetWidth; // Trigger reflow
+            box.classList.add('box-pop-animation');
+
+            // Tính toán vị trí tâm hộp để số 10 bay ra
+            const boxRect = box.getBoundingClientRect();
+            const startX = boxRect.left + boxRect.width / 2;
+            const startY = boxRect.top + boxRect.height / 2;
+
+            // Tung ra 100 con điểm 10 liên tục tạo hiệu ứng núi lửa trong 8 giây
+            for(let i = 0; i < 100; i++) {
+                setTimeout(() => spawnTen(startX, startY), i * 80);
+            }
+        }
+
+        function spawnTen(x, y) {
+            const ten = document.createElement('div');
+            ten.innerText = "10";
+            ten.className = 'flying-ten';
+            
+            // Toán học: Tính góc bay ngẫu nhiên tỏa tròn xung quanh
+            const angle = (Math.random() * 360) * (Math.PI / 180); 
+            const distance = 400 + Math.random() * 800; // Quãng đường bay xa hơn
+            const tx = Math.cos(angle) * distance + 'px';
+            const ty = (Math.sin(angle) * distance - 400) + 'px'; // Trọng tâm hơi hướng lên trên nhiều hơn
+            const rot = (Math.random() - 0.5) * 540 + 'deg'; // Góc xoay của điểm 10 nhiều hơn
+            
+            ten.style.setProperty('--tx', tx);
+            ten.style.setProperty('--ty', ty);
+            ten.style.setProperty('--rot', rot);
+            ten.style.left = x + 'px';
+            ten.style.top = y + 'px';
+            
+            document.body.appendChild(ten);
+            
+            // Xóa DOM khi animation xong (5 giây)
+            setTimeout(() => ten.remove(), 5000);
+        }
+
+        function createFirework(x, y) {
+            sounds.firework(); // Phát tiếng nổ khi bắn pháo hoa
+            const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#fbbf24', '#ffffff'];
+            for (let i = 0; i < 100; i++) { // Số lượng hạt pháo hoa
+                // Lấy màu ngẫu nhiên cho TỪNG HẠT pháo hoa để tạo chùm đa sắc
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                fwParticles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 18,
+                    vy: (Math.random() - 0.5) * 18,
+                    alpha: 1,
+                    color: color,
+                    size: Math.random() * 3 + 2
+                });
+            }
+        }
+
+        function animateFireworks() {
+            fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+            
+            for (let i = fwParticles.length - 1; i >= 0; i--) {
+                let p = fwParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.25; // Gia tốc rơi xuống
+                p.alpha -= 0.015; // Mờ dần
+                
+                fwCtx.globalAlpha = Math.max(0, p.alpha);
+                fwCtx.fillStyle = p.color;
+                fwCtx.beginPath();
+                fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                fwCtx.fill();
+                
+                if (p.alpha <= 0) {
+                    fwParticles.splice(i, 1);
+                }
+            }
+            fwCtx.globalAlpha = 1;
+            fwAnimationId = requestAnimationFrame(animateFireworks);
+        }
+
+        function stopCelebration() {
+            if(fwCanvas) fwCanvas.classList.add('hidden');
+            cancelAnimationFrame(fwAnimationId);
+            clearInterval(fwSpawnerId);
+            fwParticles = [];
+            document.querySelectorAll('.flying-ten').forEach(el => el.remove());
+        }
+
+        // Bắt đầu từ Author Screen
+        showScreen('authorScreen');
+
+    </script>
+</body>
+</html>

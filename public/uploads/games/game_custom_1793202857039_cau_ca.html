@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cậu Bé Câu Cá - Game Học Tập</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 0 0 20px rgba(250, 204, 21, 0.6), 0 0 30px rgba(250, 204, 21, 0.4);
+        }
+
+        .font-serif-custom {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Hiệu ứng trôi nổi cho cá khổng lồ */
+        @keyframes float {
+            0% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0) rotate(-5deg); }
+        }
+        .floating-fish {
+            display: inline-block;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Class đặc biệt để hiển thị Vector không làm xô lệch dòng */
+        .vec-wrap {
+            position: relative;
+            display: inline-block;
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+            font-weight: bold;
+            margin: 0 2px;
+        }
+        .vec-arrow {
+            position: absolute;
+            top: -0.7em;
+            left: 50%;
+            transform: translateX(-50%);
+            font-style: normal;
+            font-size: 0.8em;
+            font-weight: normal;
+            pointer-events: none;
+        }
+
+        /* Hiệu ứng xuất hiện */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .fade-out {
+            animation: fadeOut 0.5s ease-in forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+
+        /* Đáp án Hover */
+        .answer-btn {
+            transition: all 0.2s ease;
+        }
+        .answer-btn:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Màn hình 1: Giới thiệu -->
+    <div id="intro-screen" class="absolute inset-0 bg-[#1a2332] z-50 flex flex-col justify-center items-center text-center px-4">
+        <p class="text-gray-300 text-lg sm:text-2xl tracking-[0.2em] font-semibold mb-2 uppercase">
+            SẢN PHẨM GAME HỌC TẬP ĐƯỢC SÁNG TẠO BỞI
+        </p>
+        <p class="text-gray-200 text-2xl sm:text-3xl font-serif-custom italic mb-1">
+            Thầy giáo
+        </p>
+        <h1 class="text-6xl sm:text-8xl font-extrabold text-yellow-400 text-glow mb-4 uppercase">
+            BÙI NGỌC THẮNG
+        </h1>
+        <p class="text-white text-xl sm:text-2xl font-semibold mb-12">
+            Trường THPT Đan Phượng
+        </p>
+        <button id="btn-intro-continue" class="bg-teal-500 hover:bg-teal-400 text-white font-bold py-4 px-12 rounded-full shadow-lg shadow-teal-500/50 transition-transform transform hover:scale-105 active:scale-95 text-2xl sm:text-3xl">
+            Tiếp tục
+        </button>
+    </div>
+
+    <!-- Màn hình 2: Luật chơi -->
+    <div id="rules-screen" class="hidden absolute inset-0 bg-[#1a2332] z-40 flex flex-col justify-center items-center px-4">
+        <div class="text-9xl mb-6 floating-fish">🐟</div>
+        <div class="bg-blue-100 border-4 border-blue-400 rounded-2xl p-6 sm:p-8 max-w-xl w-full shadow-2xl text-center">
+            <h2 class="text-4xl sm:text-5xl font-bold text-blue-900 mb-4">LUẬT CHƠI</h2>
+            <ul class="text-left text-blue-900 space-y-3 mb-6 text-xl sm:text-2xl font-semibold">
+                <li>⏱️ Bạn có <strong class="text-red-600">60 giây</strong> để câu cá.</li>
+                <li>🎣 Câu trúng cá, bạn phải trả lời đúng 1 câu hỏi Toán để lấy điểm.</li>
+                <li>🥾 Cẩn thận! Câu trúng rác (ủng) sẽ bị <strong class="text-red-600">trừ 15 điểm</strong> ngay lập tức!</li>
+            </ul>
+            <div class="flex justify-center items-center space-x-6 mb-8 bg-white/50 py-4 rounded-xl">
+                <div class="text-2xl sm:text-3xl font-bold">🐟 <span class="text-green-600">+10</span></div>
+                <div class="text-2xl sm:text-3xl font-bold">🐠 <span class="text-green-600">+20</span></div>
+                <div class="text-2xl sm:text-3xl font-bold">🐡 <span class="text-green-600">+30</span></div>
+            </div>
+            <button id="btn-start-game" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 rounded-xl shadow-lg shadow-blue-500/50 transition-transform transform hover:scale-105 active:scale-95 text-2xl sm:text-3xl">
+                Bắt đầu chơi ngay
+            </button>
+        </div>
+    </div>
+
+    <!-- Màn hình 3: Gameplay -->
+    <div id="game-screen" class="hidden absolute inset-0 z-10 bg-[#87CEEB]">
+        <!-- Canvas -->
+        <canvas id="game-canvas" class="block w-full h-full"></canvas>
+
+        <!-- HUD -->
+        <div class="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
+            <div class="bg-white/90 border-2 border-blue-400 rounded-xl px-6 py-3 shadow-lg flex items-center space-x-3">
+                <span class="text-3xl sm:text-4xl">🏆</span>
+                <span id="hud-score" class="text-blue-600 font-extrabold text-3xl sm:text-4xl">0</span>
+            </div>
+            <div class="bg-white/90 border-2 border-orange-400 rounded-xl px-6 py-3 shadow-lg flex items-center space-x-3">
+                <span class="text-3xl sm:text-4xl">⏱️</span>
+                <span id="hud-time" class="text-orange-600 font-extrabold text-3xl sm:text-4xl">60</span>
+            </div>
+        </div>
+
+        <!-- Popup điểm rơi -->
+        <div id="popup-text" class="absolute hidden font-bold text-4xl sm:text-5xl pointer-events-none drop-shadow-md z-20"></div>
+
+        <!-- Mobile Controls (Điều khiển di chuyển trái/phải bên trái, nút Thả câu ở góc phải) -->
+        <div class="absolute bottom-8 left-0 right-0 flex justify-between items-end px-6 z-25 pointer-events-none">
+            <div class="flex space-x-4 pointer-events-auto">
+                <button id="btn-left" class="bg-white/95 active:bg-gray-200 border-b-6 border-gray-400 text-gray-800 w-24 h-24 sm:w-28 sm:h-28 rounded-full flex justify-center items-center text-5xl sm:text-6xl shadow-2xl select-none touch-manipulation transform active:scale-95 transition-transform">
+                    ◀
+                </button>
+                <button id="btn-right" class="bg-white/95 active:bg-gray-200 border-b-6 border-gray-400 text-gray-800 w-24 h-24 sm:w-28 sm:h-28 rounded-full flex justify-center items-center text-5xl sm:text-6xl shadow-2xl select-none touch-manipulation transform active:scale-95 transition-transform">
+                    ▶
+                </button>
+            </div>
+            <div class="pointer-events-auto">
+                <button id="btn-hook" class="bg-blue-600 active:bg-blue-700 border-b-6 border-blue-900 text-white w-28 h-28 sm:w-32 sm:h-32 rounded-full flex justify-center items-center text-6xl sm:text-7xl shadow-2xl select-none touch-manipulation transform active:scale-95 transition-transform">
+                    🎣
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Màn hình 4: Câu hỏi Toán học -->
+    <div id="quiz-screen" class="hidden absolute inset-0 z-30 bg-black/60 flex justify-center items-center px-4 backdrop-blur-sm">
+        <div class="bg-slate-50 border-4 border-blue-900 rounded-2xl p-8 sm:p-10 w-full max-w-4xl shadow-2xl flex flex-col max-h-[95vh]">
+            <div class="flex justify-between items-center mb-6 border-b-2 border-gray-200 pb-4">
+                <h2 class="text-3xl sm:text-4xl font-bold text-blue-900 uppercase">Câu hỏi thử thách</h2>
+                <div class="bg-green-100 text-green-700 px-5 py-2.5 rounded-full text-xl sm:text-2xl font-bold shadow-inner">
+                    Phần thưởng: +<span id="quiz-reward">10</span>đ
+                </div>
+            </div>
+            
+            <div id="quiz-question" class="text-2xl sm:text-3xl lg:text-4xl text-gray-900 font-medium mb-8 leading-relaxed overflow-y-auto">
+                <!-- Nội dung câu hỏi render vào đây -->
+            </div>
+
+            <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-auto">
+                <!-- Nút đáp án render vào đây -->
+            </div>
+            
+            <!-- Hiển thị kết quả đúng sai -->
+            <div id="quiz-feedback" class="hidden absolute inset-0 z-40 bg-white/90 flex flex-col justify-center items-center rounded-2xl">
+                <div id="feedback-icon" class="text-7xl mb-4"></div>
+                <div id="feedback-text" class="text-5xl font-bold mb-2"></div>
+                <div id="feedback-subtext" class="text-2xl text-gray-600"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Màn hình 5: Hết giờ -->
+    <div id="game-over-screen" class="hidden absolute inset-0 z-50 bg-[#1a2332]/95 flex flex-col justify-center items-center px-4 backdrop-blur-md">
+        <h2 class="text-6xl sm:text-8xl font-extrabold text-orange-400 mb-4 drop-shadow-lg">HẾT GIỜ!</h2>
+        <p class="text-white text-2xl sm:text-3xl mb-8">Kết quả chuyến đi câu của bạn</p>
+        
+        <div class="bg-white/10 border border-white/20 p-10 rounded-3xl backdrop-blur-sm mb-12 flex flex-col items-center shadow-2xl">
+            <span class="text-gray-300 text-lg sm:text-xl uppercase tracking-widest mb-4">Tổng điểm</span>
+            <span id="final-score" class="text-8xl sm:text-9xl font-black text-yellow-400 text-glow">0</span>
+        </div>
+
+        <button id="btn-restart" class="bg-gradient-to-r from-blue-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-bold py-5 px-16 rounded-full shadow-lg shadow-blue-500/50 transition-transform transform hover:scale-105 active:scale-95 text-2xl sm:text-3xl">
+            Chơi lại ngay
+        </button>
+    </div>
+
+    <script>
+        // Polyfill cho CanvasRenderingContext2D.roundRect
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2;
+                if (h < 2 * r) r = h / 2;
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                this.closePath();
+                return this;
+            };
+        }
+
+        /* --- NGÂN HÀNG CÂU HỎI TOÁN 12 (ĐƠN ĐIỆU, CỰC TRỊ, GTLN, GTNN) --- */
+        const QUESTION_BANK = [
+            {
+                q: "Cho hàm số y = x³ - 3x² + 2. Khẳng định nào sau đây là đúng?",
+                opts: [
+                    "Hàm số nghịch biến trên khoảng (0; 2)",
+                    "Hàm số đồng biến trên khoảng (0; 2)",
+                    "Hàm số đồng biến trên ℝ",
+                    "Hàm số nghịch biến trên ℝ"
+                ],
+                ans: 0
+            },
+            {
+                q: "Cho hàm số y = \\frac{x + 2}{x - 1}. Mệnh đề nào sau đây đúng?",
+                opts: [
+                    "Hàm số nghịch biến trên từng khoảng xác định",
+                    "Hàm số đồng biến trên ℝ \\ {1}",
+                    "Hàm số đồng biến trên các khoảng xác định",
+                    "Hàm số nghịch biến trên ℝ"
+                ],
+                ans: 0
+            },
+            {
+                q: "Số điểm cực trị của hàm số y = x⁴ - 2x² + 3 là:",
+                opts: ["3", "1", "2", "0"],
+                ans: 0
+            },
+            {
+                q: "Giá trị cực đại y<sub>CĐ</sub> của hàm số y = -x³ + 3x + 2 là:",
+                opts: ["4", "0", "2", "-2"],
+                ans: 0
+            },
+            {
+                q: "Giá trị lớn nhất của hàm số y = x³ - 3x + 2 trên đoạn [0; 2] bằng:",
+                opts: ["4", "0", "2", "1"],
+                ans: 0
+            },
+            {
+                q: "Giá trị nhỏ nhất của hàm số y = x + \\frac{4}{x} trên khoảng (0; +∞) bằng:",
+                opts: ["4", "2", "0", "5"],
+                ans: 0
+            },
+            {
+                q: "Cho hàm số y = \\frac{2x - 1}{x + 1}. Khẳng định nào sau đây đúng về tính đơn điệu?",
+                opts: [
+                    "Hàm số đồng biến trên từng khoảng xác định",
+                    "Hàm số nghịch biến trên từng khoảng xác định",
+                    "Hàm số luôn đồng biến trên ℝ",
+                    "Hàm số nghịch biến trên ℝ"
+                ],
+                ans: 0
+            },
+            {
+                q: "Điểm cực tiểu của đồ thị hàm số y = x³ - 3x + 2 là:",
+                opts: ["(1; 0)", "(-1; 4)", "(0; 2)", "(1; 2)"],
+                ans: 0
+            },
+            // 20 CÂU HỎI BỔ SUNG:
+            {
+                q: "Đường tiệm cận ngang của đồ thị hàm số y = \\frac{2x - 1}{x + 1} là:",
+                opts: ["y = 2", "y = -1", "x = -1", "x = 2"],
+                ans: 0
+            },
+            {
+                q: "Đường tiệm cận đứng của đồ thị hàm số y = \\frac{3x + 1}{x - 2} là:",
+                opts: ["x = 2", "x = 3", "y = 2", "y = 3"],
+                ans: 0
+            },
+            {
+                q: "Điểm cực tiểu của hàm số y = x³ - 3x² + 2 là:",
+                opts: ["x = 2", "x = 0", "x = -2", "x = 1"],
+                ans: 0
+            },
+            {
+                q: "Hàm số y = -x³ + 3x² - 4 đồng biến trên khoảng nào sau đây?",
+                opts: ["(0; 2)", "(-∞; 0)", "(2; +∞)", "(-1; 1)"],
+                ans: 0
+            },
+            {
+                q: "Giá trị nhỏ nhất của hàm số y = x⁴ - 2x² + 3 trên đoạn [0; 2] là:",
+                opts: ["2", "3", "11", "0"],
+                ans: 0
+            },
+            {
+                q: "Đồ thị hàm số y = \\frac{x - 1}{x² - 1} có tất cả bao nhiêu đường tiệm cận?",
+                opts: ["2", "1", "3", "0"],
+                ans: 0
+            },
+            {
+                q: "Giá trị lớn nhất của hàm số y = \\frac{2x - 1}{x + 1} trên đoạn [0; 2] là:",
+                opts: ["1", "-1", "2", "3"],
+                ans: 0
+            },
+            {
+                q: "Hàm số y = -x⁴ + 2x² + 1 có bao nhiêu điểm cực trị?",
+                opts: ["3", "1", "2", "0"],
+                ans: 0
+            },
+            {
+                q: "Hàm số y = \\frac{x + 1}{x - 2} nghịch biến trên khoảng nào?",
+                opts: ["(2; +∞)", "(-∞; +∞)", "ℝ \\ {2}", "[-2; 2]"],
+                ans: 0
+            },
+            {
+                q: "Giá trị cực tiểu y<sub>CT</sub> của hàm số y = x³ - 3x + 1 là:",
+                opts: ["-1", "3", "1", "0"],
+                ans: 0
+            },
+            {
+                q: "Đường tiệm cận xiên của đồ thị hàm số y = \\frac{x² + 2x - 1}{x - 1} là:",
+                opts: ["y = x + 3", "y = x + 1", "y = x - 1", "y = x + 2"],
+                ans: 0
+            },
+            {
+                q: "Giá trị lớn nhất của hàm số y = -x² + 4x - 3 bằng:",
+                opts: ["1", "2", "3", "-3"],
+                ans: 0
+            },
+            {
+                q: "Cho hàm số y = x³ + 3x + 2. Mệnh đề nào sau đây đúng?",
+                opts: [
+                    "Hàm số đồng biến trên ℝ",
+                    "Hàm số nghịch biến trên ℝ",
+                    "Hàm số đồng biến trên (0; +∞)",
+                    "Hàm số nghịch biến trên (0; +∞)"
+                ],
+                ans: 0
+            },
+            {
+                q: "Điểm cực đại của đồ thị hàm số y = -x³ + 3x - 1 là:",
+                opts: ["(1; 1)", "(-1; -3)", "(1; 0)", "(-1; 1)"],
+                ans: 0
+            },
+            {
+                q: "Giá trị nhỏ nhất của hàm số y = x + \\frac{9}{x} trên khoảng (0; +∞) là:",
+                opts: ["6", "9", "3", "0"],
+                ans: 0
+            },
+            {
+                q: "Đồ thị hàm số y = \\frac{3 - x}{2x + 1} có đường tiệm cận ngang là:",
+                opts: ["y = -\\frac{1}{2}", "y = \\frac{3}{2}", "y = 3", "y = -2"],
+                ans: 0
+            },
+            {
+                q: "Hàm số nào dưới đây nghịch biến trên tập xác định của nó?",
+                opts: ["y = -x³ - x", "y = \\frac{x + 1}{x + 2}", "y = x³ + 3x", "y = -x⁴ - 2x²"],
+                ans: 0
+            },
+            {
+                q: "Đồ thị hàm số y = x⁴ - 2mx² + 1 có 3 điểm cực trị khi và chỉ khi:",
+                opts: ["m > 0", "m < 0", "m ≥ 0", "m ≤ 0"],
+                ans: 0
+            },
+            {
+                q: "Giá trị lớn nhất của hàm số y = \\sqrt{4 - x²} là:",
+                opts: ["2", "4", "0", "1"],
+                ans: 0
+            },
+            {
+                q: "Số đường tiệm cận đứng của đồ thị hàm số y = \\frac{x + 2}{x² - 4} là:",
+                opts: ["1", "2", "0", "3"],
+                ans: 0
+            }
+        ];
+
+        // Parser text thành HTML có ký hiệu toán học chuẩn SGK
+        function parseMathText(text) {
+            text = text.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '<span class="inline-block align-middle text-center mx-1"><span class="block border-b-2 border-gray-800 pb-0.5">$1</span><span class="block pt-0.5">$2</span></span>');
+            return text.replace(/\[v:([a-zA-Z])\]/g, '<span class="vec-wrap">$1<span class="vec-arrow">→</span></span>');
+        }
+
+        /* --- QUẢN LÝ TONE.JS AUDIO --- */
+        let synthBloop, synthThump, synthWin, synthLose;
+        let isAudioInit = false;
+
+        async function initAudio() {
+            if (isAudioInit) return;
+            await Tone.start();
+            
+            synthBloop = new Tone.Synth({
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
+            }).toDestination();
+
+            synthThump = new Tone.MembraneSynth({
+                pitchDecay: 0.05,
+                octaves: 2,
+                oscillator: { type: "square" },
+                envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 }
+            }).toDestination();
+
+            synthWin = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.05, decay: 0.2, sustain: 0.2, release: 1 }
+            }).toDestination();
+            synthWin.volume.value = -5;
+
+            synthLose = new Tone.Synth({
+                oscillator: { type: "sawtooth" },
+                envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.5 }
+            }).toDestination();
+            synthLose.volume.value = -10;
+
+            isAudioInit = true;
+        }
+
+        function playSound(type) {
+            if (!isAudioInit) return;
+            switch(type) {
+                case 'fish': synthBloop.triggerAttackRelease("C6", "16n"); break;
+                case 'trash': synthThump.triggerAttackRelease("C2", "8n"); break;
+                case 'win': 
+                    const now = Tone.now();
+                    synthWin.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now);
+                    break;
+                case 'lose': synthLose.triggerAttackRelease("C3", "4n"); break;
+            }
+        }
+
+        /* --- GAME ENGINE --- */
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const STATE = {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            score: 0,
+            timeLeft: 60,
+            isPaused: false,
+            isPlaying: false,
+            keys: { left: false, right: false, space: false },
+            fishes: [],
+            lastTime: 0,
+            timerInterval: null
+        };
+
+        const BOAT = {
+            x: 0, y: 0, width: 140, height: 60, speed: 300,
+            direction: 1
+        };
+
+        const HOOK = {
+            x: 0, y: 0,
+            baseY: 0,
+            state: 'IDLE',
+            dropSpeed: 400,
+            pullSpeed: 500,
+            maxLength: 0,
+            hitTarget: null
+        };
+
+        const ENTITY_TYPES = [
+            { emoji: '🐟', type: 'fish', points: 10, speedMul: 1, depth: 0.3 },
+            { emoji: '🐠', type: 'fish', points: 20, speedMul: 1.5, depth: 0.5 },
+            { emoji: '🐡', type: 'fish', points: 30, speedMul: 0.8, depth: 0.7 },
+            { emoji: '🥾', type: 'trash', points: -15, speedMul: 0.6, depth: 0.8 }
+        ];
+
+        function resizeCanvas() {
+            STATE.width = window.innerWidth;
+            STATE.height = window.innerHeight;
+            canvas.width = STATE.width;
+            canvas.height = STATE.height;
+            
+            if (!STATE.isPlaying) {
+                BOAT.x = STATE.width / 2;
+            }
+            BOAT.y = STATE.height * 0.3;
+            HOOK.maxLength = STATE.height * 0.9;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function drawBackground() {
+            let skyGrad = ctx.createLinearGradient(0, 0, 0, BOAT.y);
+            skyGrad.addColorStop(0, "#87CEEB");
+            skyGrad.addColorStop(1, "#E0F6FF");
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, STATE.width, BOAT.y);
+
+            ctx.save();
+            ctx.shadowColor = "#FDE047";
+            ctx.shadowBlur = 40;
+            ctx.fillStyle = "#FEF08A";
+            ctx.beginPath();
+            ctx.arc(STATE.width - 80, 80, 40, 0, Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.fillStyle = "#4ADE80";
+            ctx.beginPath();
+            ctx.ellipse(STATE.width*0.2, BOAT.y, 150, 40, 0, Math.PI, 0);
+            ctx.fill();
+            ctx.fillStyle = "#22C55E";
+            ctx.beginPath();
+            ctx.ellipse(STATE.width*0.8, BOAT.y, 200, 60, 0, Math.PI, 0);
+            ctx.fill();
+
+            let waterGrad = ctx.createLinearGradient(0, BOAT.y, 0, STATE.height);
+            waterGrad.addColorStop(0, "#3B82F6");
+            waterGrad.addColorStop(1, "#1E3A8A");
+            ctx.fillStyle = waterGrad;
+            ctx.fillRect(0, BOAT.y, STATE.width, STATE.height - BOAT.y);
+
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for(let i=0; i<STATE.width; i+=40) {
+                ctx.moveTo(i, BOAT.y + 10);
+                ctx.quadraticCurveTo(i+20, BOAT.y + 15, i+40, BOAT.y + 10);
+            }
+            ctx.stroke();
+        }
+
+        function drawBoatAndBoy() {
+            ctx.save();
+            ctx.translate(BOAT.x, BOAT.y);
+            
+            if (BOAT.direction === -1) {
+                ctx.scale(-1, 1);
+            }
+
+            ctx.strokeStyle = "#5C4033";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(20, -40);
+            ctx.lineTo(100, -80);
+            ctx.stroke();
+
+            let tipX = BOAT.x + (BOAT.direction === 1 ? 100 : -100);
+            let tipY = BOAT.y - 80;
+            HOOK.baseY = tipY;
+            if(HOOK.state === 'IDLE') {
+                HOOK.x = tipX;
+                HOOK.y = tipY + 10;
+            }
+
+            ctx.fillStyle = "#2563EB";
+            ctx.fillRect(-10, -30, 25, 30);
+            ctx.fillStyle = "#F97316";
+            ctx.fillRect(-8, -45, 21, 15);
+            ctx.strokeStyle = "#F97316";
+            ctx.lineWidth = 6;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(0, -40);
+            ctx.lineTo(25, -40);
+            ctx.stroke();
+            ctx.fillStyle = "#FDBA74";
+            ctx.beginPath();
+            ctx.arc(2, -55, 12, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = "#FACC15";
+            ctx.beginPath();
+            ctx.arc(2, -60, 14, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(-16, -60, 36, 4);
+            ctx.fillStyle = "#16A34A";
+            ctx.fillRect(-10, 0, 10, 10);
+            ctx.fillRect(5, 0, 10, 10);
+
+            ctx.fillStyle = "#8B4513";
+            ctx.beginPath();
+            ctx.moveTo(-60, 0);
+            ctx.lineTo(80, 0);
+            ctx.lineTo(60, 30);
+            ctx.lineTo(-40, 30);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.strokeStyle = "#5C3A21";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-50, 10); ctx.lineTo(65, 10);
+            ctx.moveTo(-45, 20); ctx.lineTo(55, 20);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawHook() {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            let tipX = BOAT.x + (BOAT.direction === 1 ? 100 : -100);
+            ctx.moveTo(tipX, HOOK.baseY);
+            ctx.lineTo(HOOK.x, HOOK.y);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#9CA3AF";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(HOOK.x - 5, HOOK.y + 5, 5, 0, Math.PI);
+            ctx.moveTo(HOOK.x, HOOK.y);
+            ctx.lineTo(HOOK.x, HOOK.y + 5);
+            ctx.stroke();
+
+            if (HOOK.hitTarget && HOOK.state === 'PULLING') {
+                ctx.font = "40px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(HOOK.hitTarget.emoji, HOOK.x, HOOK.y + 20);
+            }
+        }
+
+        function drawFishes() {
+            ctx.font = "40px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            STATE.fishes.forEach(f => {
+                ctx.save();
+                ctx.translate(f.x, f.y + Math.sin(f.time) * 15);
+                if(f.dir === 1) ctx.scale(-1, 1);
+                ctx.fillText(f.emoji, 0, 0);
+                ctx.restore();
+            });
+        }
+
+        function spawnFish() {
+            if (STATE.fishes.length > 8) return;
+            const template = ENTITY_TYPES[Math.floor(Math.random() * ENTITY_TYPES.length)];
+            const dir = Math.random() > 0.5 ? 1 : -1;
+            const waterHeight = STATE.height - BOAT.y;
+            const y = BOAT.y + waterHeight * template.depth + (Math.random() * 40 - 20);
+
+            STATE.fishes.push({
+                ...template,
+                x: dir === 1 ? -50 : STATE.width + 50,
+                y: y,
+                dir: dir,
+                time: Math.random() * Math.PI * 2,
+                speed: (50 + Math.random() * 50) * template.speedMul
+            });
+        }
+
+        function updatePhysics(dt) {
+            if (STATE.keys.left) {
+                BOAT.x -= BOAT.speed * dt;
+                BOAT.direction = -1;
+            }
+            if (STATE.keys.right) {
+                BOAT.x += BOAT.speed * dt;
+                BOAT.direction = 1;
+            }
+            BOAT.x = Math.max(60, Math.min(STATE.width - 80, BOAT.x));
+
+            if (HOOK.state === 'IDLE' && STATE.keys.space) {
+                HOOK.state = 'DROPPING';
+                HOOK.x = BOAT.x + (BOAT.direction === 1 ? 100 : -100);
+            }
+
+            if (HOOK.state === 'DROPPING') {
+                HOOK.y += HOOK.dropSpeed * dt;
+                if (HOOK.y >= STATE.height - 20) {
+                    HOOK.state = 'PULLING';
+                }
+
+                const hitboxSize = 30;
+                for (let i = 0; i < STATE.fishes.length; i++) {
+                    let f = STATE.fishes[i];
+                    let fy = f.y + Math.sin(f.time) * 15;
+                    if (Math.abs(HOOK.x - f.x) < hitboxSize && Math.abs(HOOK.y - fy) < hitboxSize) {
+                        HOOK.hitTarget = f;
+                        STATE.fishes.splice(i, 1);
+                        HOOK.state = 'PULLING';
+                        
+                        if (f.type === 'trash') {
+                            playSound('trash');
+                            showPopupText("-15", HOOK.x, HOOK.y, "text-red-500");
+                            addScore(-15);
+                            HOOK.hitTarget = null;
+                        } else {
+                            playSound('fish');
+                        }
+                        break;
+                    }
+                }
+            } else if (HOOK.state === 'PULLING') {
+                HOOK.y -= HOOK.pullSpeed * dt;
+                if (HOOK.y <= HOOK.baseY + 10) {
+                    HOOK.state = 'IDLE';
+                    if (HOOK.hitTarget) {
+                        openQuiz(HOOK.hitTarget);
+                        HOOK.hitTarget = null;
+                    }
+                }
+            }
+
+            STATE.fishes.forEach(f => {
+                f.x += f.speed * f.dir * dt;
+                f.time += dt * 3;
+            });
+            STATE.fishes = STATE.fishes.filter(f => f.x > -100 && f.x < STATE.width + 100);
+
+            if (Math.random() < dt * 0.8) {
+                spawnFish();
+            }
+        }
+
+        function addScore(points) {
+            STATE.score += points;
+            document.getElementById('hud-score').innerText = STATE.score;
+        }
+
+        function showPopupText(text, x, y, colorClass) {
+            const el = document.getElementById('popup-text');
+            el.innerText = text;
+            el.className = `absolute font-bold text-5xl sm:text-6xl pointer-events-none drop-shadow-md z-20 fade-in ${colorClass}`;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            el.classList.remove('hidden');
+            
+            let start = Date.now();
+            function animatePopup() {
+                let progress = (Date.now() - start) / 1000;
+                if(progress < 1) {
+                    el.style.top = `${y - progress * 50}px`;
+                    el.style.opacity = 1 - progress;
+                    requestAnimationFrame(animatePopup);
+                } else {
+                    el.classList.add('hidden');
+                }
+            }
+            requestAnimationFrame(animatePopup);
+        }
+
+        function gameLoop(timestamp) {
+            if (!STATE.isPlaying) return;
+            
+            if (STATE.isPaused) {
+                STATE.lastTime = timestamp;
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            if (!STATE.lastTime) STATE.lastTime = timestamp;
+            const dt = (timestamp - STATE.lastTime) / 1000;
+            STATE.lastTime = timestamp;
+
+            ctx.clearRect(0, 0, STATE.width, STATE.height);
+
+            updatePhysics(dt);
+            
+            drawBackground();
+            drawFishes();
+            drawHook();
+            drawBoatAndBoy();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        let currentTarget = null;
+        let currentQuestion = null;
+
+        function openQuiz(target) {
+            STATE.isPaused = true;
+            currentTarget = target;
+            
+            currentQuestion = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
+            
+            document.getElementById('quiz-reward').innerText = target.points;
+            document.getElementById('quiz-question').innerHTML = parseMathText(currentQuestion.q);
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            let opts = currentQuestion.opts.map((text, i) => ({ text, isCorrect: i === currentQuestion.ans }));
+            opts.sort(() => Math.random() - 0.5);
+            
+            const labels = ['A', 'B', 'C', 'D'];
+            opts.forEach((opt, index) => {
+                let btn = document.createElement('button');
+                btn.className = "answer-btn flex items-center bg-[#0a2540] hover:bg-[#113a64] text-white p-6 rounded-2xl border-4 border-[#07192a] shadow-lg group text-left min-h-[110px]";
+                btn.innerHTML = `
+                    <div class="bg-blue-500 text-white text-2xl sm:text-3xl font-bold rounded-xl w-14 h-14 flex justify-center items-center mr-6 flex-shrink-0 group-hover:bg-blue-400 transition-colors shadow-md">${labels[index]}</div>
+                    <div class="font-medium text-xl sm:text-2xl leading-snug">${parseMathText(opt.text)}</div>
+                `;
+                btn.onclick = () => handleAnswer(opt.isCorrect);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-screen').classList.remove('hidden');
+        }
+
+        function handleAnswer(isCorrect) {
+            const feedback = document.getElementById('quiz-feedback');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-text');
+            const sub = document.getElementById('feedback-subtext');
+
+            feedback.classList.remove('hidden');
+            
+            if (isCorrect) {
+                playSound('win');
+                icon.innerText = "🎉";
+                title.innerText = "Chính xác!";
+                title.className = "text-5xl font-black mb-4 text-green-600";
+                sub.innerText = `Bạn nhận được +${currentTarget.points} điểm`;
+                addScore(currentTarget.points);
+            } else {
+                playSound('lose');
+                icon.innerText = "❌";
+                title.innerText = "Sai rồi!";
+                title.className = "text-5xl font-black mb-4 text-red-600";
+                sub.innerText = "Bạn đã để sổng mất con cá này!";
+            }
+
+            setTimeout(() => {
+                feedback.classList.add('hidden');
+                document.getElementById('quiz-screen').classList.add('hidden');
+                STATE.isPaused = false;
+                STATE.lastTime = performance.now();
+            }, 2000);
+        }
+
+        function startGameTimer() {
+            STATE.timerInterval = setInterval(() => {
+                if (STATE.isPaused) return;
+                STATE.timeLeft--;
+                document.getElementById('hud-time').innerText = STATE.timeLeft;
+                
+                if (STATE.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            document.getElementById('rules-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            STATE.score = 0;
+            STATE.timeLeft = 60;
+            STATE.isPaused = false;
+            STATE.isPlaying = true;
+            STATE.fishes = [];
+            HOOK.state = 'IDLE';
+            document.getElementById('hud-score').innerText = '0';
+            document.getElementById('hud-time').innerText = '60';
+            BOAT.x = STATE.width / 2;
+
+            startGameTimer();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            STATE.isPlaying = false;
+            clearInterval(STATE.timerInterval);
+            document.getElementById('final-score').innerText = STATE.score;
+            document.getElementById('game-over-screen').classList.remove('hidden');
+        }
+
+        document.getElementById('btn-intro-continue').addEventListener('click', async () => {
+            await initAudio();
+            document.getElementById('intro-screen').classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('intro-screen').classList.add('hidden');
+                document.getElementById('rules-screen').classList.remove('hidden');
+                document.getElementById('rules-screen').classList.add('fade-in');
+            }, 500);
+        });
+
+        document.getElementById('btn-start-game').addEventListener('click', startGame);
+        
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            document.getElementById('game-over-screen').classList.add('hidden');
+            startGame();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'ArrowLeft' || e.key === 'a') STATE.keys.left = true;
+            if (e.code === 'ArrowRight' || e.key === 'd') STATE.keys.right = true;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                STATE.keys.space = true;
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowLeft' || e.key === 'a') STATE.keys.left = false;
+            if (e.code === 'ArrowRight' || e.key === 'd') STATE.keys.right = false;
+            if (e.code === 'Space') STATE.keys.space = false;
+        });
+
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+        const btnHook = document.getElementById('btn-hook');
+
+        const bindTouch = (btn, key) => {
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); STATE.keys[key] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); STATE.keys[key] = false; });
+            btn.addEventListener('mousedown', (e) => { e.preventDefault(); STATE.keys[key] = true; });
+            btn.addEventListener('mouseup', (e) => { e.preventDefault(); STATE.keys[key] = false; });
+            btn.addEventListener('mouseleave', (e) => { e.preventDefault(); STATE.keys[key] = false; });
+        };
+
+        bindTouch(btnLeft, 'left');
+        bindTouch(btnRight, 'right');
+        bindTouch(btnHook, 'space');
+
+    </script>
+</body>
+</html>

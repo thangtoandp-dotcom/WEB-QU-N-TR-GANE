@@ -545,6 +545,32 @@ app.get('/api/games', (_req: Request, res: Response) => {
   res.json({ success: true, games: db.games });
 });
 
+// Play HTML game directly in browser or iframe
+app.get('/api/games/:id/play', (req: Request, res: Response) => {
+  const db = readDb();
+  const game = (db.games || []).find((g: any) => g.id === req.params.id);
+  if (!game) {
+    return res.status(404).send('Không tìm thấy trò chơi');
+  }
+
+  // 1. If physical file exists in public/uploads/games, serve it
+  if (game.fileUrl && typeof game.fileUrl === 'string') {
+    const directPath = path.join(__dirname, 'public', game.fileUrl);
+    if (fs.existsSync(directPath)) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.sendFile(directPath);
+    }
+  }
+
+  // 2. If embedCode exists, send it as HTML
+  if (game.embedCode && typeof game.embedCode === 'string' && game.embedCode.trim()) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(game.embedCode);
+  }
+
+  return res.status(404).send('Trò chơi không có nội dung HTML');
+});
+
 // Upload PowerPoint / HTML / MP4 Video game files
 app.post('/api/games/upload', (req: Request, res: Response) => {
   try {

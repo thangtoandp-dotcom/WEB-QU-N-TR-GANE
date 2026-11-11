@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Trình Chiếu PowerPoint: Ôn Tập Đạo Hàm & Hàm Số THPT</title>
+  
+  <!-- Nhúng KaTeX để kết xuất công thức Toán học chuẩn Sách giáo khoa -->
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" crossorigin="anonymous">
+  <script src="/vendor/katex/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" crossorigin="anonymous"></script>
+
+  <style>
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: "Times New Roman", Times, serif; 
+    }
+    
+    body { 
+      background: #041E42; 
+      color: #FFFFFF; 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh; 
+      overflow: hidden; 
+      user-select: none;
+    }
+    
+    /* Top PowerPoint Status Header */
+    .ppt-header {
+      background: linear-gradient(90deg, #063B8E 0%, #0878DC 100%);
+      padding: 12px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #00CFFF;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      z-index: 10;
+    }
+    .ppt-title { 
+      font-size: 20px; 
+      font-weight: bold; 
+      color: #FFDE59; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+    }
+    .ppt-badge { 
+      background: #E11D48; 
+      color: white; 
+      padding: 4px 12px; 
+      border-radius: 8px; 
+      font-size: 13px; 
+      font-weight: bold; 
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+    }
+    
+    /* Central Slide Stage */
+    .slide-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .slide-card {
+      background: linear-gradient(135deg, #0A2D6C 0%, #063B8E 50%, #084FA0 100%);
+      width: 100%;
+      max-width: 1020px;
+      aspect-ratio: 16 / 9;
+      border: 3.5px solid #00CFFF;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,207,255,0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 34px 52px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Author Watermark */
+    .slide-watermark {
+      position: absolute;
+      top: 14px;
+      right: 28px;
+      font-size: 14px;
+      color: #00CFFF;
+      font-style: italic;
+      letter-spacing: 0.3px;
+    }
+    
+    /* Big Question Header Badge */
+    .question-badge {
+      display: inline-block;
+      font-size: 26px;
+      font-weight: 900;
+      color: #FFDE59;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      background: rgba(255, 222, 89, 0.15);
+      border: 2px solid #FFDE59;
+      padding: 5px 22px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(255, 222, 89, 0.25);
+    }
+    
+    .question-title {
+      font-size: 26px;
+      font-weight: bold;
+      color: #FFFFFF;
+      line-height: 1.5;
+      text-align: left;
+      margin-bottom: 8px;
+    }
+    
+    /* Choice Buttons Grid */
+    .choices-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 18px; 
+      margin-top: 16px; 
+    }
+    
+    .choice-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 2.5px solid #00CFFF;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 16px;
+      font-size: 22px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-height: 74px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    
+    .choice-btn:hover:not(:disabled) { 
+      background: #00CFFF; 
+      color: #041E42; 
+      transform: translateY(-3px); 
+      box-shadow: 0 8px 24px rgba(0, 207, 255, 0.4);
+    }
+    .choice-btn:hover:not(:disabled) .choice-label {
+      color: #041E42;
+    }
+    
+    .choice-btn.correct { 
+      background: #10B981 !important; 
+      color: white !important; 
+      border-color: #34D399 !important; 
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.6) !important;
+    }
+    .choice-btn.correct .choice-label { color: #FFFFFF !important; }
+    
+    .choice-btn.wrong { 
+      background: #EF4444 !important; 
+      color: white !important; 
+      border-color: #F87171 !important; 
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.6) !important;
+    }
+    .choice-btn.wrong .choice-label { color: #FFFFFF !important; }
+
+    .choice-label {
+      font-size: 24px;
+      font-weight: 900;
+      color: #FFDE59;
+      min-width: 32px;
+      display: inline-block;
+    }
+
+    .choice-math {
+      font-size: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* Explanation & Sub-hint Box */
+    .explain-box {
+      min-height: 48px;
+      margin-top: 14px;
+      padding: 10px 18px;
+      background: rgba(0, 207, 255, 0.1);
+      border: 1px solid rgba(0, 207, 255, 0.3);
+      border-radius: 12px;
+      font-size: 17px;
+      color: #E0F2FE;
+      line-height: 1.5;
+    }
+
+    /* Standard SGK Fraction and Math Notation Fallbacks */
+    .math-frac {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+      font-size: 1.15em;
+      line-height: 1;
+      padding: 0 4px;
+      margin: 0 2px;
+    }
+    .math-num {
+      border-bottom: 2px solid currentColor;
+      padding-bottom: 2px;
+      font-style: italic;
+      display: block;
+    }
+    .math-den {
+      padding-top: 2px;
+      font-style: italic;
+      display: block;
+    }
+    .math-var {
+      font-style: italic;
+      font-family: "Times New Roman", Times, serif;
+    }
+
+    /* Bottom Controls */
+    .ppt-controls {
+      background: #021124;
+      padding: 12px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #1E3A8A;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.3);
+    }
+    .btn {
+      background: #0878DC;
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(8, 120, 220, 0.3);
+    }
+    .btn:hover:not(:disabled) { 
+      background: #0284C7; 
+      transform: translateY(-1px);
+    }
+    .btn:disabled { 
+      background: #475569; 
+      cursor: not-allowed; 
+      opacity: 0.6;
+    }
+
+    /* KaTeX adjustments for dark contrast */
+    .katex {
+      color: inherit !important;
+      font-size: 1.18em !important;
+    }
+    .katex-display {
+      margin: 0.5em 0 !important;
+    }
+    .katex .frac-line {
+      border-bottom-color: currentColor !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Ribbon -->
+  <div class="ppt-header">
+    <div class="ppt-title">
+      <span class="ppt-badge">POWERPOINT GAME</span>
+      <span>Ôn Tập Chuyên Đề: Đạo Hàm & Khảo Sát Hàm Số Khối 12</span>
+    </div>
+    <div style="font-size: 16px; color: #E0F2FE;">
+      Điểm số: <strong id="score-display" style="color: #FFD700; font-size: 22px;">0</strong> / 250
+    </div>
+  </div>
+
+  <!-- Slide Canvas -->
+  <div class="slide-stage">
+    <div class="slide-card" id="slide-content">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Controls -->
+  <div class="ppt-controls">
+    <button class="btn" id="prev-btn" onclick="prevSlide()">◀ Slide Trước</button>
+    <div style="color: #00CFFF; font-weight: bold; font-size: 16px;" id="slide-num">Slide 1 / 7</div>
+    <button class="btn" id="next-btn" onclick="nextSlide()">Slide Kế Tiếp ▶</button>
+  </div>
+
+  <script>
+    // Sanitize KaTeX HTML to fix Private Use Area glyphs (\uE020) and ensure standard mathematical ≠ and ℝ symbols
+    function cleanKatexHtml(html) {
+      if (!html) return '';
+      // Replace KaTeX's composite \uE020 + = glyph that appears as a broken tofu box (≢)
+      let cleaned = html.replace(
+        /<span class="mrel"><span class="mrel"><span class="mord katex-vbox">[\s\S]*?[\uE000-\uF8FF][\s\S]*?<\/span><\/span><span class="mspace nobreak"><\/span><span class="mrel">=<\/span><\/span>/g,
+        '<span class="mrel font-serif" style="font-family: \'Times New Roman\', serif; font-size: 1.15em; margin: 0 0.28em; font-weight: normal; vertical-align: -0.05em; display: inline-block;">≠</span>'
+      );
+      // Guarantee double-struck real numbers ℝ
+      cleaned = cleaned.replace(
+        /<span class="mord mathbb">R<\/span>/g,
+        '<span class="mord mathbb" style="font-family: \'Times New Roman\', serif; font-weight: bold; font-size: 1.05em;">ℝ</span>'
+      );
+      // Strip any accidental ≢ (U+2262) or PUA glyphs
+      cleaned = cleaned.replace(/≢/g, '≠');
+      cleaned = cleaned.replace(/[\uE000-\uF8FF]/g, '');
+      return cleaned;
+    }
+
+    // Helper to render LaTeX math formulas or robust HTML Math fallbacks
+    function formatMath(text) {
+      if (!text) return '';
+      
+      // Normalize raw text first: replace ≢ with ≠
+      text = text.replace(/≢/g, '≠');
+
+      // If KaTeX is available in window
+      if (typeof katex !== 'undefined') {
+        try {
+          return text.replace(/\$([^\$]+)\$/g, function(match, formula) {
+            var raw = katex.renderToString(formula, {
+              throwOnError: false,
+              displayMode: false
+            });
+            return cleanKatexHtml(raw);
+          });
+        } catch (e) {
+          console.warn('KaTeX render error:', e);
+        }
+      }
+
+      // High-Fidelity HTML Math Fallback (Matching Vietnamese High School Textbooks)
+      return text
+        .replace(/\$\\dfrac\{1\}\{x\}\$/g, '<span class="math-frac"><span class="math-num">1</span><span class="math-den">x</span></span>')
+        .replace(/\$\\dfrac\{1\}\{2x\}\$/g, '<span class="math-frac"><span class="math-num">1</span><span class="math-den">2x</span></span>')
+        .replace(/\$\\dfrac\{([^}]+)\}\{([^}]+)\}\$/g, '<span class="math-frac"><span class="math-num">$1</span><span class="math-den">$2</span></span>')
+        .replace(/\$e\^x\$/g, '<i>e</i><sup><i>x</i></sup>')
+        .replace(/\$x\$/g, '<i>x</i>')
+        .replace(/\$y = \\ln x\$/g, '<i>y</i> = ln <i>x</i>')
+        .replace(/\$x > 0\$/g, '<i>x</i> > 0')
+        .replace(/\$a \\ne 0\$/g, '<i>a</i> ≠ 0')
+        .replace(/\$\\mathbb\{R\}\$/g, 'ℝ')
+        .replace(/\$y = ax \+ b\$/g, '<i>y</i> = <i>ax</i> + <i>b</i>')
+        .replace(/\$a > 0\$/g, '<i>a</i> > 0')
+        .replace(/\$a < 0\$/g, '<i>a</i> < 0')
+        .replace(/\$a \\ge 0\$/g, '<i>a</i> ≥ 0')
+        .replace(/\$b > 0\$/g, '<i>b</i> > 0')
+        .replace(/\$y = x\^3 - 3x \+ 2\$/g, '<i>y</i> = <i>x</i><sup>3</sup> - 3<i>x</i> + 2')
+        .replace(/\$([^\$]+)\$/g, '<span class="math-var">$1</span>');
+    }
+
+    const slides = [
+      {
+        type: 'intro',
+        title: 'TRÒ CHƠI TOÁN HỌC TRÌNH CHIẾU',
+        subtitle: 'CHUYÊN ĐỀ ĐẠO HÀM & KHẢO SÁT HÀM SỐ TOÁN 12',
+        desc: 'Hệ thống học liệu chuẩn Sách giáo khoa • Trường THPT Đan Phượng.<br>Giáo viên phụ trách: <strong>Thầy Bùi Ngọc Thắng</strong>.<br><br>Nhấn <strong>"Slide Kế Tiếp ▶"</strong> hoặc bấm phím mũi tên để bắt đầu trả lời các câu hỏi tính điểm!'
+      },
+      {
+        type: 'question',
+        questionNumber: 1,
+        q: 'Đạo hàm của hàm số $y = \\ln x$ với $x > 0$ là:',
+        options: [
+          '$\\dfrac{1}{x}$',
+          '$e^x$',
+          '$x$',
+          '$\\dfrac{1}{2x}$'
+        ],
+        correct: 0,
+        explain: 'Theo SGK Toán 12: Đạo hàm của hàm số logarit tự nhiên $(\\ln x)\' = \\dfrac{1}{x}$ với mọi $x > 0$.'
+      },
+      {
+        type: 'question',
+        questionNumber: 2,
+        q: 'Cho hàm số bậc nhất $y = ax + b$ ($a \\ne 0$). Hàm số đồng biến trên $\\mathbb{R}$ khi và chỉ khi:',
+        options: [
+          '$a > 0$',
+          '$a < 0$',
+          '$a \\ge 0$',
+          '$b > 0$'
+        ],
+        correct: 0,
+        explain: 'Hàm số bậc nhất $y = ax + b$ ($a \\ne 0$) có đạo hàm $y\' = a$. Do đó hàm số đồng biến trên $\\mathbb{R} \\Leftrightarrow y\' = a > 0$.'
+      },
+      {
+        type: 'question',
+        questionNumber: 3,
+        q: 'Cho hàm số bậc ba $y = x^3 - 3x + 2$. Số điểm cực trị của hàm số đã cho là:',
+        options: [
+          '2 điểm cực trị',
+          '1 điểm cực trị',
+          '0 điểm cực trị',
+          '3 điểm cực trị'
+        ],
+        correct: 0,
+        explain: 'Ta có $y\' = 3x^2 - 3 = 0 \\Leftrightarrow x^2 = 1 \\Leftrightarrow x = \\pm 1$. Đạo hàm $y\'$ đổi dấu khi qua 2 nghiệm phân biệt này nên hàm số có đúng 2 điểm cực trị.'
+      },
+      {
+        type: 'question',
+        questionNumber: 4,
+        q: 'Tiệm cận ngang của đồ thị hàm số $y = \\dfrac{2x - 1}{x + 1}$ là đường thẳng:',
+        options: [
+          '$y = 2$',
+          '$x = -1$',
+          '$y = -1$',
+          '$x = 2$'
+        ],
+        correct: 0,
+        explain: 'Ta có $\\lim_{x \\to \\pm \\infty} \\dfrac{2x - 1}{x + 1} = 2$. Do đó đường thẳng $y = 2$ là tiệm cận ngang của đồ thị hàm số.'
+      },
+      {
+        type: 'question',
+        questionNumber: 5,
+        q: 'Giá trị lớn nhất của hàm số $f(x) = -x^4 + 2x^2 + 1$ trên đoạn $[0; 2]$ bằng:',
+        options: [
+          '$2$',
+          '$1$',
+          '$-7$',
+          '$4$'
+        ],
+        correct: 0,
+        explain: 'Ta có $f\'(x) = -4x^3 + 4x = -4x(x^2 - 1) = 0 \\Leftrightarrow x = 0$ hoặc $x = 1$ (thuộc $[0; 2]$). Ta tính: $f(0) = 1, f(1) = 2, f(2) = -7$. Do đó $\\max_{[0; 2]} f(x) = 2$ tại $x = 1$.'
+      },
+      {
+        type: 'end',
+        title: 'XUẤT SẮC HOÀN THÀNH!',
+        subtitle: 'BẠN ĐÃ CHINH PHỤC THÀNH CÔNG BỘ ĐỀ TOÁN HỌC POWERPOINT',
+        desc: 'Toàn bộ điểm số và kết quả đã được lưu trữ trên hệ thống học bạ THPT Đan Phượng.<br>Chúc các em học sinh lớp 12 luôn tự tin và đạt kết quả cao trong các kỳ thi sắp tới!'
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let answered = {};
+
+    function renderSlide() {
+      const s = slides[current];
+      const container = document.getElementById('slide-content');
+      document.getElementById('slide-num').innerText = `Slide ${current + 1} / ${slides.length}`;
+      document.getElementById('prev-btn').disabled = current === 0;
+      document.getElementById('next-btn').disabled = current === slides.length - 1;
+
+      if (s.type === 'intro' || s.type === 'end') {
+        container.innerHTML = `
+          <div class="slide-watermark">THPT Đan Phượng - Môn Toán - Thầy Bùi Ngọc Thắng</div>
+          <div></div>
+          <div style="text-align: center;">
+            <h1 style="font-size: 36px; color: #FFDE59; text-transform: uppercase; margin-bottom: 14px; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">${s.title}</h1>
+            <h2 style="font-size: 24px; color: #FFFFFF; margin-bottom: 16px;">${s.subtitle}</h2>
+            <p style="font-size: 19px; color: #E0F2FE; line-height: 1.6; max-width: 800px; margin: 0 auto;">${s.desc}</p>
+          </div>
+          <div style="text-align: center; color: #00CFFF; font-size: 15px; font-style: italic;">
+            Nhấn nút "Slide Kế Tiếp ▶" bên dưới hoặc sử dụng phím mũi tên trên bàn phím
+          </div>
+        `;
+      } else {
+        const isAns = answered[current] !== undefined;
+        let optionsHtml = '';
+        const letters = ['A', 'B', 'C', 'D'];
+
+        s.options.forEach((opt, idx) => {
+          let extraClass = '';
+          if (isAns) {
+            if (idx === s.correct) extraClass = 'correct';
+            else if (idx === answered[current]) extraClass = 'wrong';
+          }
+          
+          const renderedOpt = formatMath(opt);
+
+          optionsHtml += `
+            <button class="choice-btn ${extraClass}" onclick="chooseOpt(${idx})" ${isAns ? 'disabled' : ''}>
+              <span class="choice-label">${letters[idx]}.</span>
+              <span class="choice-math">${renderedOpt}</span>
+            </button>
+          `;
+        });
+
+        const formattedQuestion = formatMath(s.q);
+        const formattedExplain = formatMath(s.explain);
+
+        container.innerHTML = `
+          <div class="slide-watermark">THPT Đan Phượng - Môn Toán - Thầy Bùi Ngọc Thắng</div>
+          <div>
+            <div class="question-badge">CÂU SỐ ${s.questionNumber}</div>
+            <div class="question-title">${formattedQuestion}</div>
+          </div>
+          <div class="choices-grid">
+            ${optionsHtml}
+          </div>
+          <div class="explain-box">
+            ${isAns 
+              ? `<strong style="color: #FFDE59;">Lời giải chi tiết:</strong> ${formattedExplain}` 
+              : 'Hãy chọn một phương án đúng để ghi 50 điểm!'}
+          </div>
+        `;
+      }
+    }
+
+    function chooseOpt(idx) {
+      if (answered[current] !== undefined) return;
+      answered[current] = idx;
+      if (idx === slides[current].correct) {
+        score += 50;
+        document.getElementById('score-display').innerText = score;
+      }
+      renderSlide();
+    }
+
+    function nextSlide() {
+      if (current < slides.length - 1) {
+        current++;
+        renderSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (current > 0) {
+        current--;
+        renderSlide();
+      }
+    }
+
+    // Keyboard navigation (Arrow keys and Space)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    // Initial render
+    renderSlide();
+  </script>
+</body>
+</html>

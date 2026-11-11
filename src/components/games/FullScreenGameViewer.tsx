@@ -253,6 +253,29 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
     return false;
   }, [game, isVideo]);
 
+  const isHtml = useMemo(() => {
+    if (isVideo || isPowerPoint) return false;
+    return (
+      game.fileType === 'html' ||
+      Boolean(game.embedCode) ||
+      Boolean(game.fileUrl && /\.(html|htm|htlm)$/i.test(game.fileUrl)) ||
+      Boolean(game.fileName && /\.(html|htm|htlm)$/i.test(game.fileName)) ||
+      game.id.startsWith('game_custom_') ||
+      game.id.startsWith('g-uploaded-html5')
+    );
+  }, [game, isVideo, isPowerPoint]);
+
+  // Clean HTML URL for HTML5 web games
+  const resolvedHtmlUrl = useMemo(() => {
+    if (game.fileUrl && /\.(html|htm)$/i.test(game.fileUrl)) {
+      return game.fileUrl;
+    }
+    if (game.id.startsWith('game_custom_') || game.embedCode) {
+      return `/api/games/${game.id}/play`;
+    }
+    return game.fileUrl || `/api/games/${game.id}/play`;
+  }, [game]);
+
   // Safe resolved URLs
   const resolvedVideoUrl = useMemo(() => {
     if (game.id === 'game_1794045141174' || game.title.includes('Hộp quà') || (game.fileUrl && (game.fileUrl.includes('Hộp') || game.fileUrl.includes('hop_qua')))) {
@@ -286,11 +309,14 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
     if (isPowerPoint) {
       return resolvedPptHtmlUrl;
     }
+    if (isHtml) {
+      return game.fileUrl || resolvedHtmlUrl;
+    }
     if (game.fileUrl && /\.(html|htm)$/i.test(game.fileUrl)) {
       return game.fileUrl;
     }
     return game.fileUrl || resolvedPptHtmlUrl;
-  }, [isPowerPoint, resolvedPptHtmlUrl, game.fileUrl]);
+  }, [isPowerPoint, isHtml, resolvedPptHtmlUrl, game.fileUrl, resolvedHtmlUrl]);
 
   // Video reload / initialization
   useEffect(() => {
@@ -674,18 +700,36 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
 
           {/* Download Original File Button */}
           <a
-            href={isPowerPoint ? resolvedPptDownloadUrl : isVideo ? resolvedVideoUrl : (game.fileUrl || '#')}
-            download={isPowerPoint ? (game.fileName?.replace('.html', '.pptx') || 'presentation.pptx') : (game.fileName || 'game-video.mp4')}
+            href={
+              isPowerPoint 
+                ? resolvedPptDownloadUrl 
+                : isVideo 
+                ? resolvedVideoUrl 
+                : (game.fileUrl || `/api/games/${game.id}/play`)
+            }
+            download={
+              isPowerPoint 
+                ? (game.fileName?.replace('.html', '.pptx') || 'presentation.pptx') 
+                : isVideo 
+                ? (game.fileName || 'game-video.mp4')
+                : (game.fileName || `${game.title}.html`)
+            }
             className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold font-sans"
             title="Tải tệp game gốc về máy tính"
           >
             <Download className="w-4 h-4 text-[#FFDE59]" />
-            <span className="hidden xl:inline">Tải {isPowerPoint ? '.PPTX' : isVideo ? '.MP4' : 'tệp'}</span>
+            <span className="hidden xl:inline">Tải {isPowerPoint ? '.PPTX' : isVideo ? '.MP4' : '.HTML'}</span>
           </a>
 
           {/* Open in Dedicated New Tab */}
           <a
-            href={isVideo ? resolvedVideoUrl : (isPowerPoint ? resolvedPptHtmlUrl : iframeSrc)}
+            href={
+              isVideo 
+                ? resolvedVideoUrl 
+                : isPowerPoint 
+                ? resolvedPptHtmlUrl 
+                : (game.fileUrl || `/api/games/${game.id}/play`)
+            }
             target="_blank"
             rel="noopener noreferrer"
             className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold font-sans"
@@ -1193,8 +1237,28 @@ export const FullScreenGameViewer: React.FC<FullScreenGameViewerProps> = ({
             </div>
 
           </div>
+        ) : isHtml ? (
+          /* CASE 3: HTML5 WEB GAME (DIRECT IFRAME / SRCDOC / EMBED) */
+          <div className="w-full h-full relative bg-white flex flex-col">
+            {game.embedCode && game.embedCode.includes('<iframe') ? (
+              <div 
+                key={keyCounter}
+                className="w-full h-full flex items-center justify-center [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
+                dangerouslySetInnerHTML={{ __html: game.embedCode }}
+              />
+            ) : (
+              <iframe
+                key={keyCounter}
+                src={game.fileUrl || resolvedHtmlUrl}
+                srcDoc={!game.fileUrl && game.embedCode ? game.embedCode : undefined}
+                title={game.title}
+                className="w-full h-full border-0 select-none bg-white"
+                allow="fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              />
+            )}
+          </div>
         ) : (
-          /* CASE 3: INTERACTIVE HTML PRESENTATION OR WEB GAME IFRAME */
+          /* CASE 4: INTERACTIVE HTML PRESENTATION OR FALLBACK IFRAME */
           <div className="w-full h-full relative bg-slate-950 flex flex-col">
             <iframe
               key={keyCounter}
